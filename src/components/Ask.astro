@@ -1,0 +1,95 @@
+---
+/** Ask about my work. Mocked answers today; POST /api/chat (RAG over pgvector) later. */
+import { USE_MOCKS } from "~/lib/flags";
+import { askFirstQuestion, askSuggestions, mockAsk } from "~/lib/mocks/ask";
+import MockNote from "./MockNote.astro";
+
+const first = USE_MOCKS ? mockAsk(askFirstQuestion) : null;
+---
+
+<section class="sec chapter" id="ask" aria-labelledby="ask-h">
+  <div class="wrap ask-wrap">
+    <div class="head" style="margin:0">
+      <h2 id="ask-h" data-split>
+        Ask about my work
+      </h2>
+      <p>
+        It answers from my CV and case studies, shows the passages it used, and says so when it
+        doesn't know.
+        {USE_MOCKS && (
+          <>
+            <sup class="fn" aria-hidden="true">
+              †
+            </sup>
+            <span class="sr-only"> (sample answers for now)</span>
+          </>
+        )}
+      </p>
+    </div>
+    <form class="askbar" id="ask-form" role="search" aria-label="Ask about my work">
+      <svg class="icon" aria-hidden="true">
+        <use href="#i-search"></use>
+      </svg>
+      <label for="ask-input" class="sr-only">
+        Your question
+      </label>
+      <input
+        id="ask-input"
+        name="q"
+        autocomplete="off"
+        maxlength="500"
+        placeholder="What has he shipped in production?"
+      />
+      <button class="btn btn-lime" type="submit">
+        Ask
+      </button>
+    </form>
+    <div class="sugg" role="group" aria-label="Suggested questions">
+      {askSuggestions.map((q) => (
+        <button type="button" data-prompt={q}>
+          {q}
+        </button>
+      ))}
+    </div>
+    {USE_MOCKS && (
+      <MockNote text="Sample answers: the live version will search my CV and case studies and cite what it used." />
+    )}
+    <p class="nojs-note">
+      Asking needs JavaScript.{USE_MOCKS && " The sample answer below is readable as is."}
+    </p>
+    <div class="convo" id="convo" role="log" aria-live="polite" aria-label="Answers" tabindex="0">
+      {first ? (
+        <div class="turn" data-first>
+          <p class="q">{askFirstQuestion}</p>
+          <div class="turn-body">
+            <ol class="passages" aria-label="Passages used">
+              {first.passages.map((p, i) => (
+                <li>
+                  <span class="src">
+                    [{i + 1}] {p.source}
+                  </span>
+                  <Fragment set:html={p.html} />
+                </li>
+              ))}
+            </ol>
+            <div class="ans">
+              <p class="st">Answer from {first.passages.length} passages</p>
+              <p class="a-body" set:html={first.html} />
+              <div class="cites">
+                {first.citations.map((c, i) => (
+                  <a class="cite-chip" href={c.href}>
+                    [{i + 1}] {c.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p class="empty" data-empty>
+          Ask isn't connected yet. Email me and I'll answer myself.
+        </p>
+      )}
+    </div>
+  </div>
+</section>

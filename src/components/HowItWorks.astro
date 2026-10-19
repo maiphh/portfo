@@ -1,0 +1,155 @@
+---
+/** How this site works: the v1 architecture (docs/architecture.md) as a live graph. */
+---
+
+<section class="sec chapter" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <div class="head">
+      <h2 id="how-h" data-split>
+        How this site works
+      </h2>
+      <p>
+        Static pages, one Postgres database and a small job queue. Nothing runs that doesn't need
+        to.
+      </p>
+    </div>
+    <div class="graph" data-graph>
+      <svg
+        class="g-d"
+        viewBox="0 0 1200 430"
+        role="img"
+        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls on-demand API routes; the routes use Neon Postgres with pgvector and a jobs table; a worker claims jobs, asks an LLM to sort messages and emails Phu; GitHub Actions syncs activity every 6 hours."
+      >
+        <path class="e" id="e1" d="M190 210 C230 210 230 90 270 90"></path>
+        <path class="e" id="e2" d="M190 220 C230 220 230 245 270 245"></path>
+        <path class="e" id="e3" d="M500 245 H580"></path>
+        <path class="e" id="e4" d="M810 230 C850 230 850 95 890 95"></path>
+        <path class="e" id="e5" d="M810 240 H890"></path>
+        <path class="e" id="e6" d="M1005 130 V200"></path>
+        <path class="e" id="e7" d="M1120 92 C1175 92 1175 375 1120 375"></path>
+        <path class="e" id="e8" d="M695 340 V290"></path>
+        <g class="nb">
+          <rect x="20" y="180" width="170" height="70" rx="4"></rect>
+          <text x="40" y="210">
+            Your browser
+          </text>
+          <text class="sub" x="40" y="232">
+            this page
+          </text>
+        </g>
+        <g class="nb">
+          <rect x="270" y="55" width="230" height="70" rx="4"></rect>
+          <text x="290" y="85">
+            Vercel, static pages
+          </text>
+          <text class="sub" x="290" y="107">
+            prebuilt, no server
+          </text>
+        </g>
+        <g class="nb key">
+          <rect x="270" y="210" width="230" height="75" rx="4"></rect>
+          <text x="290" y="240">
+            On-demand API routes
+          </text>
+          <text class="sub" x="290" y="262">
+            chat · contact · views
+          </text>
+        </g>
+        <g class="nb key">
+          <rect x="580" y="205" width="230" height="85" rx="4"></rect>
+          <text x="600" y="236">
+            Neon Postgres
+          </text>
+          <text class="sub" x="600" y="258">
+            pgvector · jobs table
+          </text>
+          <text class="sub" x="600" y="276">
+            views · GitHub
+          </text>
+        </g>
+        <g class="nb">
+          <rect x="890" y="55" width="230" height="75" rx="4"></rect>
+          <text x="910" y="85">
+            Worker
+          </text>
+          <text class="sub" x="910" y="107">
+            SKIP LOCKED · retries
+          </text>
+        </g>
+        <g class="nb">
+          <rect x="890" y="200" width="230" height="75" rx="4"></rect>
+          <text x="910" y="230">
+            LLM
+          </text>
+          <text class="sub" x="910" y="252">
+            provider not chosen yet
+          </text>
+        </g>
+        <g class="nb">
+          <rect x="890" y="345" width="230" height="60" rx="4"></rect>
+          <text x="910" y="373">
+            Email to Phu
+          </text>
+          <text class="sub" x="910" y="393">
+            spam stored, not sent
+          </text>
+        </g>
+        <g class="nb">
+          <rect x="580" y="340" width="230" height="60" rx="4"></rect>
+          <text x="600" y="368">
+            GitHub Actions
+          </text>
+          <text class="sub" x="600" y="388">
+            sync every 6 hours
+          </text>
+        </g>
+        <circle class="pk" r="4.5" data-pk="e2"></circle>
+        <circle class="pk" r="4.5" data-pk="e3"></circle>
+        <circle class="pk v" r="4.5" data-pk="e5"></circle>
+        <circle class="pk" r="4.5" data-pk="e4"></circle>
+        <circle class="pk" r="4.5" data-pk="e6"></circle>
+        <circle class="pk v" r="4.5" data-pk="e8"></circle>
+        <circle class="pk" r="4.5" data-pk="e7"></circle>
+      </svg>
+      <ol class="graph-m">
+        <li>
+          <b>Vercel</b>
+          <span>Static pages; only the /api routes run on demand.</span>
+        </li>
+        <li>
+          <b>Neon Postgres + pgvector</b>
+          <span>Messages, views, GitHub data and the embedded CV, in one database.</span>
+        </li>
+        <li>
+          <b>Jobs table + worker</b>
+          <span>Workers claim jobs with FOR UPDATE SKIP LOCKED and retry with backoff.</span>
+        </li>
+        <li>
+          <b>LLM</b>
+          <span>
+            Answers questions with citations and sorts messages. Provider still to be chosen.
+          </span>
+        </li>
+        <li>
+          <b>GitHub Actions</b>
+          <span>Pulls public activity every 6 hours.</span>
+        </li>
+      </ol>
+    </div>
+    <div class="how-notes">
+      <p>
+        <b>Ask</b> finds the closest passages in pgvector and only answers from them, with
+        citations.
+      </p>
+      <p>
+        <b>Your message</b> is saved with a job in one transaction; a worker sorts it and emails me.
+        Failed jobs retry.
+      </p>
+      <p>
+        <b>Guardrails:</b> Cloudflare Turnstile, about 10 questions per visitor per hour, 3 messages
+        per day, and a daily LLM budget.
+      </p>
+    </div>
+    <!-- TODO(decision): LLM provider (provider-agnostic until chosen). -->
+  </div>
+</section>

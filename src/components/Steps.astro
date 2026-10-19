@@ -1,0 +1,21 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Rich from "./Rich.astro";
+
+interface Props {
+  steps: CollectionEntry<"work">["data"]["steps"];
+}
+const { steps } = Astro.props;
+---
+
+<ol class="steps" data-steps>
+  {steps.map((s, i) => (
+    <li class="step">
+      <span class="n">{i + 1}</span>
+      <b>{s.title}</b>
+      <p>
+        <Rich text={s.body} />
+      </p>
+    </li>
+  ))}
+</ol>

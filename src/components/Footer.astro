@@ -1,0 +1,29 @@
+---
+import { USE_MOCKS } from "~/lib/flags";
+import { site } from "~/lib/site";
+
+interface Props {
+  base?: "" | "/";
+}
+const { base = "" } = Astro.props;
+---
+
+<footer>
+  <div class="wrap">
+    <p class="foot-name" aria-hidden="true" data-footname>
+      {site.name}
+    </p>
+    <div class="foot-row">
+      <span>
+        {site.role} · {site.city}
+        {USE_MOCKS && base === "" && " · Figures marked † are sample data"}
+      </span>
+      <nav aria-label="Footer">
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <a href={site.github}>GitHub</a>
+        <a href={`${base}#ask`}>Ask</a>
+        <a href={base ? "/" : "#top"}>Back to top</a>
+      </nav>
+    </div>
+  </div>
+</footer>

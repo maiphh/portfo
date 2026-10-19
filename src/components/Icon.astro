@@ -1,0 +1,10 @@
+---
+interface Props {
+  name: "arrow" | "out" | "check" | "search" | "mail" | "commit" | "pr" | "star";
+}
+const { name } = Astro.props;
+---
+
+<svg class="icon" aria-hidden="true">
+  <use href={`#i-${name}`}></use>
+</svg>

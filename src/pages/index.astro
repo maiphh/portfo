@@ -1,0 +1,47 @@
+---
+import Activity from "~/components/Activity.astro";
+import Ask from "~/components/Ask.astro";
+import ChapterOcr from "~/components/ChapterOcr.astro";
+import ChapterRag from "~/components/ChapterRag.astro";
+import Contact from "~/components/Contact.astro";
+import Craftland from "~/components/Craftland.astro";
+import DevPanel from "~/components/DevPanel.astro";
+import Hero from "~/components/Hero.astro";
+import HowItWorks from "~/components/HowItWorks.astro";
+import SideProjects from "~/components/SideProjects.astro";
+import Timeline from "~/components/Timeline.astro";
+import WorkIntro from "~/components/WorkIntro.astro";
+import Base from "~/layouts/Base.astro";
+import { getGithubSummary, getMostRead, getViewCounts } from "~/lib/data";
+import { USE_MOCKS } from "~/lib/flags";
+import { getWork, pick } from "~/lib/work";
+
+const work = await getWork();
+const views = getViewCounts();
+---
+
+<Base base="">
+  <Hero />
+  <section id="work" aria-labelledby="work-h">
+    <WorkIntro mostRead={getMostRead(work)} />
+    <ChapterOcr entry={pick(work, "document-ocr")} views={views["document-ocr"]} />
+    <ChapterRag entry={pick(work, "legal-rag")} views={views["legal-rag"]} />
+    <Craftland entry={pick(work, "craftland")} views={views.craftland} />
+    <SideProjects
+      openportfo={pick(work, "openportfo")}
+      mirror={pick(work, "mirror-now")}
+      poet={pick(work, "poet")}
+      views={views}
+    />
+  </section>
+  <Timeline />
+  <Ask />
+  <Activity github={getGithubSummary()} />
+  <HowItWorks />
+  <Contact />
+  {USE_MOCKS && <DevPanel slot="after" />}
+</Base>
+
+<script>
+  import "~/scripts/home";
+</script>

@@ -1,0 +1,208 @@
+---
+/** OpenPortfo + Mirror Now + Poet. */
+import type { CollectionEntry } from "astro:content";
+import Icon from "./Icon.astro";
+import { candleSeries, pctChange } from "~/lib/candles";
+
+interface Props {
+  openportfo: CollectionEntry<"work">;
+  mirror: CollectionEntry<"work">;
+  poet: CollectionEntry<"work">;
+  views: Record<string, number | undefined>;
+}
+const { openportfo, mirror, poet, views } = Astro.props;
+
+// Static SVG of the same sample series the canvas animates (shown without JS).
+const series = candleSeries().initial.slice(-56);
+const VW = 640;
+const VH = 260;
+const pad = 14;
+const right = 64;
+const hi = Math.max(...series.map((k) => k.h));
+const lo = Math.min(...series.map((k) => k.l));
+const y = (p: number) => pad + ((hi - p) / (hi - lo)) * (VH - pad * 2);
+const cw = (VW - right - pad) / series.length;
+const candles = series.map((k, i) => {
+  const x = pad + i * cw + cw / 2;
+  const up = k.c >= k.o;
+  const top = y(Math.max(k.o, k.c));
+  const bh = Math.max(1.5, Math.abs(y(k.o) - y(k.c)));
+  const bw = Math.max(3, cw * 0.56);
+  return { x, up, top, bh, bw, hy: y(k.h), ly: y(k.l) };
+});
+const grid = [0, 1, 2, 3, 4].map((g) => ({
+  y: Math.round(pad + (g * (VH - pad * 2)) / 4) + 0.5,
+  label: (hi - (g * (hi - lo)) / 4).toFixed(1),
+}));
+const last = series[series.length - 1]?.c ?? 0;
+const lastY = Math.round(y(last)) + 0.5;
+const change = pctChange(series);
+const r1 = (n: number) => Math.round(n * 10) / 10;
+---
+
+<section class="sec chapter" aria-label="Projects of my own">
+  <div class="wrap">
+    <div class="duo">
+      <article
+        class="proj"
+        id={openportfo.data.anchor}
+        aria-labelledby="op-h"
+        data-views={views[openportfo.id]}
+        data-title={openportfo.data.title}
+      >
+        <h3 id="op-h">{openportfo.data.title}</h3>
+        <p>{openportfo.data.summary}</p>
+        <!-- TODO(content): OpenPortfo live URL, repo, metric. -->
+        <div class="chart">
+          <div class="chart-top">
+            <span>
+              portfolio value · sample data
+              <sup class="fn" aria-hidden="true">
+                †
+              </sup>
+            </span>
+            <b data-chg>{change}</b>
+          </div>
+          <canvas
+            data-candles
+            role="img"
+            aria-label="Sample candlestick chart of a mixed portfolio, updating live."
+          ></canvas>
+          <svg
+            class="chart-static"
+            viewBox={`0 0 ${VW} ${VH}`}
+            role="img"
+            aria-label="Sample candlestick chart of a mixed portfolio."
+          >
+            {grid.map((g) => (
+              <>
+                <path d={`M${pad} ${g.y}H${VW - right}`} stroke="#262624" />
+                <text
+                  x={VW - right + 10}
+                  y={g.y + 4}
+                  fill="#8c8c85"
+                  font-size="11"
+                  font-family="JetBrains Mono Variable, monospace"
+                >
+                  {g.label}
+                </text>
+              </>
+            ))}
+            {candles.map((c) => (
+              <g stroke={c.up ? "#d4f56b" : "#8c8c85"}>
+                <path d={`M${r1(c.x)} ${r1(c.hy)}V${r1(c.ly)}`} />
+                <rect
+                  x={r1(c.x - c.bw / 2)}
+                  y={r1(c.top)}
+                  width={r1(c.bw)}
+                  height={r1(c.bh)}
+                  fill={c.up ? "#d4f56b" : "#1b1b1a"}
+                />
+              </g>
+            ))}
+            <path
+              d={`M${pad} ${lastY}H${VW - right}`}
+              stroke="rgba(212,245,107,.6)"
+              stroke-dasharray="3 4"
+            ></path>
+          </svg>
+          <div class="hold" aria-label="Sample holdings">
+            <div>
+              <b>BTC</b>crypto
+            </div>
+            <div>
+              <b>ETH</b>crypto
+            </div>
+            <div>
+              <b>FPT</b>HOSE
+            </div>
+            <div>
+              <b>VNM</b>HOSE
+            </div>
+          </div>
+        </div>
+        <a class="link cs-link" href={`/work/${openportfo.id}`}>
+          Read about OpenPortfo
+          <Icon name="arrow" />
+        </a>
+      </article>
+      <article
+        class="proj mirror"
+        id={mirror.data.anchor}
+        aria-labelledby="mn-h"
+        data-views={views[mirror.id]}
+        data-title={mirror.data.title}
+      >
+        <h3 id="mn-h">{mirror.data.title}</h3>
+        <p>{mirror.data.summary}</p>
+        <!-- TODO(content): Mirror Now live URL, metric. -->
+        <div class="store" data-store>
+          <svg
+            viewBox="0 0 420 330"
+            role="img"
+            aria-label="A storefront layout that turns into the outline of a reusable template."
+          >
+            <g class="real" data-real>
+              <rect
+                x="0"
+                y="0"
+                width="420"
+                height="330"
+                rx="4"
+                fill="#1b1b1a"
+                stroke="#30302d"
+              ></rect>
+              <rect class="txt" x="20" y="18" width="70" height="10" rx="2"></rect>
+              <rect class="txt" x="280" y="18" width="40" height="8" rx="2"></rect>
+              <rect class="txt" x="330" y="18" width="40" height="8" rx="2"></rect>
+              <rect class="accent" x="380" y="14" width="22" height="16" rx="3"></rect>
+              <rect class="pimg" x="20" y="46" width="380" height="96" rx="3"></rect>
+              <rect x="40" y="76" width="150" height="14" rx="2" fill="#f1f1ec"></rect>
+              <rect class="txt" x="40" y="98" width="110" height="8" rx="2"></rect>
+              <rect class="accent" x="40" y="114" width="64" height="16" rx="3"></rect>
+              <rect class="pimg" x="20" y="160" width="116" height="100" rx="3"></rect>
+              <rect class="pimg" x="152" y="160" width="116" height="100" rx="3"></rect>
+              <rect class="pimg" x="284" y="160" width="116" height="100" rx="3"></rect>
+              <rect class="txt" x="20" y="270" width="80" height="8" rx="2"></rect>
+              <rect class="txt" x="152" y="270" width="70" height="8" rx="2"></rect>
+              <rect class="txt" x="284" y="270" width="90" height="8" rx="2"></rect>
+              <rect class="accent" x="20" y="286" width="34" height="8" rx="2"></rect>
+              <rect class="accent" x="152" y="286" width="34" height="8" rx="2"></rect>
+              <rect class="accent" x="284" y="286" width="34" height="8" rx="2"></rect>
+            </g>
+            <g class="tmpl" data-tmpl>
+              <rect x="14" y="10" width="392" height="26"></rect>
+              <text x="18" y="50">
+                &lt;Header/&gt;
+              </text>
+              <rect x="20" y="58" width="380" height="84"></rect>
+              <text x="26" y="154">
+                &lt;Hero/&gt;
+              </text>
+              <rect x="20" y="160" width="116" height="140"></rect>
+              <rect x="152" y="160" width="116" height="140"></rect>
+              <rect x="284" y="160" width="116" height="140"></rect>
+              <text x="20" y="318">
+                &lt;ProductCard/&gt; × n
+              </text>
+            </g>
+          </svg>
+        </div>
+        <a class="link cs-link" href={`/work/${mirror.id}`}>
+          Read about Mirror Now
+          <Icon name="arrow" />
+        </a>
+      </article>
+    </div>
+    <div
+      class="poet"
+      id={poet.data.anchor}
+      data-views={views[poet.id]}
+      data-title={poet.data.title}
+    >
+      <h3>{poet.data.title}</h3>
+      <p>{poet.data.summary}</p>
+      <!-- TODO(content): Poet details + URL. -->
+    </div>
+  </div>
+</section>

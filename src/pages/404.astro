@@ -1,0 +1,43 @@
+---
+import Icon from "~/components/Icon.astro";
+import Base from "~/layouts/Base.astro";
+import { site } from "~/lib/site";
+
+const json = `{
+  "status": 404,
+  "fields_found": 0,
+  "next": ["/", "/#work", "mailto:${site.email}"]
+}`;
+---
+
+<Base title={`Page not found · ${site.name}`} noindex>
+  <section class="nf" aria-labelledby="nf-h">
+    <div class="wrap">
+      <div class="sheet">
+        <p class="meta-line">
+          <span>404</span>
+          <span>no fields detected</span>
+        </p>
+        <h1 id="nf-h">
+          <span class="det">
+            Nothing to parse here.
+            <span class="box" aria-hidden="true">
+              <span class="tag">not found</span>
+            </span>
+          </span>
+        </h1>
+        <p>This page doesn't exist, or it moved. The work is all on the home page.</p>
+        <div class="ctas">
+          <a class="btn btn-lime" href="/">
+            Go home
+            <Icon name="arrow" />
+          </a>
+          <a class="btn btn-line" href="/#work">
+            See the work
+          </a>
+        </div>
+        <pre class="json" aria-hidden="true">{json}</pre>
+      </div>
+    </div>
+  </section>
+</Base>

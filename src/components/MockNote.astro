@@ -1,0 +1,14 @@
+---
+/** Visible "sample data" label for backend features rendered from src/lib/mocks. */
+interface Props {
+  text?: string;
+}
+const { text = "Sample data until the live feed is connected." } = Astro.props;
+---
+
+<p class="mock-note" data-mock-note>
+  <sup class="fn" aria-hidden="true">
+    †
+  </sup>
+  {text}
+</p>

@@ -1,0 +1,71 @@
+---
+import "@fontsource-variable/hubot-sans/wdth.css";
+import "@fontsource-variable/familjen-grotesk";
+import "@fontsource-variable/jetbrains-mono";
+import "~/styles/global.css";
+import hubotLatin from "@fontsource-variable/hubot-sans/files/hubot-sans-latin-wdth-normal.woff2?url";
+import familjenLatin from "@fontsource-variable/familjen-grotesk/files/familjen-grotesk-latin-wght-normal.woff2?url";
+import Footer from "~/components/Footer.astro";
+import Icons from "~/components/Icons.astro";
+import Nav from "~/components/Nav.astro";
+import { site } from "~/lib/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** "" on the home page (in-page anchors), "/" elsewhere. */
+  base?: "" | "/";
+  noindex?: boolean;
+}
+const {
+  title = site.title,
+  description = site.description,
+  base = "/",
+  noindex = false,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#141414" />
+    <link rel="preload" href={hubotLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={familjenLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+    <!-- JS-on pre-hide for the hero intro, with a 2.5s failsafe (see .js rules in global.css). -->
+    <script is:inline>
+      document.documentElement.classList.add("js");
+      setTimeout(function () {
+        if (!window.__hero && document.querySelector(".hero"))
+          document.documentElement.classList.remove("js");
+      }, 2500);
+    </script>
+  </head>
+  <body>
+    <Icons />
+    <a class="skip" href="#main">
+      Skip to content
+    </a>
+    <Nav base={base} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer base={base} />
+    <slot name="after" />
+  </body>
+</html>

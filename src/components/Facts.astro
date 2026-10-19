@@ -1,0 +1,26 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  facts: CollectionEntry<"work">["data"]["facts"];
+}
+const { facts } = Astro.props;
+---
+
+<div class="facts">
+  {facts.map((f) => (
+    <div>
+      <b class="num">
+        <span
+          data-count={f.count}
+          data-decimals={f.decimals}
+          data-prefix={f.prefix}
+          data-suffix={f.suffix}
+        >
+          {f.value}
+        </span>
+      </b>
+      <span>{f.label}</span>
+    </div>
+  ))}
+</div>

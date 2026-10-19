@@ -1,0 +1,56 @@
+---
+import type { ViewCount } from "~/lib/types";
+import MockNote from "./MockNote.astro";
+
+interface Props {
+  /** null when the analytics feed isn't available (mocks off, no API yet). */
+  mostRead: ViewCount[] | null;
+}
+const { mostRead } = Astro.props;
+const fmt = (n: number) => n.toLocaleString("en-US");
+---
+
+<div class="wrap">
+  <div class="work-intro">
+    <div>
+      <h2 id="work-h" data-split>
+        Work
+      </h2>
+      <p>
+        Two production AI systems at Talentnet, game modes at Garena scale, and three projects of my
+        own.
+      </p>
+    </div>
+    <div class="most">
+      <h3>
+        <span>Most read this week</span>
+        {mostRead && (
+          <span>
+            <sup class="fn" aria-hidden="true">
+              †
+            </sup>
+            <span class="sr-only">sample data</span>
+          </span>
+        )}
+      </h3>
+      {mostRead ? (
+        <>
+          <ol data-most data-max="4">
+            {mostRead.slice(0, 4).map((it, i) => (
+              <li>
+                <a href={it.href}>
+                  <span class="i">{String(i + 1).padStart(2, "0")}</span>
+                  <b>{it.title}</b>
+                  <span class="n">{fmt(it.views)} views</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+          <MockNote text="Sample view counts until analytics is connected." />
+        </>
+      ) : (
+        <p class="empty">View counts appear here once analytics is connected.</p>
+      )}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+---
+import { todos } from "~/lib/site";
+---
+
+<aside class="dev" id="dev" hidden aria-labelledby="dev-h">
+  <h2 id="dev-h">Dev notes (open with ?dev)</h2>
+  <ul>
+    {todos.map((t) => (
+      <li>{t}</li>
+    ))}
+  </ul>
+  <button type="button" data-dev-close>
+    Close
+  </button>
+</aside>

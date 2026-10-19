@@ -1,0 +1,83 @@
+---
+/** Free Fire Craftland: 14 isometric tiles, two featured. */
+import type { CollectionEntry } from "astro:content";
+import Facts from "./Facts.astro";
+import Icon from "./Icon.astro";
+import { buildIsland } from "~/lib/island";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  views?: number | undefined;
+}
+const { entry, views } = Astro.props;
+const d = entry.data;
+// The first fact ("14 game modes") is the oversized lime number; the rest sit under the copy.
+const [big, ...facts] = d.facts;
+const island = buildIsland();
+---
+
+<article
+  class="sec chapter"
+  id={d.anchor}
+  aria-labelledby="craft-h"
+  data-views={views}
+  data-title={d.title}
+>
+  <div class="wrap craft">
+    <div>
+      {big && (
+        <p class="big num" aria-hidden="true" data-count={big.count}>
+          {big.value}
+        </p>
+      )}
+      <h2 id="craft-h" data-split>
+        {d.headline}
+      </h2>
+      <p class="meta-line">
+        {d.meta.map((m) => (
+          <span>{m}</span>
+        ))}
+      </p>
+      <p style="margin-top:var(--s5);color:var(--ink-2)">{d.summary}</p>
+      <Facts facts={facts} />
+      <a class="link cs-link" href={`/work/${entry.id}`}>
+        Read the case study
+        <Icon name="arrow" />
+      </a>
+    </div>
+    <figure>
+      <svg
+        class="island"
+        viewBox={island.viewBox}
+        role="img"
+        aria-label="Fourteen game-mode tiles on an isometric island; two lime tiles are marked featured."
+        data-island
+      >
+        {island.tiles.map((t) => (
+          <g class:list={["tile", { feat: t.featured }]}>
+            <g class="lift">
+              <g class="drop">
+                <polygon class="side-l" points={t.left} />
+                <polygon class="side-r" points={t.right} />
+                <polygon class="top" points={t.top} />
+                <g
+                  class="glyph"
+                  transform={`translate(${t.x} ${t.y}) scale(1 .5) rotate(45)`}
+                  set:html={t.glyph}
+                />
+                {t.featured && (
+                  <g class="flagg">
+                    <path class="flag" d={`M${t.x} ${t.y - 4} V${t.y - 64} l22 8 -22 8`} />
+                    <text class="flagtxt" x={t.x + 28} y={t.y - 52}>
+                      featured
+                    </text>
+                  </g>
+                )}
+              </g>
+            </g>
+          </g>
+        ))}
+      </svg>
+    </figure>
+  </div>
+</article>

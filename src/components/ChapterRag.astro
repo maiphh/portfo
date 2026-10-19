@@ -1,0 +1,120 @@
+---
+/** Chapter 2: Legal RAG. Pinned and scroll-scrubbed on desktop. */
+import type { CollectionEntry } from "astro:content";
+import Icon from "./Icon.astro";
+import Steps from "./Steps.astro";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  views?: number | undefined;
+}
+const { entry, views } = Astro.props;
+const d = entry.data;
+---
+
+<article
+  class="chapter"
+  id={d.anchor}
+  aria-labelledby="rag-h"
+  data-chapter="rag"
+  data-views={views}
+  data-title={d.title}
+>
+  <div class="wrap ch-grid">
+    <div class="ch-text">
+      <h2 id="rag-h">{d.headline}</h2>
+      <p class="meta-line">
+        {d.meta.map((m) => (
+          <span>{m}</span>
+        ))}
+      </p>
+      <Steps steps={d.steps} />
+      {d.note && <p class="note">{d.note}</p>}
+      <a class="link cs-link" href={`/work/${entry.id}`}>
+        Read the case study
+        <Icon name="arrow" />
+      </a>
+    </div>
+    <div
+      class="stage"
+      data-rag-stage
+      role="img"
+      aria-label="Illustration: a legal document tree from decree to Điều 12, Khoản 2, Điểm b. A plain chunk loses its source; a tagged chunk keeps the path; the answer cites Điều 12, Khoản 2, Điểm b."
+    >
+      <div class="rag" aria-hidden="true">
+        <div class="tree">
+          <svg viewBox="0 0 300 320" preserveAspectRatio="xMidYMid meet">
+            <path class="edge" d="M150 46 V70 H232 V96"></path>
+            <path class="edge" d="M84 132 V152 H40 V178"></path>
+            <path class="edge" d="M128 214 V236 H92 V262"></path>
+            <path class="edge hot" d="M150 46 V70 H84 V96"></path>
+            <path class="edge hot" d="M84 132 V152 H128 V178"></path>
+            <path class="edge hot" d="M128 214 V236 H200 V262"></path>
+            <g class="nd hot">
+              <rect x="85" y="10" width="130" height="36" rx="3"></rect>
+              <text x="150" y="33" text-anchor="middle">
+                Sample decree
+              </text>
+            </g>
+            <g class="nd hot">
+              <rect x="36" y="96" width="96" height="36" rx="3"></rect>
+              <text x="84" y="119" text-anchor="middle">
+                Điều 12
+              </text>
+            </g>
+            <g class="nd">
+              <rect x="184" y="96" width="96" height="36" rx="3"></rect>
+              <text x="232" y="119" text-anchor="middle">
+                Điều 13
+              </text>
+            </g>
+            <g class="nd">
+              <rect x="4" y="178" width="72" height="36" rx="3"></rect>
+              <text x="40" y="201" text-anchor="middle">
+                Khoản 1
+              </text>
+            </g>
+            <g class="nd hot">
+              <rect x="92" y="178" width="72" height="36" rx="3"></rect>
+              <text x="128" y="201" text-anchor="middle">
+                Khoản 2
+              </text>
+            </g>
+            <g class="nd">
+              <rect x="58" y="262" width="68" height="36" rx="3"></rect>
+              <text x="92" y="285" text-anchor="middle">
+                Điểm a
+              </text>
+            </g>
+            <g class="nd hot">
+              <rect x="166" y="262" width="68" height="36" rx="3"></rect>
+              <text x="200" y="285" text-anchor="middle">
+                Điểm b
+              </text>
+            </g>
+          </svg>
+        </div>
+        <div class="chunks">
+          <div class="chunk cut" data-c="cut">
+            <span class="lost">source: ?</span>
+            <br />
+            <span lang="vi">…b) nội dung mẫu về tiền lương làm thêm giờ…</span>
+          </div>
+          <div class="chunk" data-c="tag">
+            <span class="ctag">Điều 12 › Khoản 2 › Điểm b</span>
+            <br />
+            <span lang="vi">b) Nội dung mẫu về tiền lương làm thêm giờ…</span>
+          </div>
+          <div class="answer" data-c="ans">
+            How is overtime pay worked out?
+            <br />
+            <span style="color:var(--ink-2)">The rule is in this point of the decree.</span>
+            <br />
+            <span class="cite">Điều 12 · Khoản 2 · Điểm b</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- TODO(content): outcome metric for Legal RAG. -->
+</article>

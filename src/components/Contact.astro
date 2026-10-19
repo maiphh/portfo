@@ -1,0 +1,147 @@
+---
+/** Contact band: words snap into boxes; the form shows the job moving through the queue. */
+import { USE_MOCKS } from "~/lib/flags";
+import { site } from "~/lib/site";
+import Icon from "./Icon.astro";
+
+const steps = [
+  { id: "queued", label: "Queued" },
+  { id: "claimed", label: "Picked up" },
+  { id: "sorted", label: "Sorted" },
+  { id: "sent", label: "Sent to Phu" },
+];
+---
+
+<section class="sec" id="contact" aria-labelledby="ct-h" style="padding-top:var(--s6)">
+  <div class="wrap">
+    <div class="band" data-band>
+      <div class="intro">
+        <h2 class="words" id="ct-h" data-words>
+          <span>Hiring</span>
+          <span>for</span>
+          <span>AI?</span>
+          <span>Let's</span>
+          <span>talk.</span>
+        </h2>
+        <p>Tell me about the role or the project. I read every message myself.</p>
+        <!-- TODO(content): reply-time promise, LinkedIn, résumé PDF. -->
+        <div class="direct">
+          <a class="btn btn-ink" href={`mailto:${site.email}`}>
+            <Icon name="mail" />
+            {site.email}
+          </a>
+          <a class="btn btn-dark-line" href={site.github}>
+            GitHub
+            <Icon name="out" />
+          </a>
+        </div>
+      </div>
+      <form
+        class="form"
+        id="contact-form"
+        novalidate
+        aria-labelledby="form-h"
+        data-mock={USE_MOCKS ? "true" : "false"}
+      >
+        <h3 id="form-h">Send a message</h3>
+        <noscript>
+          <p class="q-status">
+            The form needs JavaScript. You can always email me at{" "}
+            <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </p>
+        </noscript>
+        <div class="two">
+          <div class="fld">
+            <label for="f-name">Your name</label>
+            <input
+              id="f-name"
+              name="name"
+              autocomplete="name"
+              required
+              aria-describedby="f-name-e"
+            />
+            <p class="err" id="f-name-e"></p>
+          </div>
+          <div class="fld">
+            <label for="f-email">Email</label>
+            <input
+              id="f-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+              aria-describedby="f-email-e"
+            />
+            <p class="err" id="f-email-e"></p>
+          </div>
+        </div>
+        <fieldset class="fld">
+          <legend>
+            You're writing as <span class="opt">(optional)</span>
+          </legend>
+          <div class="roles-pick">
+            <label>
+              <input type="radio" name="role" value="recruiter" />
+              Recruiter
+            </label>
+            <label>
+              <input type="radio" name="role" value="client" />
+              Client
+            </label>
+            <label>
+              <input type="radio" name="role" value="other" />
+              Something else
+            </label>
+          </div>
+        </fieldset>
+        <div class="fld">
+          <label for="f-msg">Message</label>
+          <textarea
+            id="f-msg"
+            name="message"
+            required
+            maxlength="2000"
+            aria-describedby="f-msg-e"
+          ></textarea>
+          <p class="err" id="f-msg-e"></p>
+        </div>
+        <!-- TODO(build): Cloudflare Turnstile widget goes here (PUBLIC_TURNSTILE_SITE_KEY). -->
+        <div class="send-row">
+          <button class="btn btn-lime" type="submit">
+            Send message
+            <Icon name="arrow" />
+          </button>
+          <small>
+            Up to 3 messages a day. You'll see it move through the queue below.
+            {USE_MOCKS && (
+              <>
+                <sup class="fn" aria-hidden="true">
+                  †
+                </sup>
+                <span class="sr-only"> (sample: nothing is sent yet)</span>
+              </>
+            )}
+          </small>
+        </div>
+        <ol class="queue" aria-label="Message status">
+          <span class="track" aria-hidden="true"></span>
+          <span class="pkt" aria-hidden="true" data-pkt></span>
+          {steps.map((s) => (
+            <li class="qs" data-step={s.id}>
+              <span class="ring">
+                <Icon name="check" />
+              </span>
+              <b>{s.label}</b>
+              <small>waiting</small>
+            </li>
+          ))}
+        </ol>
+        <p class="q-status" id="q-status" role="status" aria-live="polite">
+          {USE_MOCKS
+            ? "Nothing sent yet. This is a sample queue: messages aren't delivered."
+            : "Nothing sent yet."}
+        </p>
+      </form>
+    </div>
+  </div>
+</section>

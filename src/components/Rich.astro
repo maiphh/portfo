@@ -1,0 +1,19 @@
+---
+/** Renders a content string, turning [[term]] into a Vietnamese legal-term span. */
+import { parseRich } from "~/lib/rich";
+
+interface Props {
+  text: string;
+}
+const parts = parseRich(Astro.props.text);
+---
+
+{parts.map((p) =>
+  p.vi ? (
+    <span class="vi" lang="vi">
+      {p.text}
+    </span>
+  ) : (
+    p.text
+  ),
+)}

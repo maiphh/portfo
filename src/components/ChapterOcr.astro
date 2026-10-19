@@ -1,0 +1,120 @@
+---
+/** Chapter 1: Document OCR. Pinned and scroll-scrubbed on desktop. */
+import type { CollectionEntry } from "astro:content";
+import Facts from "./Facts.astro";
+import Icon from "./Icon.astro";
+import Steps from "./Steps.astro";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  views?: number | undefined;
+}
+const { entry, views } = Astro.props;
+const d = entry.data;
+---
+
+<article
+  class="chapter"
+  id={d.anchor}
+  aria-labelledby="ocr-h"
+  data-chapter="ocr"
+  data-views={views}
+  data-title={d.title}
+>
+  <div class="wrap ch-grid">
+    <div class="ch-text">
+      <h2 id="ocr-h">{d.headline}</h2>
+      <p class="meta-line">
+        {d.meta.map((m) => (
+          <span>{m}</span>
+        ))}
+      </p>
+      <Steps steps={d.steps} />
+      <Facts facts={d.facts} />
+      {d.note && <p class="note">{d.note}</p>}
+      <a class="link cs-link" href={`/work/${entry.id}`}>
+        Read the case study
+        <Icon name="arrow" />
+      </a>
+    </div>
+    <div
+      class="stage"
+      data-ocr-stage
+      role="img"
+      aria-label="Illustration: a sample invoice is scanned, four fields are boxed, a rule checks the total, and the fields appear as structured data."
+    >
+      <div class="paper" aria-hidden="true">
+        <div class="ph">
+          <div class="logo"></div>
+          <div style="text-align:right">
+            <b>INVOICE</b>
+            <br />
+            <small>Sample Co. Ltd</small>
+          </div>
+        </div>
+        <div class="pf">
+          <span data-p="supplier">
+            <small>Supplier</small>
+            <br />
+            Sample Co. Ltd<span class="pbox" data-l="supplier"></span>
+          </span>
+        </div>
+        <div class="pf">
+          <span data-p="invoice_no">
+            <small>Invoice no.</small>
+            <br />
+            INV-0042<span class="pbox" data-l="invoice_no"></span>
+          </span>
+          <span data-p="date" style="text-align:right">
+            <small>Date</small>
+            <br />
+            02/10/2026<span class="pbox" data-l="date"></span>
+          </span>
+        </div>
+        <div class="lines">
+          <div class="ln" style="width:92%"></div>
+          <div class="ln" style="width:78%"></div>
+          <div class="ln" style="width:85%"></div>
+          <div class="ln" style="width:60%"></div>
+        </div>
+        <div class="tot">
+          <span>Total</span>
+          <span data-p="total">
+            12,450,000 VND<span class="pbox" data-l="total"></span>
+          </span>
+        </div>
+      </div>
+      <div class="ocr-scan" aria-hidden="true"></div>
+      <div class="out" aria-hidden="true">
+        <div class="field" data-o="supplier">
+          <i>supplier</i>
+          <b>"Sample Co. Ltd"</b>
+        </div>
+        <div class="field" data-o="invoice_no">
+          <i>invoice_no</i>
+          <b>"INV-0042"</b>
+        </div>
+        <div class="field" data-o="date">
+          <i>date</i>
+          <b>"2026-10-02"</b>
+        </div>
+        <div class="field" data-o="total">
+          <i>total_vnd</i>
+          <b>12450000</b>
+        </div>
+      </div>
+      <div class="rule" aria-hidden="true">
+        <Icon name="check" />
+        <span>
+          rule: total = sum(line_items)
+          <br />
+          passed
+        </span>
+      </div>
+      <p class="stage-cap" aria-hidden="true">
+        sample document
+      </p>
+      <svg class="ocr-leaders" aria-hidden="true" data-ocr-leaders></svg>
+    </div>
+  </div>
+</article>

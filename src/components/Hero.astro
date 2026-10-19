@@ -1,0 +1,130 @@
+---
+/** Hero: Phu's CV page, parsed live into extract.json. Facts only from the brief. */
+import Icon from "./Icon.astro";
+import { USE_MOCKS } from "~/lib/flags";
+import { site } from "~/lib/site";
+
+type Val = string | string[];
+const record: [string, Val][] = [
+  ["name", site.name],
+  ["headline", "ships production AI"],
+  ["role", "AI Engineer Specialist"],
+  ["employer", "Talentnet"],
+  ["previously", "Garena Free Fire"],
+  ["based_in", site.city],
+  ["ships", ["document OCR", "legal RAG", "game modes"]],
+];
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+const str = (s: string) => `<span class="s">"${esc(s)}"</span>`;
+const line = (inner: string) => `<span class="jl">${inner}</span>`;
+const p = (s: string) => `<span class="p">${s}</span>`;
+const jsonHtml = [
+  line(p("{")),
+  ...record.map(([k, v], i) => {
+    const comma = i < record.length - 1 ? p(",") : "";
+    const val = Array.isArray(v) ? `${p("[")}${v.map(str).join(`${p(",")} `)}${p("]")}` : str(v);
+    return line(
+      `  <span class="k">"${k}"</span>${p(":")}${Array.isArray(v) ? " " : " "}${val}${comma}`,
+    );
+  }),
+  line(p("}")),
+].join("");
+---
+
+<section class="hero" id="top" aria-labelledby="h1">
+  <div class="wrap">
+    <div class="sheet" data-sheet>
+      <div class="sheet-head" data-h>
+        <span>mai-gia-phu-cv.pdf</span>
+        {USE_MOCKS && <span>† marks sample data</span>}
+      </div>
+      <div class="hero-grid">
+        <div class="doc" data-doc>
+          <h1 id="h1" data-h>
+            <span class="det" data-field="headline">
+              <span data-hl>I ship production AI tools and things people actually use.</span>
+              <span class="box" aria-hidden="true">
+                <span class="tag">headline</span>
+              </span>
+            </span>
+          </h1>
+          <p class="lede" data-h>
+            I'm an AI engineer in Ho Chi Minh City. At Talentnet I build document OCR and legal RAG
+            that run in production. Before that, I shipped 14 game modes to Free Fire players.
+          </p>
+          <div class="ctas" data-h>
+            <a class="btn btn-lime" href={`mailto:${site.email}`} data-magnet>
+              <Icon name="mail" />
+              Email me
+            </a>
+            <a class="btn btn-line" href="#work" data-magnet>
+              See the work
+              <Icon name="arrow" />
+            </a>
+          </div>
+          <p class="name" data-h>
+            <span class="det" data-field="name">
+              {site.name}
+              <span class="box" aria-hidden="true">
+                <span class="tag">name</span>
+              </span>
+            </span>
+          </p>
+          <ul class="roles">
+            <li data-h>
+              <span>
+                <b>AI Engineer Specialist</b> <span>at</span>
+                <span class="det" data-field="employer">
+                  <b>Talentnet</b>
+                  <span class="box" aria-hidden="true">
+                    <span class="tag">employer</span>
+                  </span>
+                </span>
+              </span>
+              <span class="when">Sep 2025 – now</span>
+            </li>
+            <li data-h>
+              <span>
+                <b>Game Developer</b> <span>at</span>
+                <span class="det" data-field="previously">
+                  <b>Garena Free Fire</b>
+                  <span class="box" aria-hidden="true">
+                    <span class="tag">previously</span>
+                  </span>
+                </span>
+              </span>
+              <span class="when">Dec 2023 – Sep 2025</span>
+            </li>
+            <li data-h>
+              <span>
+                <b>Master of AI</b> <span>at</span> <b>RMIT</b> · <span>{site.city}</span>
+              </span>
+              <span class="when">2025 – 2028</span>
+            </li>
+          </ul>
+          <div class="inspector" aria-hidden="true" data-inspector>
+            <i class="c1"></i>
+            <i class="c2"></i>
+            <i class="c3"></i>
+            <i class="c4"></i>
+            <span class="lbl">field</span>
+          </div>
+        </div>
+        <aside class="rail" aria-label="Extracted record" data-h>
+          <div class="rail-head">
+            <span>extract.json</span>
+            <b data-parse-status data-fields={record.length}>
+              parsed · {record.length} fields
+            </b>
+          </div>
+          <pre class="json" data-json set:html={jsonHtml} />
+          <p class="rail-foot">
+            The same idea as my OCR work at Talentnet: find the fields, then hand over clean data.
+          </p>
+        </aside>
+      </div>
+      <div class="scan" aria-hidden="true" data-scan></div>
+      <svg class="leaders" aria-hidden="true" data-leaders></svg>
+    </div>
+  </div>
+</section>

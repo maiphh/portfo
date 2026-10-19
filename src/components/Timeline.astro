@@ -1,0 +1,97 @@
+---
+/** Work and study, 2021 to 2028: a 96-month grid built from the experience collection. */
+import { getCollection } from "astro:content";
+import { TL_MONTHS, TL_YEARS, gridColumn, monthIndex, nowIndex } from "~/lib/timeline";
+
+const entries = (await getCollection("experience")).sort((a, b) => a.data.order - b.data.order);
+const now = new Date();
+const nowIdx = nowIndex(now);
+const byLane = (lane: "work" | "study" | "award") =>
+  entries
+    .filter((e) => e.data.lane === lane)
+    .sort((a, b) => monthIndex(a.data.start) - monthIndex(b.data.start));
+
+/** Bars that run past "now" get the striped future fill after the now line. */
+function barStyle(start: string, end: string | undefined, row: number): string {
+  const parts = [`--c:${gridColumn(start, end, now)}`, `--row:${row}`];
+  if (end && monthIndex(end) + 1 > nowIdx) {
+    const s = monthIndex(start);
+    const span = monthIndex(end) + 1 - s;
+    const pct = Math.max(0, Math.min(100, ((nowIdx - s) / span) * 100)).toFixed(1);
+    parts.push(
+      `background:linear-gradient(90deg,var(--sheet-2) ${pct}%,transparent ${pct}%),repeating-linear-gradient(135deg,var(--sheet-2) 0 8px,var(--sheet) 8px 16px)`,
+    );
+  }
+  return parts.join(";");
+}
+/** Award marks are points; give the label two years of room. */
+const markCol = (start: string) => {
+  const s = monthIndex(start) + 1;
+  return `--c:${s}/${Math.min(TL_MONTHS + 1, s + 23)}`;
+};
+const notes = entries.filter((e) => e.data.note).sort((a, b) => a.data.order - b.data.order);
+const nowP = (nowIdx / TL_MONTHS).toFixed(3);
+---
+
+<section class="sec" id="timeline" aria-labelledby="tl-h">
+  <div class="wrap">
+    <div class="head">
+      <h2 id="tl-h" data-split>
+        Work and study, 2021 to 2028
+      </h2>
+      <p>Two jobs, two degrees, one competition podium.</p>
+    </div>
+    <div class="tl" data-tl>
+      <div class="tl-axis" aria-hidden="true">
+        {TL_YEARS.map((y) => (
+          <span>{y}</span>
+        ))}
+      </div>
+      <div class="lane">
+        <h3>Work</h3>
+        <ol>
+          {byLane("work").map((e) => (
+            <li class="bar work" style={barStyle(e.data.start, e.data.end, e.data.row)}>
+              <b>{e.data.title}</b>
+              <span>{e.data.detail}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="lane">
+        <h3>Study</h3>
+        <ol>
+          {byLane("study").map((e) => (
+            <li class="bar" style={barStyle(e.data.start, e.data.end, e.data.row)}>
+              <b>{e.data.title}</b>
+              <span>{e.data.detail}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="lane">
+        <h3>Awards</h3>
+        <ol>
+          {byLane("award").map((e) => (
+            <li class="mark" style={markCol(e.data.start)}>
+              <span>
+                <b>{e.data.title}</b> · {e.data.detail}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="now" style={`--p:${nowP}`} aria-hidden="true">
+        <span>now</span>
+      </div>
+    </div>
+    <div class="tl-notes">
+      {notes.map((e) => (
+        <p>
+          <b>{e.data.note?.lead}</b> {e.data.note?.text}
+        </p>
+      ))}
+      <!-- TODO(content): confirm BIT institution. -->
+    </div>
+  </div>
+</section>

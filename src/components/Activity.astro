@@ -1,0 +1,115 @@
+---
+/** GitHub activity. Sample data today; synced every 6 hours into Postgres later. */
+import type { GithubSummary } from "~/lib/types";
+import { site } from "~/lib/site";
+import Icon from "./Icon.astro";
+import MockNote from "./MockNote.astro";
+
+interface Props {
+  github: GithubSummary | null;
+}
+const { github } = Astro.props;
+const fmt = (n: number) => n.toLocaleString("en-US");
+const syncLabel = (iso: string) => {
+  const d = new Date(iso);
+  const time = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(d);
+  return `last sync today ${time} (UTC+7)`;
+};
+const icon = { commit: "commit", pr: "pr", star: "star" } as const;
+---
+
+<section class="sec" id="activity" aria-labelledby="gh-h">
+  <div class="wrap">
+    <div class="head" style="margin-bottom:var(--s5)">
+      <h2 id="gh-h" data-split>
+        What I'm building lately
+      </h2>
+    </div>
+    {github ? (
+      <>
+        <p class="gh-line">
+          From <a href={site.github}>github.com/{site.githubHandle}</a>:{" "}
+          <b class="num" data-count={github.publicRepos}>
+            {github.publicRepos}
+          </b>{" "}
+          public repos,{" "}
+          <b class="num">
+            <span data-count={github.commitsLastYear}>{fmt(github.commitsLastYear)}</span> commits
+          </b>{" "}
+          in the last year, and a{" "}
+          <b class="num" data-count={github.streakDays}>
+            {github.streakDays}
+          </b>
+          -day streak.
+          <sup class="fn" aria-hidden="true">
+            †
+          </sup>
+          <span class="sr-only"> (sample numbers)</span>
+        </p>
+        <MockNote text="Sample numbers until the GitHub sync is connected." />
+        <div class="gh-grid">
+          <div>
+            <div
+              class="hm-scroll"
+              data-hm-scroll
+              tabindex="0"
+              role="region"
+              aria-label="Contribution heatmap, scrolls sideways"
+            >
+              <div
+                class="hm"
+                data-heatmap
+                role="img"
+                aria-label="Sample heatmap of daily commits over 52 weeks, busier in recent months"
+              >
+                {github.heatmap.map((lv) => (lv ? <i class={`l${lv}`} /> : <i />))}
+              </div>
+            </div>
+            <div class="hm-foot">
+              <span>
+                Synced every 6 hours · {syncLabel(github.lastSyncedAt)}
+                <sup class="fn" aria-hidden="true">
+                  †
+                </sup>
+              </span>
+              <span class="legend" aria-hidden="true">
+                Less <i style="background:#242422" />
+                <i style="background:#36421c" />
+                <i style="background:#5a7424" />
+                <i style="background:#95bd3a" />
+                <i style="background:#d4f56b" /> More
+              </span>
+            </div>
+          </div>
+          <div>
+            <ul class="feed" aria-label="Recent activity (sample)">
+              {github.feed.map((f) => (
+                <li>
+                  <Icon name={icon[f.kind]} />
+                  <b>{f.text}</b>
+                  <span>{f.when}</span>
+                </li>
+              ))}
+            </ul>
+            <a class="link" href={site.github}>
+              All activity on GitHub
+              <Icon name="out" />
+            </a>
+          </div>
+        </div>
+      </>
+    ) : (
+      <>
+        <p class="gh-line">
+          My public work lives on <a href={site.github}>github.com/{site.githubHandle}</a>.
+        </p>
+        <p class="empty">Recent activity appears here once the GitHub sync is connected.</p>
+      </>
+    )}
+    <!-- TODO(content): GitHub display name shows "Lucas Mai"; confirm which name the site uses. -->
+  </div>
+</section>

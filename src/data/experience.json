@@ -1,0 +1,59 @@
+[
+  {
+    "id": "garena",
+    "lane": "work",
+    "title": "Garena Free Fire",
+    "detail": "Game Developer · Dec 2023 – Sep 2025",
+    "start": "2023-12",
+    "end": "2025-09",
+    "row": 1,
+    "order": 2,
+    "note": {
+      "lead": "At Garena",
+      "text": "I shipped 14 Craftland game modes for Free Fire. Two were officially featured."
+    }
+  },
+  {
+    "id": "talentnet",
+    "lane": "work",
+    "title": "Talentnet",
+    "detail": "AI Engineer Specialist · Sep 2025 – now",
+    "start": "2025-09",
+    "row": 2,
+    "order": 1,
+    "note": {
+      "lead": "At Talentnet",
+      "text": "I built the document OCR pipeline (over 98% accurate, more than 90% of processing time saved) and the legal RAG payroll assistant, both on my own."
+    }
+  },
+  {
+    "id": "bit",
+    "lane": "study",
+    "title": "Bachelor of IT",
+    "detail": "2021 – 2024 · GPA 3.7",
+    "start": "2021-01",
+    "end": "2024-12",
+    "order": 3,
+    "note": {
+      "lead": "In my Bachelor of IT",
+      "text": "I made the Scholar's List (top 5%) and graduated in the top 10, with a 3.7 GPA. IELTS 7.0."
+    }
+  },
+  {
+    "id": "rmit-master",
+    "lane": "study",
+    "title": "Master of AI, RMIT",
+    "detail": "2025 – 2028",
+    "start": "2025-01",
+    "end": "2028-12",
+    "order": 4
+  },
+  {
+    "id": "neo-league",
+    "lane": "award",
+    "title": "Neo League 2025",
+    "detail": "2nd runner-up of ~100 teams",
+    "start": "2025-01",
+    "order": 5
+  }
+]
