@@ -116,7 +116,7 @@ export function initAsk() {
       return;
     }
     const body = $(".a-body", turn);
-    const split = body ? SplitText.create(body, { type: "words", aria: "auto" }) : null;
+    const split = body ? SplitText.create(body, { type: "words", aria: "none" }) : null;
     const tl = gsap.timeline({
       defaults: { ease: "power3.out", duration: 0.4 },
       onUpdate: () => {
