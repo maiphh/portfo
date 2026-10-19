@@ -2661,3 +2661,15 @@ footer {
   border-radius: 4px;
   max-width: 520px;
 }
+
+/* Contact: honeypot (off-screen, never focusable) and the Turnstile widget slot. */
+.form .hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form .turnstile {
+  min-height: 65px;
+}

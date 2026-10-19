@@ -59,6 +59,7 @@ src/
     flags.ts         Feature flags (PUBLIC_USE_MOCKS)
     types.ts         Data contracts the real APIs will return
     mocks/           Typed sample data (views, GitHub, Ask, contact)
+  server/            Server-only code for /api routes (contact pipeline, cron, Turnstile)
     data.ts          Build-time data access: mocks today, APIs later
     ai/provider.ts   LLM + embedding model factory (Gemini default, OpenAI optional)
   pages/
@@ -103,12 +104,12 @@ Talentnet work stays at CV level. Don't add internal code, documents or screensh
 
 ## Sample data and the mock flag
 
-The backend features (Ask, GitHub activity, the contact queue and the most-read list) aren't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
+The contact form is wired to a real backend (see [Contact form](#contact-form)); Ask, GitHub activity and the most-read list aren't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
 
-Set `PUBLIC_USE_MOCKS=false` to see the honest empty states instead ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
+Set `PUBLIC_USE_MOCKS=false` to use the real contact form and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
 
 1. DB foundation (Neon, Drizzle schema, migrations, jobs + rate limits)
-2. Contact form + worker + Resend
+2. Contact form + worker + Resend (done: `/api/contact`)
 3. Analytics beacon + most-viewed
 4. GitHub sync
 5. RAG chat
@@ -119,7 +120,7 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
-`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL` and `PUBLIC_USE_MOCKS`. None are needed for the current build.
+`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form needs `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (it fails closed without them). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the cron needs `CRON_SECRET`.
 
 ## Database
 
@@ -148,6 +149,28 @@ TEST_DATABASE_URL=postgresql://postgres:portfo@localhost:5432/postgres pnpm test
 ```
 
 A local install works too (for example `postgresql-17` plus `postgresql-17-pgvector` from the PGDG apt repo). CI runs the same tests against a `pgvector/pgvector:pg17` service container, so no database secret is needed.
+
+## Contact form
+
+With `PUBLIC_USE_MOCKS=false` the form posts to `POST /api/contact` (an on-demand function). With mocks on, it keeps the labelled sample queue and sends nothing.
+
+1. **Request** (`src/server/contact/submit.ts`): the honeypot field (`website`) gets a fake success and nothing is stored. Next comes zod validation (name, email, message up to 2000 characters, optional role) using the same rules and messages as the inline client errors, then Turnstile verification, then the rate limit: 3 posts per `visitor_hash` per day. `visitor_hash` is SHA-256 of IP + UA + `VISITOR_HASH_SALT` combined with the UTC date. The message and a `classify_and_notify` job are inserted in **one transaction**.
+2. **Kick**: the endpoint starts the worker right away with `waitUntil` from `@vercel/functions`, falling back to fire-and-forget outside Vercel, so the response doesn't wait for the LLM.
+3. **Worker** (`src/server/contact/worker.ts`): claims jobs with `FOR UPDATE SKIP LOCKED` and classifies the message through the AI SDK wrapper (Gemini by default, `AI_PROVIDER=openai` to switch). The output is JSON: `{ category: recruiter | client | other | spam, confidence }`. It stores the result, then emails `NOTIFY_EMAIL` through Resend unless the message is spam. Failures retry with exponential backoff, and after 5 attempts the job and the message are marked `failed`. A retry skips steps that already succeeded, and the Resend idempotency key prevents duplicate emails. Classification and email sit behind the `Classifier` and `Notifier` interfaces, so tests use fakes and make no network calls.
+4. **Sweeper**: `GET /api/cron/jobs` with `Authorization: Bearer $CRON_SECRET` re-queues jobs stuck in `running` for over 10 minutes, then processes pending ones. It returns 503 if `CRON_SECRET` is unset. `vercel.json` schedules it daily at 03:00 UTC. That is only a **fallback**, because each post already kicks the worker and Vercel Hobby cron runs at most daily. A more frequent GitHub Actions schedule can call the same URL.
+
+Turnstile: without `TURNSTILE_SECRET_KEY`, verification is skipped in dev and test, with a log line. In production (`VERCEL_ENV` or `NODE_ENV` = `production`) every post is rejected (fail closed). Preview deployments also run with `NODE_ENV=production`, so give them keys too; Cloudflare's [test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) work there. The widget renders only when `PUBLIC_TURNSTILE_SITE_KEY` is set and mocks are off.
+
+Without JavaScript the form is a plain POST, and `/api/contact` answers with a small accessible result page: sent, field errors, rate limited, or unavailable. With JavaScript it uses `fetch` and shows inline, `aria-describedby`-linked errors and a live status line.
+
+Try it locally (needs a local Postgres, see [Database](#database)):
+
+```sh
+DATABASE_URL=postgresql://... pnpm db:migrate
+PUBLIC_USE_MOCKS=false DATABASE_URL=postgresql://... pnpm dev
+```
+
+Without AI or Resend keys, messages are stored and the job retries with backoff until the keys are set.
 
 ## Deploy on Vercel
 
