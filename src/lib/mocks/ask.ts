@@ -28,7 +28,7 @@ const P = {
   },
   edu: {
     source: "cv · education",
-    html: "Master of AI, RMIT, 2025 – 2028. Bachelor of IT, 2021 – 2024: GPA 3.7, Scholar's List (top 5%), top 10 graduates. IELTS 7.0.",
+    html: "Master of AI, RMIT, 2025 – 2028. Bachelor of IT, RMIT University, 2021 – 2024: GPA 3.7, Scholar's List (top 5%), top 10 graduates. IELTS 7.0.",
   },
   award: { source: "cv · awards", html: "Neo League 2025: 2nd runner-up of about 100 teams." },
   proj: {
@@ -80,7 +80,7 @@ const KB: Rule[] = [
   {
     re: /stud|educat|rmit|degree|gpa|ielts|school|master|universit|bachelor/i,
     passages: [P.edu],
-    html: "He's doing a Master of AI at RMIT (2025 – 2028). His Bachelor of IT (2021 – 2024) ended with a 3.7 GPA, the Scholar's List (top 5%) and a place in the top 10 graduates. IELTS 7.0 [1].",
+    html: "He's doing a Master of AI at RMIT (2025 – 2028). His Bachelor of IT at RMIT University (2021 – 2024) ended with a 3.7 GPA, the Scholar's List (top 5%) and a place in the top 10 graduates. IELTS 7.0 [1].",
     citations: [{ label: "Timeline", href: "#timeline" }],
   },
   {

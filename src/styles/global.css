@@ -2673,3 +2673,13 @@ footer {
 .form .turnstile {
   min-height: 65px;
 }
+
+/* Room for the detection box (inset -10px) so it never overlaps "at" in the roles list. */
+.roles .det {
+  margin-left: 12px;
+}
+@media (max-width: 1023px) {
+  .roles .det {
+    margin-left: 0;
+  }
+}
