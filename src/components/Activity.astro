@@ -1,5 +1,8 @@
 ---
-/** GitHub activity. Sample data today; synced every 6 hours into Postgres later. */
+/**
+ * GitHub activity. Mocks on: labelled sample data. Mocks off: an empty shell that
+ * src/scripts/activity.ts fills from /api/activity (synced every 6 hours).
+ */
 import type { GithubSummary } from "~/lib/types";
 import { site } from "~/lib/site";
 import Icon from "./Icon.astro";
@@ -19,7 +22,7 @@ const syncLabel = (iso: string) => {
   }).format(d);
   return `last sync today ${time} (UTC+7)`;
 };
-const icon = { commit: "commit", pr: "pr", star: "star" } as const;
+const icon = { commit: "commit", pr: "pr", issue: "issue", star: "star" } as const;
 ---
 
 <section class="sec" id="activity" aria-labelledby="gh-h">
@@ -103,12 +106,50 @@ const icon = { commit: "commit", pr: "pr", star: "star" } as const;
         </div>
       </>
     ) : (
-      <>
-        <p class="gh-line">
+      <div data-gh-live data-handle={site.githubHandle}>
+        <p class="gh-line" data-gh-line>
           My public work lives on <a href={site.github}>github.com/{site.githubHandle}</a>.
         </p>
-        <p class="empty">Recent activity appears here once the GitHub sync is connected.</p>
-      </>
+        <div class="gh-grid" data-gh-body hidden>
+          <div>
+            <div
+              class="hm-scroll"
+              data-hm-scroll
+              tabindex="0"
+              role="region"
+              aria-label="Contribution heatmap, scrolls sideways"
+            >
+              <div
+                class="hm"
+                data-gh-heatmap
+                role="img"
+                aria-label="Heatmap of public GitHub activity over the last 52 weeks"
+              />
+            </div>
+            <div class="hm-foot">
+              <span data-gh-sync>Synced every 6 hours</span>
+              <span class="legend" aria-hidden="true">
+                Less <i style="background:#242422" />
+                <i style="background:#36421c" />
+                <i style="background:#5a7424" />
+                <i style="background:#95bd3a" />
+                <i style="background:#d4f56b" /> More
+              </span>
+            </div>
+            <p class="gh-scope">Counts cover public repos, not forks or archived ones.</p>
+          </div>
+          <div>
+            <ul class="feed" data-gh-feed aria-label="Recent public activity" />
+            <a class="link" href={site.github}>
+              All activity on GitHub
+              <Icon name="out" />
+            </a>
+          </div>
+        </div>
+        <p class="empty" data-gh-status role="status">
+          Recent activity loads with JavaScript. It's all on GitHub too.
+        </p>
+      </div>
     )}
     <!-- TODO(content): GitHub display name shows "Lucas Mai"; confirm which name the site uses. -->
   </div>

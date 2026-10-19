@@ -104,14 +104,14 @@ Talentnet work stays at CV level. Don't add internal code, documents or screensh
 
 ## Sample data and the mock flag
 
-The contact form and the most-read list are wired to real backends (see [Contact form](#contact-form) and [Analytics](#analytics)); Ask and GitHub activity aren't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
+The contact form, the most-read list and GitHub activity are wired to real backends (see [Contact form](#contact-form), [Analytics](#analytics) and [GitHub sync](#github-sync)); Ask isn't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
 
-Set `PUBLIC_USE_MOCKS=false` to use the real contact form and live view counts, and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
+Set `PUBLIC_USE_MOCKS=false` to use the real contact form, live view counts and GitHub activity, and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
 
 1. DB foundation (Neon, Drizzle schema, migrations, jobs + rate limits)
 2. Contact form + worker + Resend (done: `/api/contact`)
 3. Analytics beacon + most-viewed (done: `/api/view`, `/api/popular`)
-4. GitHub sync
+4. GitHub sync (done: `/api/cron/github-sync`, `/api/activity`)
 5. RAG chat
 
 Add `?dev` to the URL (with mocks on) to see the open content TODOs.
@@ -120,7 +120,7 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
-`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form and analytics need `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (they fail closed without them; `/api/view` answers 503 without the salt). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the cron needs `CRON_SECRET`.
+`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM`, `GITHUB_LOGIN` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form, analytics and GitHub activity need `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (they fail closed without them; `/api/view` answers 503 without the salt). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the crons need `CRON_SECRET`. The GitHub sync needs `GITHUB_TOKEN`.
 
 ## Database
 
@@ -181,6 +181,30 @@ Cookie-free page views for the "Most read this week" list. Only active with `PUB
 - **Dedupe**: one row per `visitor_hash` + `slug` + day, enforced by the unique index `page_views_visitor_slug_day_key` (migration `0002`) and `ON CONFLICT DO NOTHING`. "Day" is the calendar day in **Asia/Ho_Chi_Minh** (UTC+7, no DST), the site owner's time zone. The salt rotates on the same boundary, so a visitor can't be linked across days.
 - **`GET /api/popular`** (`src/server/analytics/popular.ts`) returns `{ items: ViewCount[], since, days: 7 }`: deduped views per case study over the last 7 days, highest first (ties by slug). `ViewCount` is the same shape the mocks use (`slug`, `title`, `href`, `views`). It sends `Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=30`, so the edge serves it for about 30 s, and it answers 503 with `items: []` when the database is unavailable.
 - **UI**: the home list fetches `/api/popular` and refreshes every 30 s while the tab is visible. With no data it says "Not enough reads yet this week". When the API fails or JavaScript is off it says "View counts appear here once analytics is connected". It never shows sample numbers.
+
+## GitHub sync
+
+With `PUBLIC_USE_MOCKS=false` the Activity section ("What I'm building lately") loads live data from `GET /api/activity`. With mocks on it keeps the labelled † sample.
+
+- **Sync** (`src/server/github/sync.ts`): `GET|POST /api/cron/github-sync` with `Authorization: Bearer $CRON_SECRET`. It answers 401 for a missing or wrong token and 503 when `CRON_SECRET` is unset, in any environment (the same rule as `/api/cron/jobs`).
+  - Each run is logged in `sync_runs` (`kind = 'github'`, `started_at`, `finished_at`, `status`, `error`). A run already in progress blocks a new one (409) for up to 10 minutes.
+  - It reads the user's (`GITHUB_LOGIN`, default `maiphh`) public repos and 53 weeks of contributions through the GitHub GraphQL API, in windows of 91 days or less.
+  - It replaces `github_repos` and `github_activity` in one transaction, so a second run is a no-op and a failed run leaves the previous snapshot in place.
+  - Without `GITHUB_TOKEN` the run is recorded as `failed` and the endpoint answers 503. GitHub errors give `failed` plus 502.
+- **Filter**: only the owner's **public, non-fork, non-archived** repos are stored. Their stars, language, up to 10 topics, `pushed_at` and description are kept, along with daily commit, PR and issue counts in `github_activity`, rolled up per Asia/Ho_Chi_Minh day. Contributions to other people's repos and anything private are dropped, so the counts are lower than GitHub's own profile graph. Nothing from private or work (Talentnet) repos is stored.
+- **Token**: a fine-grained token with read-only access to public repositories (or a classic token with no scopes). It goes in the Vercel env as `GITHUB_TOKEN` and is never committed.
+- **Read API** (`src/server/github/activity.ts`): `GET /api/activity` returns `{ status: "ok", summary: GithubSummary, repos }`, where `summary` has the same shape the sample uses (`src/lib/types.ts`) and `repos` holds the 6 most recently pushed repos.
+  - The heatmap is 52 Sunday-first weeks ending this week, levelled by quartile of the busiest day. The streak counts back from today, or from yesterday when today has nothing yet. The feed is the newest 4 repo-days from the last 14 days.
+  - It returns `{ status: "empty" }` before the first successful sync or when no repos are stored, and 503 with `{ status: "unavailable" }` when the database is down. It sends `Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=60`.
+  - The page shows "No GitHub activity synced yet" or "…once the GitHub sync is connected" instead of numbers. Without JavaScript it links to GitHub and says the activity loads with JavaScript.
+- **Schedule**: `.github/workflows/github-sync.yml` runs every 6 hours (`17 */6 * * *` UTC) and on manual dispatch. Manual runs are dry by default. It needs the Actions secrets `SITE_URL` and `CRON_SECRET`; until both are set, it logs a notice and exits successfully. `vercel.json` also schedules the sync daily at 21:00 UTC (04:00 UTC+7) as a fallback, because Vercel Hobby crons run at most daily and Vercel Cron sends the `CRON_SECRET` bearer itself.
+
+Try it locally (no GitHub call without a token):
+
+```sh
+CRON_SECRET=dev GITHUB_TOKEN=... PUBLIC_USE_MOCKS=false DATABASE_URL=postgresql://... pnpm dev
+curl -X POST -H "Authorization: Bearer dev" http://localhost:4321/api/cron/github-sync
+```
 
 ## Deploy on Vercel
 

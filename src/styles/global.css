@@ -2707,3 +2707,16 @@ footer {
     overflow-x: hidden;
   }
 }
+
+/* GitHub activity, live mode */
+.gh-scope {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.feed .feed-none {
+  display: block;
+}
+.gh-grid[hidden] {
+  display: none;
+}
