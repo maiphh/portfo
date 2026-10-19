@@ -158,7 +158,7 @@ export function initAsk() {
   });
 }
 
-/* ---------- 4. contact form + queue (SAMPLE: nothing is sent) ---------- */
+/* ---------- 4. contact form + queue (SAMPLE with mocks on; POST /api/contact with mocks off) ---------- */
 export function initContact() {
   const cf = $<HTMLFormElement>("#contact-form");
   const status = $("#q-status");
@@ -171,6 +171,8 @@ export function initContact() {
     cf.elements.namedItem(k) as HTMLInputElement | HTMLTextAreaElement;
   const errEl = (f: HTMLElement) =>
     document.getElementById(f.getAttribute("aria-describedby") ?? "");
+  // JS validates inline with readable messages; without JS the browser and server do.
+  cf.noValidate = true;
 
   const validate = () => {
     let first: HTMLElement | null = null;
@@ -195,6 +197,77 @@ export function initContact() {
     });
   }
 
+  const resetSteps = () =>
+    steps.forEach((s) => {
+      s.classList.remove("active", "done");
+      const sm = $("small", s);
+      if (sm) sm.textContent = "waiting";
+    });
+  const showFieldErrors = (errors: Partial<Record<string, string>>) => {
+    let first: HTMLElement | null = null;
+    for (const k of fields) {
+      const f = field(k);
+      const msg = errors[k] ?? "";
+      const e = errEl(f);
+      if (e) e.textContent = msg;
+      f.setAttribute("aria-invalid", msg ? "true" : "false");
+      if (msg && !first) first = f;
+    }
+    return first;
+  };
+
+  /** Real submission: POST /api/contact, then show where the message is. */
+  const sendLive = async () => {
+    if (sendBtn) sendBtn.disabled = true;
+    cf.setAttribute("aria-busy", "true");
+    resetSteps();
+    status.textContent = "Sending…";
+    const fallback = `Please email ${site.email} instead.`;
+    try {
+      const res = await fetch(cf.action, {
+        method: "POST",
+        body: new FormData(cf),
+        headers: { Accept: "application/json" },
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        fieldErrors?: Partial<Record<string, string>>;
+      };
+      if (res.ok) {
+        const queued = steps[0];
+        if (queued) {
+          queued.classList.add("done");
+          const sm = $("small", queued);
+          if (sm) sm.textContent = clock();
+        }
+        const name = field("name").value.trim().split(/\s+/)[0] ?? "";
+        status.textContent = `Sent. Thanks, ${name}: your message is in the queue, and I'll read it myself.`;
+        cf.reset();
+        fields.forEach((k) => field(k).removeAttribute("aria-invalid"));
+        return;
+      }
+      if (res.status === 400 && data.fieldErrors) {
+        const bad = showFieldErrors(data.fieldErrors);
+        status.textContent = "Fix the highlighted fields and send again.";
+        bad?.focus();
+        return;
+      }
+      status.textContent =
+        res.status === 429
+          ? `That's 3 messages today, the daily limit. ${fallback}`
+          : res.status === 403
+            ? "The anti-spam check didn't pass. Please try again."
+            : `Sorry, the message couldn't be sent. ${fallback}`;
+    } catch {
+      status.textContent = `Sorry, the message couldn't be sent (network error). ${fallback}`;
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      cf.removeAttribute("aria-busy");
+      // Turnstile tokens are single-use.
+      (window as { turnstile?: { reset: () => void } }).turnstile?.reset();
+    }
+  };
+
   cf.addEventListener("submit", (e) => {
     e.preventDefault();
     const bad = validate();
@@ -205,7 +278,7 @@ export function initContact() {
       return;
     }
     if (!USE_MOCKS) {
-      status.textContent = `The form isn't connected yet. Please email ${site.email}.`;
+      void sendLive();
       return;
     }
     const name = field("name").value.trim().split(/\s+/)[0] ?? "";
