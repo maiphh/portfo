@@ -10,10 +10,13 @@ import {
   initNowMarker,
 } from "./features";
 import { initMotion } from "./motion";
+import { initActivity } from "./activity";
+import { USE_MOCKS } from "~/lib/flags";
 
 initDevPanel();
 initMostRead();
 initHeatmap();
+if (!USE_MOCKS) void initActivity();
 initNowMarker();
 initAsk();
 initContact();
