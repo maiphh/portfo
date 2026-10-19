@@ -78,6 +78,8 @@ export function initMotion(redrawOcrLeaders: () => void) {
   mm.add(
     {
       desktop: "(min-width: 1024px)",
+      // Pin the OCR/RAG chapters only when the whole chapter fits on screen.
+      pin: "(min-width: 1024px) and (min-height: 900px)",
       mobile: "(max-width: 1023px)",
       reduce: "(prefers-reduced-motion: reduce)",
       hover: "(hover: hover) and (pointer: fine)",
@@ -146,7 +148,8 @@ export function initMotion(redrawOcrLeaders: () => void) {
       const setStatus = (t: string) => () => {
         if (status) status.textContent = t;
       };
-      const hl = SplitText.create("[data-hl]", { type: "lines", mask: "lines", aria: "auto" });
+      // The visible headline is aria-hidden; an .sr-only copy carries the text, so no aria-label on a span.
+      const hl = SplitText.create("[data-hl]", { type: "lines", mask: "lines", aria: "none" });
       const boxes = $$(".doc .box");
       const jl = $$(".json .jl");
       const hero = gsap.timeline({ defaults: { ease: "expo.out", duration: 0.9 } });
@@ -337,7 +340,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
         tl: gsap.core.Timeline,
         follow: (p: number) => void,
       ): ScrollTrigger.StaticVars =>
-        c.desktop
+        c.pin
           ? {
               trigger: ch,
               start: "top top",
@@ -364,7 +367,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
         redrawOcrLeaders();
         const oFollow = stepsFollow(ocr, [0, 0.28, 0.55, 0.78]);
         const oTl = gsap.timeline({
-          defaults: { ease: c.desktop ? "none" : "expo.out", duration: 1 },
+          defaults: { ease: c.pin ? "none" : "expo.out", duration: 1 },
         });
         oTl
           .fromTo(
@@ -375,7 +378,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
           .to($(".ocr-scan", oSt), { opacity: 0, duration: 0.2 })
           .from(
             $$(".pbox", oSt),
-            { opacity: 0, scale: 1.25, stagger: 0.35, ease: c.desktop ? "power3.out" : "expo.out" },
+            { opacity: 0, scale: 1.25, stagger: 0.35, ease: c.pin ? "power3.out" : "expo.out" },
             0.6,
           )
           .from($(".rule", oSt), { opacity: 0, y: 20 }, "+=0.2")
@@ -390,7 +393,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
           .from($$("circle", ocrSvg), { opacity: 0, stagger: 0.3, duration: 0.2 }, "out")
           .call(() => undefined, undefined, "+=0.4");
         oTl.eventCallback("onUpdate", () => {
-          if (!c.desktop) oFollow(oTl.progress());
+          if (!c.pin) oFollow(oTl.progress());
         });
         $$(".facts [data-count]", ocr).forEach((el) =>
           ScrollTrigger.create({
@@ -400,7 +403,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
             onEnter: () => countUp(el),
           }),
         );
-        if (!c.desktop) oTl.timeScale(1.8);
+        if (!c.pin) oTl.timeScale(1.8);
         ScrollTrigger.create(chapterST(ocr, oTl, oFollow));
         oFollow(0);
       }
@@ -417,7 +420,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
           tree.classList.toggle("dim", p < 0.8);
         };
         const rTl = gsap.timeline({
-          defaults: { ease: c.desktop ? "power2.out" : "expo.out", duration: 1 },
+          defaults: { ease: c.pin ? "power2.out" : "expo.out", duration: 1 },
         });
         rTl
           .from($$(".nd", tree), { opacity: 0, y: -8, stagger: 0.15 })
@@ -432,9 +435,9 @@ export function initMotion(redrawOcrLeaders: () => void) {
           .from($('[data-c="ans"]', rSt), { opacity: 0, y: 24 }, "+=0.4")
           .call(() => undefined, undefined, "+=0.5");
         rTl.eventCallback("onUpdate", () => {
-          if (!c.desktop) rFollow(rTl.progress());
+          if (!c.pin) rFollow(rTl.progress());
         });
-        if (!c.desktop) rTl.timeScale(1.8);
+        if (!c.pin) rTl.timeScale(1.8);
         ScrollTrigger.create(chapterST(rag, rTl, rFollow));
         rFollow(0);
         cleanups.push(() => {
@@ -556,10 +559,10 @@ export function initMotion(redrawOcrLeaders: () => void) {
       if (band) {
         gsap.fromTo(
           band,
-          { scale: 0.93, opacity: 0.6 },
+          // Scale only: fading the band left its grey text below AA contrast until scrolled in.
+          { scale: 0.93 },
           {
             scale: 1,
-            opacity: 1,
             ease: "none",
             scrollTrigger: { trigger: band, start: "top bottom", end: "top 35%", scrub: 0.5 },
           },
