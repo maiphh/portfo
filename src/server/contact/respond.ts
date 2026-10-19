@@ -98,15 +98,18 @@ export function renderResultPage(v: View): string {
 <title>${esc(v.title)} · ${esc(site.name)}</title>
 <style>
   :root { color-scheme: dark; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #141414; color: #f1f1ec;
-    font: 1.0625rem/1.6 system-ui, sans-serif; padding: 24px; box-sizing: border-box; }
-  main { max-width: 34rem; width: 100%; background: #1b1b1a; border: 1px solid #3d3d39; border-radius: 10px; padding: 32px; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; background: #141414;
+    color: #f1f1ec; font: 1.0625rem/1.6 system-ui, sans-serif; padding: 16px; overflow-wrap: anywhere; }
+  main { width: 100%; max-width: 34rem; background: #1b1b1a; border: 1px solid #3d3d39; border-radius: 10px;
+    padding: clamp(20px, 6vw, 32px); }
   .tag { display: inline-block; font: 600 0.8rem/1 ui-monospace, monospace; padding: 6px 8px; border-radius: 4px;
     background: ${v.ok ? "#d4f56b" : "#ff9d8a"}; color: #141414; }
   h1 { font-size: 1.75rem; line-height: 1.2; margin: 16px 0 8px; }
   ul { padding-left: 1.2em; } li { margin: 6px 0; }
   a { color: #d4f56b; } a:focus-visible { outline: 2px solid #d4f56b; outline-offset: 3px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+  .actions { display: flex; flex-wrap: wrap; column-gap: 20px; row-gap: 4px; margin: 20px 0 0; }
+  .actions a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; }
 </style>
 </head>
 <body>
