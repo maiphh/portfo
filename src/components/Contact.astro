@@ -1,8 +1,13 @@
 ---
 /** Contact band: words snap into boxes; the form shows the job moving through the queue. */
-import { USE_MOCKS } from "~/lib/flags";
+import { HONEYPOT_FIELD } from "~/lib/contact-rules";
+import { TURNSTILE_SITE_KEY, USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
 import Icon from "./Icon.astro";
+
+// Real mode posts to /api/contact; without JS that's a plain form POST that returns a result page.
+const live = !USE_MOCKS;
+const turnstile = live && TURNSTILE_SITE_KEY !== "";
 
 const steps = [
   { id: "queued", label: "Queued" },
@@ -39,17 +44,20 @@ const steps = [
       <form
         class="form"
         id="contact-form"
-        novalidate
         aria-labelledby="form-h"
         data-mock={USE_MOCKS ? "true" : "false"}
+        action={live ? "/api/contact" : undefined}
+        method={live ? "post" : undefined}
       >
         <h3 id="form-h">Send a message</h3>
-        <noscript>
-          <p class="q-status">
-            The form needs JavaScript. You can always email me at{" "}
-            <a href={`mailto:${site.email}`}>{site.email}</a>.
-          </p>
-        </noscript>
+        {USE_MOCKS && (
+          <noscript>
+            <p class="q-status">
+              The form needs JavaScript. You can always email me at{" "}
+              <a href={`mailto:${site.email}`}>{site.email}</a>.
+            </p>
+          </noscript>
+        )}
         <div class="two">
           <div class="fld">
             <label for="f-name">Your name</label>
@@ -105,14 +113,34 @@ const steps = [
           ></textarea>
           <p class="err" id="f-msg-e"></p>
         </div>
-        <!-- TODO(build): Cloudflare Turnstile widget goes here (PUBLIC_TURNSTILE_SITE_KEY). -->
+        <div class="hp" aria-hidden="true">
+          <label for="f-website">Leave this field empty</label>
+          <input id="f-website" name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" />
+        </div>
+        {turnstile && (
+          <>
+            <div
+              class="cf-turnstile turnstile"
+              data-sitekey={TURNSTILE_SITE_KEY}
+              data-theme="dark"
+              data-size="flexible"
+            />
+            <script
+              is:inline
+              src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+              async
+              defer
+            />
+          </>
+        )}
         <div class="send-row">
           <button class="btn btn-lime" type="submit">
             Send message
             <Icon name="arrow" />
           </button>
           <small>
-            Up to 3 messages a day. You'll see it move through the queue below.
+            Up to 3 messages a day.
+            {USE_MOCKS ? " You'll see it move through the queue below." : ""}
             {USE_MOCKS && (
               <>
                 <sup class="fn" aria-hidden="true">

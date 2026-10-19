@@ -2662,6 +2662,18 @@ footer {
   max-width: 520px;
 }
 
+/* Contact: honeypot (off-screen, never focusable) and the Turnstile widget slot. */
+.form .hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form .turnstile {
+  min-height: 65px;
+}
+
 /* Room for the detection box (inset -10px) so it never overlaps "at" in the roles list. */
 .roles .det {
   margin-left: 12px;

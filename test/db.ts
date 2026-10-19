@@ -36,3 +36,13 @@ export async function rows<T>(handle: DbHandle, query: SQL): Promise<T[]> {
   const result = (await handle.db.execute(query)) as unknown as { rows: T[] };
   return result.rows;
 }
+
+/** A logger that records calls instead of printing. */
+export function memoryLogger() {
+  const lines: { level: "info" | "warn" | "error"; text: string }[] = [];
+  const at =
+    (level: "info" | "warn" | "error") =>
+    (...args: unknown[]) =>
+      lines.push({ level, text: args.map(String).join(" ") });
+  return { lines, info: at("info"), warn: at("warn"), error: at("error") };
+}
