@@ -15,7 +15,6 @@ export const site = {
 export const todos: readonly string[] = [
   'GitHub display name shows "Lucas Mai": confirm which name the site uses.',
   "Legal RAG: outcome metric (only the qualitative outcome is stated).",
-  "Bachelor of IT: confirm the institution.",
   "LinkedIn URL, résumé PDF, headshot, short bio.",
   "OpenPortfo, Mirror Now, Poet: live URLs, repos, any metrics.",
   "LLM provider (copy is provider-agnostic until chosen; Gemini is the default to wire up).",
