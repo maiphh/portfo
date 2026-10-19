@@ -26,7 +26,7 @@ const { Content } = await render(entry);
 ---
 
 <Base title={`${d.title} · ${site.name}`} description={d.summary}>
-  <article class="cs" aria-labelledby="cs-h">
+  <article class="cs" aria-labelledby="cs-h" data-view-slug={entry.id}>
     <div class="wrap">
       <a class="back" href={`/#${d.anchor}`}>
         <Icon name="arrow" />
@@ -113,3 +113,8 @@ const { Content } = await render(entry);
     </div>
   </article>
 </Base>
+
+<script>
+  import { trackPageView } from "~/scripts/analytics";
+  trackPageView();
+</script>

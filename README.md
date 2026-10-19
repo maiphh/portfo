@@ -104,13 +104,13 @@ Talentnet work stays at CV level. Don't add internal code, documents or screensh
 
 ## Sample data and the mock flag
 
-The contact form is wired to a real backend (see [Contact form](#contact-form)); Ask, GitHub activity and the most-read list aren't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
+The contact form and the most-read list are wired to real backends (see [Contact form](#contact-form) and [Analytics](#analytics)); Ask and GitHub activity aren't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
 
-Set `PUBLIC_USE_MOCKS=false` to use the real contact form and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
+Set `PUBLIC_USE_MOCKS=false` to use the real contact form and live view counts, and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
 
 1. DB foundation (Neon, Drizzle schema, migrations, jobs + rate limits)
 2. Contact form + worker + Resend (done: `/api/contact`)
-3. Analytics beacon + most-viewed
+3. Analytics beacon + most-viewed (done: `/api/view`, `/api/popular`)
 4. GitHub sync
 5. RAG chat
 
@@ -120,7 +120,7 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
-`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form needs `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (it fails closed without them). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the cron needs `CRON_SECRET`.
+`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form and analytics need `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (they fail closed without them; `/api/view` answers 503 without the salt). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the cron needs `CRON_SECRET`.
 
 ## Database
 
@@ -154,7 +154,7 @@ A local install works too (for example `postgresql-17` plus `postgresql-17-pgvec
 
 With `PUBLIC_USE_MOCKS=false` the form posts to `POST /api/contact` (an on-demand function). With mocks on, it keeps the labelled sample queue and sends nothing.
 
-1. **Request** (`src/server/contact/submit.ts`): the honeypot field (`website`) gets a fake success and nothing is stored. Next comes zod validation (name, email, message up to 2000 characters, optional role) using the same rules and messages as the inline client errors, then Turnstile verification, then the rate limit: 3 posts per `visitor_hash` per day. `visitor_hash` is SHA-256 of IP + UA + `VISITOR_HASH_SALT` combined with the UTC date. The message and a `classify_and_notify` job are inserted in **one transaction**.
+1. **Request** (`src/server/contact/submit.ts`): the honeypot field (`website`) gets a fake success and nothing is stored. Next comes zod validation (name, email, message up to 2000 characters, optional role) using the same rules and messages as the inline client errors, then Turnstile verification, then the rate limit: 3 posts per `visitor_hash` per day. `visitor_hash` is SHA-256 of IP + UA + `VISITOR_HASH_SALT` combined with the calendar date in Asia/Ho_Chi_Minh (the same day boundary analytics uses). The message and a `classify_and_notify` job are inserted in **one transaction**.
 2. **Kick**: the endpoint starts the worker right away with `waitUntil` from `@vercel/functions`, falling back to fire-and-forget outside Vercel, so the response doesn't wait for the LLM.
 3. **Worker** (`src/server/contact/worker.ts`): claims jobs with `FOR UPDATE SKIP LOCKED` and classifies the message through the AI SDK wrapper (Gemini by default, `AI_PROVIDER=openai` to switch). The output is JSON: `{ category: recruiter | client | other | spam, confidence }`. It stores the result, then emails `NOTIFY_EMAIL` through Resend unless the message is spam. Failures retry with exponential backoff, and after 5 attempts the job and the message are marked `failed`. A retry skips steps that already succeeded, and the Resend idempotency key prevents duplicate emails. Classification and email sit behind the `Classifier` and `Notifier` interfaces, so tests use fakes and make no network calls.
 4. **Sweeper**: `GET /api/cron/jobs` with `Authorization: Bearer $CRON_SECRET` re-queues jobs stuck in `running` for over 10 minutes, then processes pending ones. It returns 503 if `CRON_SECRET` is unset. `vercel.json` schedules it daily at 03:00 UTC. That is only a **fallback**, because each post already kicks the worker and Vercel Hobby cron runs at most daily. A more frequent GitHub Actions schedule can call the same URL.
@@ -171,6 +171,16 @@ PUBLIC_USE_MOCKS=false DATABASE_URL=postgresql://... pnpm dev
 ```
 
 Without AI or Resend keys, messages are stored and the job retries with backoff until the keys are set.
+
+## Analytics
+
+Cookie-free page views for the "Most read this week" list. Only active with `PUBLIC_USE_MOCKS=false`; with mocks on, the list shows the labelled † sample counts and no beacon is sent.
+
+- **Beacon** (`src/scripts/analytics.ts`): case-study pages (`/work/<slug>`) send one view on load. On the home page a project section counts once it reaches the middle band of the screen (`data-slug`). The script uses `navigator.sendBeacon` with a JSON body and falls back to `fetch(..., { keepalive: true })`. It sends nothing when the browser has Do Not Track or Global Privacy Control on.
+- **`POST /api/view`** (`src/server/analytics/view.ts`) takes `{ slug, referrer_host? }` as JSON, as a sendBeacon text body, or form-encoded, up to 2 KB. The slug must be a known case study (400 otherwise), and a referrer host that isn't a plain hostname is dropped. Bots and empty user agents are ignored. `visitor_hash` = SHA-256(IP + UA + `VISITOR_HASH_SALT`:day); no IP, cookie or ID is stored. The limit is 60 beacons per visitor per hour (429 above that). Statuses: 204 for a new view, 202 for a duplicate or ignored one, 503 when the salt is missing in production (fail closed).
+- **Dedupe**: one row per `visitor_hash` + `slug` + day, enforced by the unique index `page_views_visitor_slug_day_key` (migration `0002`) and `ON CONFLICT DO NOTHING`. "Day" is the calendar day in **Asia/Ho_Chi_Minh** (UTC+7, no DST), the site owner's time zone. The salt rotates on the same boundary, so a visitor can't be linked across days.
+- **`GET /api/popular`** (`src/server/analytics/popular.ts`) returns `{ items: ViewCount[], since, days: 7 }`: deduped views per case study over the last 7 days, highest first (ties by slug). `ViewCount` is the same shape the mocks use (`slug`, `title`, `href`, `views`). It sends `Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=30`, so the edge serves it for about 30 s, and it answers 503 with `items: []` when the database is unavailable.
+- **UI**: the home list fetches `/api/popular` and refreshes every 30 s while the tab is visible. With no data it says "Not enough reads yet this week". When the API fails or JavaScript is off it says "View counts appear here once analytics is connected". It never shows sample numbers.
 
 ## Deploy on Vercel
 

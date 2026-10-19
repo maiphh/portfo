@@ -12,7 +12,7 @@ export const GET: APIRoute = () =>
     {
       ok: true,
       mocks: USE_MOCKS,
-      features: { ask: false, contact: true, views: false, github: false },
+      features: { ask: false, contact: true, views: true, github: false },
     },
     { headers: { "Cache-Control": "no-store" } },
   );
