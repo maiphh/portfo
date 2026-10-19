@@ -12,7 +12,8 @@ The design idea is "the document under parse". The hero is my CV, scanned and bo
 - Self-hosted variable fonts via Fontsource: Hubot Sans (display, with the `wdth` axis), Familjen Grotesk (body) and JetBrains Mono (data). All three include Vietnamese subsets.
 - Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`), provider-swappable and not called yet.
 - ESLint (typescript-eslint + eslint-plugin-astro), Prettier (prettier-plugin-astro), `astro check`.
-- GitHub Actions CI on every push to `main` and every PR: install, lint, check, build.
+- GitHub Actions CI on every push to `main` and every PR: install, lint, check, build, plus migrations and DB tests against a throwaway Postgres + pgvector service container.
+- Database layer (not wired to the UI yet): Drizzle ORM + drizzle-kit, `@neondatabase/serverless`, schema and migrations in `src/db` and `drizzle/`.
 
 The planned backend is described in [`docs/architecture.md`](docs/architecture.md): Neon Postgres + pgvector, a Postgres jobs table, the GitHub sync, Turnstile and rate limits.
 
@@ -20,16 +21,19 @@ The planned backend is described in [`docs/architecture.md`](docs/architecture.m
 
 Needs Node 22.22+ (see `.nvmrc`) and pnpm 10 (`corepack enable`).
 
-| Command         | What it does                                                               |
-| --------------- | -------------------------------------------------------------------------- |
-| `pnpm install`  | Install dependencies                                                       |
-| `pnpm dev`      | Dev server at http://localhost:4321                                        |
-| `pnpm build`    | Production build (`.vercel/output`)                                        |
-| `pnpm preview`  | Serve the built static output locally (no `/api` routes; use `vercel dev`) |
-| `pnpm lint`     | ESLint + Prettier check                                                    |
-| `pnpm lint:fix` | Auto-fix lint and formatting                                               |
-| `pnpm check`    | `astro check` (types, content schemas, `.astro` files)                     |
-| `pnpm verify`   | lint + check + build, the same as CI                                       |
+| Command            | What it does                                                               |
+| ------------------ | -------------------------------------------------------------------------- |
+| `pnpm install`     | Install dependencies                                                       |
+| `pnpm dev`         | Dev server at http://localhost:4321                                        |
+| `pnpm build`       | Production build (`.vercel/output`)                                        |
+| `pnpm preview`     | Serve the built static output locally (no `/api` routes; use `vercel dev`) |
+| `pnpm lint`        | ESLint + Prettier check                                                    |
+| `pnpm lint:fix`    | Auto-fix lint and formatting                                               |
+| `pnpm check`       | `astro check` (types, content schemas, `.astro` files)                     |
+| `pnpm verify`      | lint + check + build, the same as CI                                       |
+| `pnpm test`        | Vitest DB tests (needs `TEST_DATABASE_URL`, see [Database](#database))     |
+| `pnpm db:generate` | Write a new SQL migration in `drizzle/` from `src/db/schema.ts`            |
+| `pnpm db:migrate`  | Apply pending migrations to `DATABASE_URL`                                 |
 
 ## Structure
 
@@ -116,6 +120,34 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
 `DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL` and `PUBLIC_USE_MOCKS`. None are needed for the current build.
+
+## Database
+
+Neon Postgres + pgvector, following [`docs/architecture.md`](docs/architecture.md). The UI doesn't use it yet; it still renders the mocks.
+
+- `src/db/schema.ts` defines all ten tables (`documents`, `chunks` with `vector(1536)` and an HNSW cosine index, `chat_logs`, `github_repos`, `github_activity`, `contact_messages`, `jobs`, `page_views`, `rate_limits`, `sync_runs`).
+- `drizzle/` holds the generated SQL migrations. `0000_enable_pgvector.sql` runs `CREATE EXTENSION IF NOT EXISTS vector` before any table is created.
+- `src/db/client.ts`: `getDb()` / `createDb(url)` read `DATABASE_URL`. A `*.neon.tech` host uses the `@neondatabase/serverless` driver (WebSockets, transactions work in serverless functions). Any other host uses node-postgres.
+- `src/db/queue.ts`: the Postgres job queue. `enqueue`, `claim` (`FOR UPDATE SKIP LOCKED`, each claim counts as an attempt), `complete`, `fail` (exponential backoff from 30 s, capped at 1 h; `failed` after 5 attempts), and `requeueStale` for a sweeper.
+- `src/db/rate-limit.ts`: fixed-window limits. `hitRateLimit(db, { key, limit, windowMs })` does one atomic upsert per hit, and `pruneRateLimits` cleans up old windows.
+
+### Point it at Neon and run migrations
+
+1. In the Neon console, create a project (Postgres 17) and copy the **pooled** connection string from _Connect_. It looks like `postgresql://USER:PASSWORD@ep-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require`.
+2. Put it in `.env` as `DATABASE_URL=...`. `.env` is git-ignored, so never commit it. For production, set the same variable in the Vercel project settings.
+3. Run `pnpm db:migrate`. drizzle-kit reads `DATABASE_URL` (it loads `.env` itself), enables `vector` and creates the tables. It records what it applied in `drizzle.__drizzle_migrations`, so running it again is a no-op. Neon supports pgvector, and the role Neon creates may run `CREATE EXTENSION`.
+4. To change the schema, edit `src/db/schema.ts`, run `pnpm db:generate`, review the new SQL in `drizzle/`, commit it, then run `pnpm db:migrate`. CI fails if the schema and the committed migrations drift apart.
+
+### Tests
+
+`pnpm test` runs Vitest against a real Postgres with pgvector. It needs `TEST_DATABASE_URL` pointing at a **throwaway local** database: the setup drops and recreates the `public` schema, then applies the migrations from `drizzle/`. It refuses non-local hosts. The quickest local database is Docker:
+
+```sh
+docker run -d --name portfo-pg -e POSTGRES_PASSWORD=portfo -p 5432:5432 pgvector/pgvector:pg17
+TEST_DATABASE_URL=postgresql://postgres:portfo@localhost:5432/postgres pnpm test
+```
+
+A local install works too (for example `postgresql-17` plus `postgresql-17-pgvector` from the PGDG apt repo). CI runs the same tests against a `pgvector/pgvector:pg17` service container, so no database secret is needed.
 
 ## Deploy on Vercel
 

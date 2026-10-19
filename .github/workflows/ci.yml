@@ -38,3 +38,53 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  db:
+    name: Migrations + DB tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Throwaway Postgres with pgvector inside the runner; no real DB secret needed.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: portfo
+          POSTGRES_PASSWORD: portfo
+          POSTGRES_DB: portfo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portfo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://portfo:portfo@localhost:5432/portfo
+      TEST_DATABASE_URL: postgresql://portfo:portfo@localhost:5432/portfo_test
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrations match the schema
+        run: |
+          pnpm db:generate
+          git status --porcelain drizzle
+          test -z "$(git status --porcelain drizzle)"
+
+      - name: Apply migrations (pnpm db:migrate)
+        run: pnpm db:migrate
+
+      - name: Create the test database
+        run: psql "$DATABASE_URL" -c "CREATE DATABASE portfo_test"
+
+      - name: Unit tests (vitest)
+        run: pnpm test
