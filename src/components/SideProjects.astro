@@ -48,6 +48,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
         id={openportfo.data.anchor}
         aria-labelledby="op-h"
         data-views={views[openportfo.id]}
+        data-slug={openportfo.id}
         data-title={openportfo.data.title}
       >
         <h3 id="op-h">{openportfo.data.title}</h3>
@@ -131,6 +132,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
         id={mirror.data.anchor}
         aria-labelledby="mn-h"
         data-views={views[mirror.id]}
+        data-slug={mirror.id}
         data-title={mirror.data.title}
       >
         <h3 id="mn-h">{mirror.data.title}</h3>
@@ -198,6 +200,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
       class="poet"
       id={poet.data.anchor}
       data-views={views[poet.id]}
+      data-slug={poet.id}
       data-title={poet.data.title}
     >
       <h3>{poet.data.title}</h3>

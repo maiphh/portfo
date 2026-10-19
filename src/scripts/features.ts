@@ -24,9 +24,56 @@ export function initDevPanel() {
   $("[data-dev-close]")?.addEventListener("click", () => (dev.hidden = true));
 }
 
+/* ---------- 1a. most read, live: /api/popular, refreshed every 30 s while visible ---------- */
+interface PopularItem {
+  title: string;
+  href: string;
+  views: number;
+}
+export function initPopular() {
+  const ol = $<HTMLOListElement>("[data-most][data-live]");
+  const status = $("[data-most-status]");
+  if (!ol || !status) return;
+  const max = Number(ol.dataset.max) || 4;
+  const show = (msg: string) => {
+    ol.hidden = true;
+    status.hidden = false;
+    status.textContent = msg;
+  };
+  const load = async () => {
+    try {
+      const res = await fetch("/api/popular", { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = (await res.json()) as { items?: PopularItem[] };
+      const items = (data.items ?? []).filter((it) => it.views > 0).slice(0, max);
+      if (!items.length) {
+        show("Not enough reads yet this week. The list fills in as people visit.");
+        return;
+      }
+      ol.innerHTML = items
+        .map(
+          (it, i) =>
+            `<li><a href="${esc(it.href)}"><span class="i">${String(i + 1).padStart(2, "0")}</span><b>${esc(it.title)}</b><span class="n">${fmt(it.views)} ${it.views === 1 ? "view" : "views"}</span></a></li>`,
+        )
+        .join("");
+      ol.hidden = false;
+      status.hidden = true;
+    } catch {
+      show("View counts appear here once analytics is connected.");
+    }
+  };
+  void load();
+  window.setInterval(() => {
+    if (!document.hidden) void load();
+  }, 30_000);
+}
+
 /* ---------- 1. views + most read (SAMPLE: counts tick up locally) ---------- */
 export function initMostRead() {
-  if (!USE_MOCKS) return;
+  if (!USE_MOCKS) {
+    initPopular();
+    return;
+  }
   const viewEls = $$("[data-views]");
   const render = () => {
     const items = viewEls

@@ -10,8 +10,10 @@ import {
   initNowMarker,
 } from "./features";
 import { initMotion } from "./motion";
+import { trackSections } from "./analytics";
 
 initDevPanel();
+trackSections();
 initMostRead();
 initHeatmap();
 initNowMarker();

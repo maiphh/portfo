@@ -147,6 +147,7 @@ export const jobs = pgTable(
   (t) => [index("jobs_status_run_after_idx").on(t.status, t.runAfter)],
 );
 
+/** One row per visitor, page and calendar day (Asia/Ho_Chi_Minh). See src/server/analytics. */
 export const pageViews = pgTable(
   "page_views",
   {
@@ -154,9 +155,16 @@ export const pageViews = pgTable(
     slug: text("slug").notNull(),
     visitorHash: text("visitor_hash").notNull(),
     referrerHost: text("referrer_host"),
+    /** Calendar day in Asia/Ho_Chi_Minh; part of the dedupe key. */
+    day: date("day", { mode: "string" })
+      .notNull()
+      .default(sql`(now() at time zone 'Asia/Ho_Chi_Minh')::date`),
     createdAt: createdAt(),
   },
-  (t) => [index("page_views_slug_created_at_idx").on(t.slug, t.createdAt)],
+  (t) => [
+    index("page_views_slug_created_at_idx").on(t.slug, t.createdAt),
+    uniqueIndex("page_views_visitor_slug_day_key").on(t.visitorHash, t.slug, t.day),
+  ],
 );
 
 /** Fixed-window counters. See src/db/rate-limit.ts. */
