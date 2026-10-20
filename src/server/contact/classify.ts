@@ -1,11 +1,9 @@
 /**
  * Contact classification behind an interface, so tests use a fake.
- * The real one goes through the provider-swappable AI SDK wrapper
- * (Gemini by default, AI_PROVIDER=openai to switch) with structured JSON output.
+ * The real one calls a small Cloudflare Workers AI model over the REST API
+ * (no SDK) with JSON-schema output, validated with zod before it is trusted.
  */
-import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "astro/zod";
-import { getChatModel } from "~/lib/ai/provider";
 import type { ContactCategory } from "~/lib/types";
 import type { Env } from "../env";
 
@@ -50,24 +48,72 @@ export function buildClassifyPrompt(input: ClassifyInput): string {
   ].join("\n");
 }
 
-export function createAiClassifier(model: LanguageModel | (() => LanguageModel)): Classifier {
+/** Small, cheap Workers AI model for sorting messages. Override with CLASSIFY_MODEL. */
+export const DEFAULT_CLASSIFY_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+
+const jsonSchema = {
+  type: "object",
+  properties: {
+    category: { type: "string", enum: ["recruiter", "client", "other", "spam"] },
+    confidence: { type: "number", minimum: 0, maximum: 1 },
+  },
+  required: ["category", "confidence"],
+} as const;
+
+export interface WorkersAiConfig {
+  accountId: string;
+  /** API token with the "Workers AI: Read" permission only. */
+  apiToken: string;
+  model?: string;
+  fetch?: typeof fetch;
+}
+
+/** Workers AI returns `result.response` as a string, or as an object in JSON mode. */
+function parseResponse(body: unknown): unknown {
+  const res = (body as { result?: { response?: unknown } } | null)?.result?.response;
+  return typeof res === "string" ? JSON.parse(res) : res;
+}
+
+export function createWorkersAiClassifier(
+  config: WorkersAiConfig | (() => WorkersAiConfig),
+): Classifier {
   return {
     async classify(input) {
-      const { output } = await generateText({
-        model: typeof model === "function" ? model() : model,
-        output: Output.object({ schema: classificationSchema, name: "classification" }),
-        system: CLASSIFY_SYSTEM,
-        prompt: buildClassifyPrompt(input),
-        temperature: 0,
-        maxOutputTokens: 100,
-        maxRetries: 1,
+      const c = typeof config === "function" ? config() : config;
+      const model = c.model ?? DEFAULT_CLASSIFY_MODEL;
+      const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(c.accountId)}/ai/run/${model}`;
+      const res = await (c.fetch ?? fetch)(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${c.apiToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: CLASSIFY_SYSTEM },
+            { role: "user", content: buildClassifyPrompt(input) },
+          ],
+          response_format: { type: "json_schema", json_schema: jsonSchema },
+          temperature: 0,
+          max_tokens: 100,
+        }),
+        signal: AbortSignal.timeout(20_000),
       });
-      return output;
+      if (!res.ok) throw new Error(`Workers AI returned HTTP ${res.status}`);
+      return classificationSchema.parse(parseResponse(await res.json()));
     },
   };
 }
 
-/** The production classifier: model created lazily so a missing key fails the job, not the import. */
+function requireEnv(env: Env, name: string): string {
+  const v = env[name];
+  if (!v)
+    throw new Error(`${name} is not set. Add it to the Vercel project env (see .env.example).`);
+  return v;
+}
+
+/** The production classifier: config read lazily so a missing key fails the job, not the import. */
 export function defaultClassifier(env: Env = process.env): Classifier {
-  return createAiClassifier(() => getChatModel(env, "classify"));
+  return createWorkersAiClassifier(() => ({
+    accountId: requireEnv(env, "CLOUDFLARE_ACCOUNT_ID"),
+    apiToken: requireEnv(env, "CLOUDFLARE_AI_API_TOKEN"),
+    model: env.CLASSIFY_MODEL || undefined,
+  }));
 }

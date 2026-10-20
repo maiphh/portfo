@@ -2,8 +2,8 @@ import type { APIRoute } from "astro";
 import { USE_MOCKS } from "~/lib/flags";
 
 /**
- * On-demand (Vercel function). The /api routes for chat, views and the GitHub
- * sync land in later PRs (see docs/architecture.md); this one proves the wiring.
+ * On-demand (Vercel function); proves the /api wiring. The chat is not an /api route:
+ * it runs as the separate Cloudflare Worker in workers/chat (not deployed yet).
  */
 export const prerender = false;
 
@@ -12,7 +12,7 @@ export const GET: APIRoute = () =>
     {
       ok: true,
       mocks: USE_MOCKS,
-      features: { ask: false, contact: true, views: true, github: true },
+      features: { chat: false, contact: true, views: true, github: true },
     },
     { headers: { "Cache-Control": "no-store" } },
   );

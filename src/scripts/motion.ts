@@ -595,7 +595,7 @@ export function initMotion(redrawOcrLeaders: () => void) {
 
   // Reveals never trap content: anything focused becomes visible.
   document.addEventListener("focusin", (e) => {
-    const t = (e.target as HTMLElement | null)?.closest(".turn, .bar, .field, .chunk");
+    const t = (e.target as HTMLElement | null)?.closest(".bar, .field, .chunk");
     if (t) gsap.set(t, { opacity: 1 });
   });
   window.addEventListener("resize", () => {

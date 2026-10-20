@@ -10,12 +10,12 @@ The design idea is "the document under parse". The hero is my CV, scanned and bo
 - `@astrojs/vercel` adapter, `@astrojs/sitemap`, `@astrojs/mdx`.
 - [GSAP](https://gsap.com) from npm (ScrollTrigger, SplitText, MotionPathPlugin) for motion. Plain CSS tokens in `src/styles/global.css`.
 - Self-hosted variable fonts via Fontsource: Hubot Sans (display, with the `wdth` axis), Familjen Grotesk (body) and JetBrains Mono (data). All three include Vietnamese subsets.
-- Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`), provider-swappable and not called yet.
+- [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) for every model call: the chat agent (Llama 3.3 70B with tool calling, bge-m3 embeddings, Vectorize) runs in its own Worker in [`workers/chat`](workers/chat/README.md), and the contact worker sorts messages with a small Llama over the Workers AI REST API. No AI SDK.
 - ESLint (typescript-eslint + eslint-plugin-astro), Prettier (prettier-plugin-astro), `astro check`.
 - GitHub Actions CI on every push to `main` and every PR: install, lint, check, build, plus migrations and DB tests against a throwaway Postgres + pgvector service container.
 - Database layer (not wired to the UI yet): Drizzle ORM + drizzle-kit, `@neondatabase/serverless`, schema and migrations in `src/db` and `drizzle/`.
 
-The planned backend is described in [`docs/architecture.md`](docs/architecture.md): Neon Postgres + pgvector, a Postgres jobs table, the GitHub sync, Turnstile and rate limits.
+The backend is described in [`docs/architecture.md`](docs/architecture.md): Neon Postgres, a Postgres jobs table, the GitHub sync, Turnstile and rate limits, and the chat Worker on Cloudflare.
 
 ## Scripts
 
@@ -47,7 +47,6 @@ src/
     Craftland.astro    Isometric island of 14 game modes
     SideProjects.astro OpenPortfo chart, Mirror Now template, Poet
     Timeline.astro     96-month work/study/awards grid
-    Ask.astro          "Ask about my work" (RAG chat UI)
     Activity.astro     GitHub activity
     HowItWorks.astro   Architecture graph
     Contact.astro      Contact band, form and job queue
@@ -58,10 +57,9 @@ src/
   lib/
     flags.ts         Feature flags (PUBLIC_USE_MOCKS)
     types.ts         Data contracts the real APIs will return
-    mocks/           Typed sample data (views, GitHub, Ask, contact)
+    mocks/           Typed sample data (views, GitHub, contact)
   server/            Server-only code for /api routes (contact pipeline, cron, Turnstile)
     data.ts          Build-time data access: mocks today, APIs later
-    ai/provider.ts   LLM + embedding model factory (Gemini default, OpenAI optional)
   pages/
     index.astro      Home
     work/[slug].astro Case-study pages
@@ -70,6 +68,7 @@ src/
   scripts/         Client code: features.ts (works without motion), motion.ts (GSAP), home.ts (entry)
   styles/global.css Design tokens and all styles
 docs/architecture.md  v1 backend plan
+workers/chat/      portfo-chat: the chat agent Worker (Cloudflare Workers AI + Vectorize), its own package
 ```
 
 ## Add a case study
@@ -104,7 +103,7 @@ Talentnet work stays at CV level. Don't add internal code, documents or screensh
 
 ## Sample data and the mock flag
 
-The contact form, the most-read list and GitHub activity are wired to real backends (see [Contact form](#contact-form), [Analytics](#analytics) and [GitHub sync](#github-sync)); Ask isn't built yet. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
+The contact form, the most-read list and GitHub activity are wired to real backends (see [Contact form](#contact-form), [Analytics](#analytics) and [GitHub sync](#github-sync)). The chat is a separate Cloudflare Worker ([Chat](#chat)); its window and mascot land in later PRs. While `PUBLIC_USE_MOCKS` is `true` (the default), they render **clearly labelled sample data** from `src/lib/mocks/*`. Every sample figure carries a † and a visible "sample" note, and the contact form says that nothing is sent.
 
 Set `PUBLIC_USE_MOCKS=false` to use the real contact form, live view counts and GitHub activity, and to see the honest empty states for the rest ("not connected yet"). Each real API will replace one mock module and return the shapes in `src/lib/types.ts`, in this order (see `docs/architecture.md`):
 
@@ -112,7 +111,7 @@ Set `PUBLIC_USE_MOCKS=false` to use the real contact form, live view counts and 
 2. Contact form + worker + Resend (done: `/api/contact`)
 3. Analytics beacon + most-viewed (done: `/api/view`, `/api/popular`)
 4. GitHub sync (done: `/api/cron/github-sync`, `/api/activity`)
-5. RAG chat
+5. Chat agent on Cloudflare Workers AI (Worker done: `workers/chat`; window and mascot next)
 
 Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
@@ -120,7 +119,7 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
-`DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` (`AI_PROVIDER=google|openai`), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM`, `GITHUB_LOGIN` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form, analytics and GitHub activity need `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (they fail closed without them; `/api/view` answers 503 without the salt). The worker needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the crons need `CRON_SECRET`. The GitHub sync needs `GITHUB_TOKEN`.
+`DATABASE_URL`, `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_AI_API_TOKEN` (Workers AI: Read), `GITHUB_TOKEN`, `RESEND_API_KEY`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY`, `CRON_SECRET`, `VISITOR_HASH_SALT`, plus optional `SITE_URL`, `RESEND_FROM`, `GITHUB_LOGIN`, `CLASSIFY_MODEL`, `PUBLIC_CHAT_URL` and `PUBLIC_USE_MOCKS`. None are needed for the build. With mocks off, the contact form, analytics and GitHub activity need `DATABASE_URL`, and in production also `TURNSTILE_SECRET_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` and `VISITOR_HASH_SALT` (they fail closed without them; `/api/view` answers 503 without the salt). The worker needs `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_AI_API_TOKEN`, `RESEND_API_KEY` and `NOTIFY_EMAIL`, and the crons need `CRON_SECRET`. The GitHub sync needs `GITHUB_TOKEN`.
 
 ## Database
 
@@ -156,7 +155,7 @@ With `PUBLIC_USE_MOCKS=false` the form posts to `POST /api/contact` (an on-deman
 
 1. **Request** (`src/server/contact/submit.ts`): the honeypot field (`website`) gets a fake success and nothing is stored. Next comes zod validation (name, email, message up to 2000 characters, optional role) using the same rules and messages as the inline client errors, then Turnstile verification, then the rate limit: 3 posts per `visitor_hash` per day. `visitor_hash` is SHA-256 of IP + UA + `VISITOR_HASH_SALT` combined with the calendar date in Asia/Ho_Chi_Minh (the same day boundary analytics uses). The message and a `classify_and_notify` job are inserted in **one transaction**.
 2. **Kick**: the endpoint starts the worker right away with `waitUntil` from `@vercel/functions`, falling back to fire-and-forget outside Vercel, so the response doesn't wait for the LLM.
-3. **Worker** (`src/server/contact/worker.ts`): claims jobs with `FOR UPDATE SKIP LOCKED` and classifies the message through the AI SDK wrapper (Gemini by default, `AI_PROVIDER=openai` to switch). The output is JSON: `{ category: recruiter | client | other | spam, confidence }`. It stores the result, then emails `NOTIFY_EMAIL` through Resend unless the message is spam. Failures retry with exponential backoff, and after 5 attempts the job and the message are marked `failed`. A retry skips steps that already succeeded, and the Resend idempotency key prevents duplicate emails. Classification and email sit behind the `Classifier` and `Notifier` interfaces, so tests use fakes and make no network calls.
+3. **Worker** (`src/server/contact/worker.ts`): claims jobs with `FOR UPDATE SKIP LOCKED` and classifies the message with Cloudflare Workers AI over the REST API (`@cf/meta/llama-3.1-8b-instruct` in JSON mode, `CLASSIFY_MODEL` to override), validated with zod. The output is JSON: `{ category: recruiter | client | other | spam, confidence }`. It stores the result, then emails `NOTIFY_EMAIL` through Resend unless the message is spam. Failures retry with exponential backoff, and after 5 attempts the job and the message are marked `failed`. A retry skips steps that already succeeded, and the Resend idempotency key prevents duplicate emails. Classification and email sit behind the `Classifier` and `Notifier` interfaces, so tests use fakes and make no network calls.
 4. **Sweeper**: `GET /api/cron/jobs` with `Authorization: Bearer $CRON_SECRET` re-queues jobs stuck in `running` for over 10 minutes, then processes pending ones. It returns 503 if `CRON_SECRET` is unset. `vercel.json` schedules it daily at 03:00 UTC. That is only a **fallback**, because each post already kicks the worker and Vercel Hobby cron runs at most daily. A more frequent GitHub Actions schedule can call the same URL.
 
 Turnstile: without `TURNSTILE_SECRET_KEY`, verification is skipped in dev and test, with a log line. In production (`VERCEL_ENV` or `NODE_ENV` = `production`) every post is rejected (fail closed). Preview deployments also run with `NODE_ENV=production`, so give them keys too; Cloudflare's [test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) work there. The widget renders only when `PUBLIC_TURNSTILE_SITE_KEY` is set and mocks are off.
@@ -179,7 +178,7 @@ Cookie-free page views for the "Most read this week" list. Only active with `PUB
 - **Beacon** (`src/scripts/analytics.ts`): case-study pages (`/work/<slug>`) send one view on load. On the home page a project section counts once it reaches the middle band of the screen (`data-slug`). The script uses `navigator.sendBeacon` with a JSON body and falls back to `fetch(..., { keepalive: true })`. It sends nothing when the browser has Do Not Track or Global Privacy Control on.
 - **`POST /api/view`** (`src/server/analytics/view.ts`) takes `{ slug, referrer_host? }` as JSON, as a sendBeacon text body, or form-encoded, up to 2 KB. The slug must be a known case study (400 otherwise), and a referrer host that isn't a plain hostname is dropped. Bots and empty user agents are ignored. `visitor_hash` = SHA-256(IP + UA + `VISITOR_HASH_SALT`:day); no IP, cookie or ID is stored. The limit is 60 beacons per visitor per hour (429 above that). Statuses: 204 for a new view, 202 for a duplicate or ignored one, 503 when the salt is missing in production (fail closed).
 - **Dedupe**: one row per `visitor_hash` + `slug` + day, enforced by the unique index `page_views_visitor_slug_day_key` (migration `0002`) and `ON CONFLICT DO NOTHING`. "Day" is the calendar day in **Asia/Ho_Chi_Minh** (UTC+7, no DST), the site owner's time zone. The salt rotates on the same boundary, so a visitor can't be linked across days.
-- **`GET /api/popular`** (`src/server/analytics/popular.ts`) returns `{ items: ViewCount[], since, days: 7 }`: deduped views per case study over the last 7 days, highest first (ties by slug). `ViewCount` is the same shape the mocks use (`slug`, `title`, `href`, `views`). It sends `Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=30`, so the edge serves it for about 30 s, and it answers 503 with `items: []` when the database is unavailable.
+- **`GET /api/popular`** (`src/server/analytics/popular.ts`) returns `{ items: ViewCount[], since, days }`: deduped views per case study over the last 7 days (or `?days=1..30`, which the chat's `get_popular_projects` tool uses), highest first (ties by slug). `ViewCount` is the same shape the mocks use (`slug`, `title`, `href`, `views`). It sends `Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=30`, so the edge serves it for about 30 s, and it answers 503 with `items: []` when the database is unavailable.
 - **UI**: the home list fetches `/api/popular` and refreshes every 30 s while the tab is visible. With no data it says "Not enough reads yet this week". When the API fails or JavaScript is off it says "View counts appear here once analytics is connected". It never shows sample numbers.
 
 ## GitHub sync
@@ -206,6 +205,20 @@ CRON_SECRET=dev GITHUB_TOKEN=... PUBLIC_USE_MOCKS=false DATABASE_URL=postgresql:
 curl -X POST -H "Authorization: Bearer dev" http://localhost:4321/api/cron/github-sync
 ```
 
+## Chat
+
+The chat is an agent in its own Cloudflare Worker, `portfo-chat`, in [`workers/chat`](workers/chat/README.md), with its own `package.json`, lockfile, tests and `wrangler.jsonc`. The Astro site stays on Vercel; the chat window (next PR) calls the Worker at `PUBLIC_CHAT_URL`.
+
+- `POST /chat` runs an agent loop on Workers AI function calling (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`, `@cf/meta/llama-3.1-8b-instruct` as the fallback), with at most 3 tool rounds, then a forced answer. It streams SSE: `session`, `status` per tool call, `token`, `sources`, `done`.
+- Seven read-only tools: `list_projects`, `get_project`, `get_experience`, `get_contact` (from `workers/chat/data/site.json`, generated from this repo's content by `pnpm corpus`), `get_github_stats` and `get_popular_projects` (from this site's `/api/activity` and `/api/popular`), and `search_knowledge` (bge-m3 + Vectorize).
+- Guards: Turnstile on a session's first message, then a signed session token; 3 messages per 10 s (Rate Limiting binding) and 10 per 10 minutes per visitor (Durable Object); 500-character questions, 400 `max_tokens`, top-k 5; a daily message budget.
+
+```sh
+cd workers/chat && pnpm install && pnpm test   # all bindings mocked, no Cloudflare account needed
+```
+
+After changing a case study or `src/data/experience.json`, run `pnpm corpus` in `workers/chat` and commit `data/site.json` (CI checks it is up to date).
+
 ## Deploy on Vercel
 
 1. Import `maiphh/portfo` in Vercel. The framework preset is detected as Astro, the install command is `pnpm install`, and the build command is `pnpm build`.
@@ -221,7 +234,7 @@ curl -X POST -H "Authorization: Bearer dev" http://localhost:4321/api/cron/githu
 
 ## Accessibility and motion
 
-- WCAG 2.2 AA contrast, a skip link, keyboard-complete controls, and `/` to focus Ask.
+- WCAG 2.2 AA contrast, a skip link, and keyboard-complete controls.
 - `prefers-reduced-motion`: every animation has a readable final state, and the reduced-motion path shows final states with no movement.
-- Without JavaScript the whole page is readable: the hero, both chapters in their final state, a static SVG of the chart, and the sample answer.
+- Without JavaScript the whole page is readable: the hero, both chapters in their final state, and a static SVG of the chart.
 - Below 1024px the chapters stack and leader lines are hidden. Below 960px the nav collapses into a menu.

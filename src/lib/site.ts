@@ -17,8 +17,8 @@ export const todos: readonly string[] = [
   "Legal RAG: outcome metric (only the qualitative outcome is stated).",
   "LinkedIn URL, résumé PDF, headshot, short bio.",
   "OpenPortfo, Mirror Now, Poet: live URLs, repos, any metrics.",
-  "LLM provider (copy is provider-agnostic until chosen; Gemini is the default to wire up).",
+  "Chat: the portfo-chat Cloudflare Worker (Workers AI + Vectorize) is built but not deployed; the chat window and mascot land next.",
   "Cloudflare Turnstile widget on the contact form.",
   "Reply-time promise on the contact section (left out rather than invented).",
-  "All numbers marked † (views, GitHub stats, sync time, Ask answers, the OpenPortfo chart) are sample data.",
+  "All numbers marked † (views, GitHub stats, sync time, the OpenPortfo chart) are sample data.",
 ];

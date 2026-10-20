@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { connect, truncate } from "../../../test/db";
 import { pageViews } from "~/db/schema";
-import { getPopular, POPULAR_CACHE_CONTROL } from "./popular";
+import { getPopular, parseDays, POPULAR_CACHE_CONTROL } from "./popular";
 
 const h = connect();
 const db = h.db;
@@ -52,6 +52,27 @@ describe("getPopular", () => {
     await seed("legal-rag", 2, daysAgo(0));
     await seed("craftland", 1, daysAgo(0));
     expect((await getPopular(db, work, { now, limit: 1 })).items).toHaveLength(1);
+  });
+
+  it("takes a custom window of days", async () => {
+    await seed("craftland", 4, daysAgo(10));
+    await seed("legal-rag", 1, daysAgo(1));
+    const r = await getPopular(db, work, { now, days: 14 });
+    expect(r.items.map((i) => [i.slug, i.views])).toEqual([
+      ["craftland", 4],
+      ["legal-rag", 1],
+    ]);
+    expect(r.days).toBe(14);
+    expect((await getPopular(db, work, { now, days: 1 })).items.map((i) => i.slug)).toEqual([
+      "legal-rag",
+    ]);
+  });
+
+  it("parses ?days= as 1 to 30, defaulting to 7", () => {
+    expect(parseDays(null)).toBe(7);
+    expect(parseDays("14")).toBe(14);
+    expect(parseDays("30")).toBe(30);
+    for (const bad of ["0", "31", "-1", "7.5", "abc", "999"]) expect(parseDays(bad)).toBe(7);
   });
 
   it("is cached ~30 s at the edge", () => {

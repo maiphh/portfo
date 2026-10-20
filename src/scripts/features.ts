@@ -1,20 +1,16 @@
 /**
- * Home page features that work without motion: most-read, heatmap, Ask, contact queue,
+ * Home page features that work without motion: most-read, heatmap, contact queue,
  * OpenPortfo chart, OCR leader lines, dev panel. Motion lives in motion.ts.
  */
 import { gsap } from "gsap";
-import { SplitText } from "gsap/SplitText";
 import { candleSeries, pctChange, type Candle } from "~/lib/candles";
 import { contactRules, type ContactField } from "~/lib/contact-rules";
 import { USE_MOCKS } from "~/lib/flags";
-import { mockAsk } from "~/lib/mocks/ask";
 import { mockSubmitContact } from "~/lib/mocks/contact";
 import { site } from "~/lib/site";
 import { TL_MONTHS, nowIndex } from "~/lib/timeline";
 import type { ContactRole, QueueStep } from "~/lib/types";
 import { $, $$, clock, esc, fmt, reduce, relRect } from "./dom";
-
-gsap.registerPlugin(SplitText);
 
 /* ---------- dev panel (?dev) ---------- */
 export function initDevPanel() {
@@ -107,102 +103,6 @@ export function initHeatmap() {
     toEnd();
     window.addEventListener("resize", toEnd);
   }
-}
-
-/* ---------- 3. Ask (SAMPLE answers from src/lib/mocks/ask.ts) ---------- */
-export function initAsk() {
-  const convo = $("#convo");
-  const form = $<HTMLFormElement>("#ask-form");
-  const input = $<HTMLInputElement>("#ask-input");
-  if (!convo || !form || !input) return;
-  let busy = false;
-
-  const ask = (raw: string) => {
-    const q = (raw || "").trim();
-    if (!q || busy) return;
-    busy = true;
-    $("[data-empty]", convo)?.remove();
-    const turn = document.createElement("div");
-    turn.className = "turn";
-    if (!USE_MOCKS) {
-      turn.innerHTML = `<p class="q">${esc(q)}</p><div class="turn-body"><div class="ans"><p class="st">Not connected yet</p><p class="a-body">Ask isn't live yet. Email <a href="mailto:${site.email}">${site.email}</a> and I'll answer myself.</p></div></div>`;
-      convo.appendChild(turn);
-      convo.scrollTop = convo.scrollHeight;
-      busy = false;
-      return;
-    }
-    const hit = mockAsk(q);
-    const n = hit.passages.length;
-    const passages = n
-      ? hit.passages
-          .map((p, i) => `<li><span class="src">[${i + 1}] ${esc(p.source)}</span>${p.html}</li>`)
-          .join("")
-      : '<li><span class="src">no passage found</span>Nothing close enough to quote.</li>';
-    const chips = hit.citations
-      .map(
-        (c, i) =>
-          `<a class="cite-chip" href="${c.href}">${n ? `[${i + 1}] ` : ""}${esc(c.label)}</a>`,
-      )
-      .join("");
-    turn.innerHTML =
-      `<p class="q">${esc(q)}</p><div class="turn-body"><ol class="passages" aria-label="Passages used">${passages}</ol>` +
-      `<div class="ans"><p class="st">${n ? `Reading ${n} passage${n > 1 ? "s" : ""}…` : "Searching…"}</p><p class="a-body">${hit.html}</p>` +
-      `<div class="cites">${chips}</div></div></div>`;
-    convo.appendChild(turn);
-    const st = $(".st", turn);
-    const done = () => {
-      if (st)
-        st.textContent = n
-          ? `Sample answer from ${n} passage${n > 1 ? "s" : ""}`
-          : "No sourced answer";
-      busy = false;
-    };
-    if (reduce()) {
-      convo.scrollTop = convo.scrollHeight;
-      done();
-      return;
-    }
-    const body = $(".a-body", turn);
-    const split = body ? SplitText.create(body, { type: "words", aria: "none" }) : null;
-    const tl = gsap.timeline({
-      defaults: { ease: "power3.out", duration: 0.4 },
-      onUpdate: () => {
-        convo.scrollTop = convo.scrollHeight;
-      },
-      onComplete: () => {
-        split?.revert();
-        done();
-      },
-    });
-    tl.from($(".q", turn), { opacity: 0, y: 12 }).from(
-      $$(".passages li", turn),
-      { opacity: 0, x: -14, stagger: 0.16 },
-      "-=0.1",
-    );
-    if (split)
-      tl.from(split.words, { opacity: 0.08, duration: 0.1, stagger: 0.022, ease: "none" }, "+=0.1");
-    tl.from($$(".cite-chip", turn), { opacity: 0, y: 6, stagger: 0.07 }, ">-0.05");
-  };
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    ask(input.value);
-    input.value = "";
-  });
-  $$<HTMLButtonElement>("[data-prompt]").forEach((b) =>
-    b.addEventListener("click", () => ask(b.dataset.prompt ?? "")),
-  );
-  const focusAsk = (e?: Event) => {
-    e?.preventDefault();
-    $("#ask")?.scrollIntoView({ behavior: reduce() ? "auto" : "smooth" });
-    input.focus({ preventScroll: true });
-  };
-  $$("[data-ask]").forEach((a) => a.addEventListener("click", focusAsk));
-  document.addEventListener("keydown", (e) => {
-    const t = e.target as HTMLElement | null;
-    if (e.key === "/" && t && !/INPUT|TEXTAREA|SELECT/.test(t.tagName) && !t.isContentEditable)
-      focusAsk(e);
-  });
 }
 
 /* ---------- 4. contact form + queue (SAMPLE with mocks on; POST /api/contact with mocks off) ---------- */

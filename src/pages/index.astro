@@ -1,6 +1,5 @@
 ---
 import Activity from "~/components/Activity.astro";
-import Ask from "~/components/Ask.astro";
 import ChapterOcr from "~/components/ChapterOcr.astro";
 import ChapterRag from "~/components/ChapterRag.astro";
 import Contact from "~/components/Contact.astro";
@@ -35,7 +34,6 @@ const views = getViewCounts();
     />
   </section>
   <Timeline />
-  <Ask />
   <Activity github={getGithubSummary()} />
   <HowItWorks />
   <Contact />
