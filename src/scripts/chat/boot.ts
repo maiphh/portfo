@@ -1,6 +1,6 @@
 /**
  * Always-loaded part of the chat window (small): the launcher, `data-chat-open` triggers, the
- * `/` shortcut, `window.portfoChat`, and the launcher's tuck-away logic. The panel code
+ * `/` shortcut, `window.portfoChat`, and the launcher's content-cover tuck. The panel code
  * (./panel) loads on first use, or when the browser is idle after the visitor shows intent.
  */
 import type { PortfoChatApi } from "~/lib/chat/events";
@@ -97,12 +97,12 @@ let place: () => void = () => {};
 function initTuck(root: HTMLElement, launcher: HTMLButtonElement): void {
   const slot = root.querySelector<HTMLElement>("[data-chat-slot]");
   if (!slot) return;
-  let lastY = scrollY;
   let idle = 0;
   let raf = 0;
 
   const tuck = (on: boolean) => {
-    if (open || launcher.dataset.mascot === "roam") on = false; // the roaming mascot avoids content itself
+    // A mascot the visitor dragged ("float") keeps the spot they chose; the docked one yields.
+    if (open || launcher.dataset.mascot === "float") on = false;
     if (on && launcher === document.activeElement) on = false;
     launcher.classList.toggle("is-tucked", on);
   };
@@ -123,12 +123,6 @@ function initTuck(root: HTMLElement, launcher: HTMLButtonElement): void {
   addEventListener(
     "scroll",
     () => {
-      const y = scrollY;
-      const dy = y - lastY;
-      lastY = y;
-      // Out of the way while scrolling down; back on a scroll up (a sign of looking around).
-      if (dy > 2) tuck(true);
-      else if (dy < -2) tuck(false);
       clearTimeout(idle);
       clearTimeout(again);
       idle = window.setTimeout(settle, 180);

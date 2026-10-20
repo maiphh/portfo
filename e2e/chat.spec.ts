@@ -28,7 +28,7 @@ const input = (page: Page) => page.getByRole("textbox", { name: "Ask about Phu's
 async function openFromLauncher(page: Page) {
   await page.goto("/");
   await expect(launcher(page)).toBeVisible();
-  // At the top of the page the launcher may be tucked if it would cover text; scroll up shows it.
+  // At the top of the page the launcher may be tucked if it would cover text; focus brings it back.
   await launcher(page).focus();
   await launcher(page).press("Enter");
   await expect(dialog(page)).toBeVisible();

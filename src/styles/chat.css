@@ -65,7 +65,7 @@ body {
   background: var(--lime);
   box-shadow: 0 0 0 2px var(--sheet-2);
 }
-/* Tucked: off the content while scrolling or when it would sit on text. Still focusable;
+/* Tucked: off the content when it would sit on text. Still focusable;
    keyboard focus brings it back. */
 .chat-launcher.is-tucked {
   transform: translateX(calc(100% + var(--chat-edge) + 4px));
@@ -575,7 +575,8 @@ html.chat-kb-open .chat-foot {
   background: none;
   border: 0;
   box-shadow: none;
-  touch-action: manipulation;
+  /* none: the page must not scroll (or hijack the pointer) while the mascot is dragged. */
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .chat-launcher.has-mascot > svg,
@@ -596,18 +597,16 @@ html.chat-kb-open .chat-foot {
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-/* Roaming: placed by transform from the top-left corner; no CSS transform transition. */
-.chat-launcher.is-swapping {
-  visibility: hidden;
-}
-
-.chat-launcher.is-roaming {
-  left: 0;
-  top: 0;
+/* Float: the visitor dragged the mascot; JS positions it with fixed left/top. */
+.chat-launcher.is-float {
   right: auto;
   bottom: auto;
   transition: opacity 0.2s linear;
-  will-change: transform;
+  cursor: grab;
+  will-change: left, top;
+}
+.chat-launcher.is-dragging {
+  cursor: grabbing;
 }
 .chat-launcher.is-away {
   opacity: 0;
@@ -630,15 +629,10 @@ html.chat-kb-open .chat-foot {
   pointer-events: none;
   transition: opacity 0.15s var(--ease-out);
 }
-.chat-launcher.is-roaming .mascot-tip {
-  bottom: auto;
-  top: calc(100% + 10px);
-  left: 0;
+/* Flipped when the mascot floats on the left half, so the tip stays on-screen. */
+.chat-launcher.is-float.is-right .mascot-tip {
   right: auto;
-}
-.chat-launcher.is-roaming.is-right .mascot-tip {
-  left: auto;
-  right: 0;
+  left: 0;
 }
 .chat-launcher.has-mascot:hover .mascot-tip,
 .chat-launcher.has-mascot:focus-visible .mascot-tip {
@@ -657,14 +651,6 @@ html.chat-kb-open .chat-foot {
 }
 .chat-launcher.has-unread .mascot-badge {
   display: block;
-}
-.mascot-trail {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 93;
-  pointer-events: none;
 }
 .chat-avatar.has-ink {
   border: 0;

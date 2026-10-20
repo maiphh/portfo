@@ -3,11 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 type Dbg = {
   running(): boolean;
   frames(): number;
-  mode(): "roam" | "docked";
+  mode(): "docked" | "float";
   view(): { mood: string; tool: string | null };
   pos(): { x: number; y: number; size: number };
   moving(): boolean;
-  roam(): void;
 };
 declare global {
   interface Window {
@@ -22,57 +21,130 @@ async function ready(page: Page, path = "/") {
   await page.goto(path);
   await page.waitForFunction(() => !!window.__portfoMascot, null, { timeout: 15_000 });
 }
+/** Content-cover tuck slides the docked launcher off-screen; clear it before measuring or dragging. */
+async function untuck(page: Page) {
+  await launcher(page).evaluate((el) => el.classList.remove("is-tucked"));
+  // Focus keeps boot's settle from tucking again while we interact.
+  await launcher(page).focus();
+  await page.waitForTimeout(350);
+}
 const mode = (page: Page) => page.evaluate(() => window.__portfoMascot?.mode());
 
-/** The content column: `main .wrap` minus its padding. */
-const column = (page: Page) =>
-  page.evaluate(() => {
-    const w = document.querySelector("main .wrap") as HTMLElement;
-    const r = w.getBoundingClientRect();
-    const cs = getComputedStyle(w);
-    return {
-      left: r.left + parseFloat(cs.paddingLeft),
-      right: r.right - parseFloat(cs.paddingRight),
-    };
-  });
+test("stays visible while scrolling down", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await ready(page);
+  await untuck(page);
+  await page.evaluate(() => scrollBy(0, 700));
+  // Before the content-cover settle (180ms): scroll-down must not tuck.
+  await page.waitForTimeout(60);
+  await expect(launcher(page)).not.toHaveClass(/is-tucked/);
+});
 
-test("docks below 1280px and roams the margins from 1280px", async ({ page, isMobile }) => {
+test("docks at the bottom right of the window by default", async ({ page, isMobile }) => {
   if (isMobile) {
     await ready(page);
     expect(await mode(page)).toBe("docked");
     await expect(launcher(page)).toHaveAttribute("data-mascot", "docked");
     return;
   }
-  await page.setViewportSize({ width: 1279, height: 900 });
-  await ready(page);
-  expect(await mode(page)).toBe("docked");
-  await expect(launcher(page)).not.toHaveClass(/is-roaming/);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await expect.poll(() => mode(page)).toBe("roam");
-  await expect(launcher(page)).toHaveClass(/is-roaming/);
-  await page.setViewportSize({ width: 1100, height: 900 });
-  await expect.poll(() => mode(page)).toBe("docked");
+  await ready(page);
+  await untuck(page);
+  expect(await mode(page)).toBe("docked");
+  await expect(launcher(page)).not.toHaveClass(/is-float/);
+  // Flush into the corner (24px edge at ≥1280px), where chat.css docked it.
+  const b = await launcher(page).boundingBox();
+  if (!b) throw new Error("no box");
+  expect(Math.abs(b.x + b.width - (1280 - 24))).toBeLessThanOrEqual(2);
+  expect(Math.abs(b.y + b.height - (900 - 24))).toBeLessThanOrEqual(2);
 });
 
-test("roaming stays in the side margins and keeps a 44px target", async ({ page, isMobile }) => {
-  test.skip(isMobile, "desktop only");
-  for (const width of [1280, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    await ready(page);
-    await expect.poll(() => mode(page)).toBe("roam");
-    const col = await column(page);
-    for (let i = 0; i < 24; i++) {
-      if (i % 6 === 0) await page.evaluate(() => window.__portfoMascot?.roam());
-      await page.waitForTimeout(150);
-      const b = await launcher(page).boundingBox();
-      if (!b) throw new Error("no box");
-      expect(b.width).toBeGreaterThanOrEqual(44);
-      const offscreen = b.x + b.width <= 0 || b.x >= width;
-      const left = b.x + b.width <= col.left + 0.5;
-      const right = b.x >= col.right - 0.5;
-      expect(offscreen || left || right, `x=${b.x} at ${width}`).toBe(true);
-    }
-  }
+test("dragging snaps the mascot to the nearest corner, and a drop doesn't open the chat", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "mouse-only drag");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await ready(page);
+  await untuck(page);
+  const b0 = await launcher(page).boundingBox();
+  if (!b0) throw new Error("no box");
+  await page.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2);
+  await page.mouse.down();
+  // Drop toward the top-left quadrant → snaps to the top-left corner.
+  await page.mouse.move(400, 300, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => mode(page)).toBe("float");
+  await expect(launcher(page)).toHaveAttribute("data-mascot", "float");
+  await expect(launcher(page)).toHaveClass(/is-float/);
+  await expect.poll(() => page.evaluate(() => window.__portfoMascot?.moving())).toBe(false);
+  const b1 = await launcher(page).boundingBox();
+  if (!b1) throw new Error("no box");
+  // Top-left dock: 24px edge at ≥1280px.
+  expect(Math.abs(b1.x - 24)).toBeLessThanOrEqual(2);
+  expect(Math.abs(b1.y - 24)).toBeLessThanOrEqual(2);
+  await expect(dialog(page)).toBeHidden();
+  // Fixed positioning: it keeps the corner while the page scrolls.
+  await page.evaluate(() => scrollTo(0, 800));
+  await page.waitForTimeout(400);
+  const b2 = await launcher(page).boundingBox();
+  if (!b2) throw new Error("no box");
+  expect(Math.abs(b2.x - b1.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(b2.y - b1.y)).toBeLessThanOrEqual(1);
+  await page.evaluate(() => scrollTo(0, 0));
+  // A plain click still opens the chat.
+  await launcher(page).click();
+  await expect(dialog(page)).toBeVisible();
+  await expect(launcher(page)).toHaveClass(/is-away/);
+  await page.keyboard.press("Escape");
+  await expect(dialog(page)).toBeHidden();
+});
+
+test("a dragged mascot snaps to a corner inside the viewport", async ({ page, isMobile }) => {
+  test.skip(isMobile, "mouse-only drag");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await ready(page);
+  await untuck(page);
+  const b0 = await launcher(page).boundingBox();
+  if (!b0) throw new Error("no box");
+  await page.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(0, 0, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => page.evaluate(() => window.__portfoMascot?.moving())).toBe(false);
+  const b = await launcher(page).boundingBox();
+  if (!b) throw new Error("no box");
+  expect(Math.abs(b.x - 24)).toBeLessThanOrEqual(2);
+  expect(Math.abs(b.y - 24)).toBeLessThanOrEqual(2);
+  expect(b.x + b.width).toBeLessThanOrEqual(1280 + 0.5);
+  expect(b.y + b.height).toBeLessThanOrEqual(900 + 0.5);
+});
+
+test("the chosen corner survives a full-page navigation", async ({ page, isMobile }) => {
+  test.skip(isMobile, "mouse-only drag");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await ready(page);
+  await page.evaluate(() => sessionStorage.clear());
+  await untuck(page);
+  const b0 = await launcher(page).boundingBox();
+  if (!b0) throw new Error("no box");
+  await page.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(400, 300, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => mode(page)).toBe("float");
+  await expect.poll(() => page.evaluate(() => window.__portfoMascot?.moving())).toBe(false);
+  await expect
+    .poll(() => page.evaluate(() => sessionStorage.getItem("portfo-mascot:v1")))
+    .toContain('"corner":"tl"');
+
+  await ready(page, "/work/document-ocr");
+  await expect.poll(() => mode(page)).toBe("float");
+  await expect(launcher(page)).toHaveAttribute("data-mascot", "float");
+  const b = await launcher(page).boundingBox();
+  if (!b) throw new Error("no box");
+  expect(Math.abs(b.x - 24)).toBeLessThanOrEqual(2);
+  expect(Math.abs(b.y - 24)).toBeLessThanOrEqual(2);
 });
 
 test("clicking or pressing Enter on the mascot opens the chat", async ({ page, isMobile }) => {
@@ -83,6 +155,7 @@ test("clicking or pressing Enter on the mascot opens the chat", async ({ page, i
     await expect(launcher(page)).not.toHaveClass(/is-tucked/);
     await launcher(page).tap();
   } else {
+    await untuck(page);
     await expect.poll(() => page.evaluate(() => window.__portfoMascot?.moving())).toBe(false);
     await launcher(page).hover();
     await launcher(page).click();
@@ -153,11 +226,12 @@ test("reduced motion: a static, docked mascot with no loop", async ({ page }) =>
     return n;
   });
   expect(inked).toBeGreaterThan(100);
-  await expect(launcher(page)).not.toHaveClass(/is-roaming/);
+  await expect(launcher(page)).not.toHaveClass(/is-float/);
 });
 
 test("the animation loop pauses while the tab is hidden", async ({ page }) => {
   await ready(page);
+  await untuck(page);
   await expect.poll(() => page.evaluate(() => window.__portfoMascot?.running())).toBe(true);
   const setHidden = (hidden: boolean) =>
     page.evaluate((h) => {
