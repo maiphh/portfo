@@ -4,7 +4,7 @@ headline: Crypto and Vietnamese stocks, side by side.
 summary: One place to track crypto and Vietnamese stocks side by side.
 org: Personal project
 meta: [Personal project]
-order: 4
+order: 5
 anchor: work-openportfo
 note: The chart on the home page is sample data.
 todo:

@@ -35,8 +35,24 @@ const resolve = (url) => {
 createServer((req, res) => {
   const file = resolve(req.url ?? "/");
   const target = file ?? join(root, "404.html");
+  if (!target || !existsSync(target)) {
+    // Can vanish for a beat while `pnpm build` rewrites the output dir.
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Not found (rebuilding?)");
+    return;
+  }
   res.writeHead(file ? 200 : 404, {
     "Content-Type": types[extname(target)] ?? "application/octet-stream",
   });
-  createReadStream(target).pipe(res);
+  const stream = createReadStream(target);
+  stream.pipe(res);
+  let done = false;
+  res.on("close", () => {
+    if (!done) stream.destroy();
+    done = true;
+  });
+  stream.on("error", (err) => {
+    if (!done) res.destroy(err);
+    done = true;
+  });
 }).listen(port, () => console.log(`Static preview on http://localhost:${port} (no /api routes)`));

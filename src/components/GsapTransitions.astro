@@ -1,0 +1,422 @@
+---
+/**
+ * GSAP "curtain" page transition (adapted from prototypes/prototype-a-curtain.html).
+ *
+ * - Clicking any link to /work/* covers the screen with staggered columns only
+ *   (readout stays hidden; no typing on the old page). Navigate when the curtain
+ *   is shut (`landedAt`). The arrival page owns the command line.
+ * - Arrival types the command on the closed curtain (same character type as
+ *   before), holds the finished line, then uncovers. Exit never types.
+ * - /work pages render WITH the curtain already covered server-side, so the loaded
+ *   document paints under it and the transition reads as one move (no flash).
+ * - Pages arrived at via an exit (incl. home on the way back) get `t-covered`
+ *   and `t-shield` (Base.astro inline head script) before first paint. The
+ *   curtain is the first body node, and `t-shield` paints the canvas the
+ *   curtain color until the columns are actually covering.
+ * - Each covered page uncovers itself + staggers its content in.
+ * - Browser back restores the previous document from bfcache; if it left covered,
+ *   it types the command for the page being re-entered, then uncovers.
+ * - Everything is skipped for prefers-reduced-motion (instant navigation).
+ */
+const route = Astro.url.pathname;
+const slug = route.startsWith("/work/") ? (route.split("/")[2] ?? "") : "";
+const covered = !!slug;
+---
+
+<div id="t-curtain" class:list={[covered && "covered"]} hidden={!covered} aria-hidden="true">
+  <div class="col"></div>
+  <div class="col"></div>
+  <div class="col"></div>
+  <div class="col"></div>
+  <div class="col"></div>
+  <div class="col"></div>
+</div>
+<div id="t-readout" hidden={!covered} aria-hidden="true">
+  <span id="t-readout-text">{covered ? `cd work/${slug}` : ""}</span>
+</div>
+<script is:inline>
+  // SSR-covered failsafe: if the entrance module never runs, clear the curtain.
+  setTimeout(function () {
+    const c = document.getElementById("t-curtain");
+    if (c && !c.hidden && c.classList.contains("covered")) c.classList.remove("covered");
+    const r = document.getElementById("t-readout");
+    if (r && !r.hidden) r.hidden = true;
+  }, 3000);
+</script>
+
+<style is:global>
+  #t-curtain,
+  #t-readout {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+  #t-curtain {
+    z-index: 100;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+  }
+  /* the display:grid above would otherwise defeat the hidden attribute */
+  #t-curtain[hidden],
+  #t-readout[hidden] {
+    display: none;
+  }
+  /* …but a flagged arrival (Base.astro sets .t-covered on <html>) must cover from
+     the very first paint, hidden attribute or not — otherwise it blinks once. */
+  .t-covered #t-curtain[hidden],
+  .t-covered #t-readout[hidden] {
+    display: grid;
+  }
+  /* Canvas matches the columns until the entrance script drops .t-shield.
+     Body background otherwise shows through for one frame before this node exists. */
+  html.t-shield,
+  html.t-shield body {
+    background: var(--sheet-2);
+  }
+  #t-curtain .col {
+    background: var(--sheet-2);
+    border-right: 1px solid var(--rule);
+    transform: scaleY(0);
+    will-change: transform;
+  }
+  /* Server-rendered covered state on /work pages (class) and the flagged arrival
+     state on any page (Base.astro sets .t-covered when sessionStorage has t-go). */
+  #t-curtain.covered .col,
+  .t-covered #t-curtain .col {
+    transform: scaleY(1);
+    transform-origin: top center;
+  }
+  /* Keep the line hidden until the entrance types it. SSR text on /work
+     would otherwise appear all at once under .t-covered. */
+  .t-covered #t-readout {
+    visibility: hidden;
+  }
+  #t-readout {
+    z-index: 110;
+    display: grid;
+    place-items: center;
+    font: 14px var(--code);
+    color: var(--lime);
+    text-align: center;
+  }
+  #t-readout-text::after {
+    content: "▮";
+    margin-left: 3px;
+    animation: t-blink 0.8s steps(1) infinite;
+  }
+  @keyframes t-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  /* Pre-hide the case-study entrance targets when JS is on (this rule + the
+     entrance timeline replace each other; see the failsafes in the script). */
+  .js
+    article.cs
+    :is(
+      .back,
+      .sheet-head,
+      .cs-head .meta-line,
+      .cs-head h1,
+      .cs-head .lede,
+      .cs-head .facts,
+      .prose,
+      .cs-side > *,
+      .cs-next a
+    ) {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #t-curtain,
+    #t-readout {
+      display: none;
+    }
+    #t-curtain.covered .col,
+    .t-covered #t-curtain .col {
+      transform: scaleY(0);
+    }
+    .js
+      article.cs
+      :is(
+        .back,
+        .sheet-head,
+        .cs-head .meta-line,
+        .cs-head h1,
+        .cs-head .lede,
+        .cs-head .facts,
+        .prose,
+        .cs-side > *,
+        .cs-next a
+      ) {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { TextPlugin } from "gsap/TextPlugin";
+
+  gsap.registerPlugin(TextPlugin);
+
+  const K_GO = "t-go"; // readout text for the next document (stashed at exit)
+  const K_BACK = "t-back"; // readout text for this document if bfcache restores it
+
+  /** Bare storage access: browsers can throw on both reads and writes. */
+  const session = (): Storage | null => {
+    try {
+      return window.sessionStorage;
+    } catch {
+      return null;
+    }
+  };
+
+  const curtain = document.getElementById("t-curtain") as HTMLElement;
+  const readout = document.getElementById("t-readout") as HTMLElement;
+  const readoutText = document.getElementById("t-readout-text") as HTMLElement;
+  const cols = gsap.utils.toArray<HTMLElement>("#t-curtain .col");
+
+  const TARGETS =
+    ".back, .sheet-head, .cs-head .meta-line, .cs-head h1, .cs-head .lede, " +
+    ".cs-head .facts, .prose, .cs-side > *, .cs-next a";
+  const reveals = gsap.utils.toArray<HTMLElement>(`article.cs ${TARGETS}`);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /** `cd work/<slug>` into a case study, `cd ..` out of one. */
+  const commandFor = (path: string): string => {
+    if (path.startsWith("/work/")) {
+      const slug = path.split("/")[2] || "";
+      return slug ? `cd work/${slug}` : "cd ..";
+    }
+    return "cd ..";
+  };
+
+  const show = (): void => {
+    curtain.hidden = false;
+    readout.hidden = false;
+    gsap.set(readout, { visibility: "visible" });
+  };
+  const dropShield = (): void => {
+    document.documentElement.classList.remove("t-shield");
+  };
+  const hide = (): void => {
+    curtain.hidden = true;
+    curtain.classList.remove("covered");
+    document.documentElement.classList.remove("t-covered", "t-shield");
+    readout.hidden = true;
+  };
+
+  let busy = false;
+  const TYPE_DUR = 0.2;
+
+  /** Character-type the command on an already closed curtain, then the caller uncovers. */
+  function typeCommand(cmd: string): void {
+    // Clear before reveal so SSR/stash text cannot flash in fully formed.
+    gsap.set(readoutText, { text: "", autoAlpha: 1, y: 0 });
+    show();
+    gsap.timeline().to(
+      readoutText,
+      { text: { value: cmd, delimiter: "" }, duration: TYPE_DUR, ease: "none" },
+      0,
+    );
+  }
+
+  /** Columns fold away from the top; the case study staggers in underneath. */
+  function uncover(startAt: number): void {
+    gsap
+      .timeline()
+      // Canvas fill stays until the columns actually move; dropping it earlier
+      // lets the page background through the seams, dropping it later hides the reveal.
+      .call(dropShield, [], startAt)
+      .set(cols, { transformOrigin: "top center" }, startAt)
+      .to(
+        cols,
+        {
+          scaleY: 0,
+          duration: 0.5,
+          ease: "power3.inOut",
+          stagger: { each: 0.04, from: "start" },
+        },
+        startAt,
+      )
+      // the command line exits with the curtain: glide up and dissolve as it opens
+      .to(readoutText, { y: -18, autoAlpha: 0, duration: 0.3, ease: "power2.in" }, startAt + 0.05)
+      .fromTo(
+        reveals,
+        { y: 20, autoAlpha: 0 },
+        {
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.5,
+          ease: "power3.out",
+          stagger: { amount: 0.5 },
+          clearProps: "transform",
+        },
+        Math.max(0, startAt - 0.1),
+      )
+      .call(hide, [], startAt + 0.65);
+  }
+
+  /** Columns rise from the bottom. Readout stays hidden — arrival owns the command. */
+  function cover(fast = false): { tl: gsap.core.Timeline; landedAt: number } {
+    curtain.hidden = false;
+    const tl = gsap.timeline();
+    const dur = fast ? 0.3 : 0.42;
+    const gap = fast ? 0.03 : 0.04;
+    const start = fast ? 0.12 : 0.03;
+    const landedAt = start + dur + gap * 5;
+    tl.set(cols, { scaleY: 0, transformOrigin: "bottom center" }, 0).to(
+      cols,
+      { scaleY: 1, duration: dur, ease: "power3.inOut", stagger: { each: gap, from: "start" } },
+      start,
+    );
+    return { tl, landedAt };
+  }
+
+  /** Exit: cover only, stash the arrival command, navigate when shut. */
+  function exit(href: string): void {
+    if (busy) return;
+    busy = true;
+
+    const s = session();
+    let cmd = "cd ..";
+    try {
+      cmd = commandFor(new URL(href, location.href).pathname);
+    } catch {
+      // keep the fallback command
+    }
+    if (s) {
+      // The command itself is the arrival flag: the next document reads it
+      // before paint (Base.astro + the inline script above the curtain).
+      s.setItem(K_GO, cmd);
+      s.setItem(K_BACK, cmd);
+    }
+    // warm the cache while the cover plays (Astro prefetch is hover-based)
+    import("astro:prefetch").then((m) => m.prefetch(href)).catch(() => {});
+
+    let gone = false;
+    const go = () => {
+      if (gone) return;
+      gone = true;
+      window.location.href = href;
+    };
+    window.setTimeout(go, 1200); // backup if the cover timeline never fires
+    try {
+      const { tl, landedAt } = cover();
+      tl.call(go, [], landedAt);
+      tl.call(() => (busy = false), [], landedAt + 0.02); // only relevant on a cancelled nav
+    } catch {
+      go();
+    }
+  }
+
+  /** Entry: type the command on the closed curtain, hold it, then uncover. */
+  function enter(): void {
+    busy = true;
+    try {
+      const fromTransition = document.documentElement.classList.contains("t-covered");
+      if (fromTransition) {
+        typeCommand(commandFor(location.pathname));
+        // Type finishes at 0.2s; leave the finished line up briefly, then open.
+        uncover(TYPE_DUR + 0.35);
+      } else {
+        show();
+        gsap.set(readoutText, { autoAlpha: 1, y: 0 });
+        uncover(0.4);
+      }
+      window.setTimeout(() => (busy = false), 1600);
+    } catch {
+      hide();
+      failsafe();
+    }
+  }
+
+  /** Failsafe: force the case study visible even if the entrance never ran. */
+  function failsafe(): void {
+    reveals.forEach((el) => {
+      el.style.opacity = "1";
+      el.style.visibility = "";
+      el.style.transform = "";
+    });
+    hide();
+  }
+
+  const isWork = location.pathname.startsWith("/work/");
+
+  // The document may have rendered already covered (server-rendered on /work, or
+  // flagged via the inline head script for the "cd .." route home).
+  const arrivedCovered =
+    curtain.classList.contains("covered") ||
+    document.documentElement.classList.contains("t-covered");
+
+  if (reduced) {
+    // reduced motion: everything visible, plain navigation
+    reveals.forEach((el) => {
+      el.style.opacity = "1";
+    });
+    hide(); // drop the SSR/flag coverage instantly
+  } else if (arrivedCovered) {
+    enter();
+  }
+
+  window.addEventListener("pageshow", (e) => {
+    const s = session();
+    if (!e.persisted) {
+      // fresh load: stale stash cleaned; entrance ran above
+      if (s) {
+        s.removeItem(K_GO);
+      }
+      return;
+    }
+    // bfcache restore of this document
+    const first = cols[0];
+    const left = !!first && (gsap.getProperty(first, "scaleY") as number) > 0.02;
+    if (s) {
+      s.removeItem(K_GO);
+      s.removeItem(K_BACK);
+    }
+    if (reduced || !left) {
+      hide(); // in case the document was left mid-cover
+      failsafe();
+      return;
+    }
+    // departed covered: reopen the show
+    try {
+      // reflect the page being re-entered, not the stale destination command
+      const backCmd = isWork ? commandFor(location.pathname) : "cd ..";
+      gsap.set(cols, { scaleY: 1, transformOrigin: "top center" });
+      typeCommand(backCmd);
+      window.setTimeout(() => (busy = false), 1600);
+      uncover(TYPE_DUR + 0.35);
+    } catch {
+      hide();
+      failsafe();
+    }
+  });
+
+  document.addEventListener("click", (e: MouseEvent) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return;
+    }
+    const link = (e.target as Element | null)?.closest("a");
+    if (!link) return;
+    if (link.target && link.target !== "_self") return;
+    if (link.hasAttribute("download")) return;
+
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin) return;
+    // in-page anchors stay put
+    if (url.hash && url.pathname === location.pathname) return;
+
+    const isToWork = url.pathname.startsWith("/work/");
+    const leavingWork = isWork && url.pathname === "/";
+    if (!isToWork && !leavingWork) return;
+
+    if (reduced) {
+      // plain navigation
+      return;
+    }
+    e.preventDefault();
+    exit(url.href);
+  });
+</script>
