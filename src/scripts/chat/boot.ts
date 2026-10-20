@@ -1,11 +1,11 @@
 /**
  * Always-loaded part of the chat window (small): the launcher, `data-chat-open` triggers, the
- * `/` shortcut, `window.portfoChat`, and the launcher's tuck-away logic. The panel code
+ * `/` shortcut, `window.portfoChat`, and the launcher's content-cover tuck. The panel code
  * (./panel) loads on first use, or when the browser is idle after the visitor shows intent.
  */
 import type { PortfoChatApi } from "~/lib/chat/events";
 import type { Phase } from "~/lib/chat/state";
-import { overlaps, type Box } from "~/lib/chat/geometry";
+import { coversContent } from "./content";
 
 type Panel = typeof import("./panel");
 let panel: Promise<Panel> | null = null;
@@ -71,59 +71,38 @@ export function bootChat(): void {
   });
 
   initTuck(root, launcher);
+  loadMascot(root, launcher);
+}
+
+/** The ink-dot mascot replaces the placeholder once the page has loaded and gone idle. */
+function loadMascot(root: HTMLElement, launcher: HTMLButtonElement): void {
+  const go = () =>
+    void import("../mascot/engine")
+      .then((m) => m.initMascot(root, launcher))
+      .catch(() => {
+        /* the placeholder launcher keeps working */
+      });
+  const idle = () =>
+    "requestIdleCallback" in window
+      ? requestIdleCallback(go, { timeout: 2500 })
+      : setTimeout(go, 600);
+  if (document.readyState === "complete") idle();
+  else addEventListener("load", idle, { once: true });
 }
 
 /* ---------- keep the launcher off text and tap targets ---------- */
-
-const INTERACTIVE = "a[href],button,input,select,textarea,summary,[role=button]";
-
-/**
- * True when real content (a line of text or a tap target) sits under the launcher's spot.
- * Text that is invisible right now still counts: scroll reveals fade it in a moment later.
- * Runs only when scrolling settles, so a full pass over the page's text is affordable.
- */
-function coversContent(spot: Box, root: HTMLElement): boolean {
-  const pad = 6;
-  const near = (r: DOMRect) => r.width > 0 && r.height > 0 && overlaps(r, spot, pad);
-  for (const el of document.querySelectorAll(INTERACTIVE))
-    if (!root.contains(el) && near(el.getBoundingClientRect())) return true;
-  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-    acceptNode: (n) =>
-      n.textContent?.trim() && !root.contains(n)
-        ? NodeFilter.FILTER_ACCEPT
-        : NodeFilter.FILTER_REJECT,
-  });
-  const range = document.createRange();
-  let lastParent: Element | null = null;
-  let parentNear = false;
-  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-    const parent = n.parentElement;
-    if (!parent) continue;
-    if (parent !== lastParent) {
-      lastParent = parent;
-      // Cheap reject: the parent's box (inline or block) doesn't reach the spot.
-      const b = parent.getBoundingClientRect();
-      parentNear =
-        b.bottom >= spot.top - pad && b.top <= spot.bottom + pad && b.right >= spot.left - pad;
-    }
-    if (!parentNear) continue;
-    range.selectNodeContents(n);
-    for (const r of range.getClientRects()) if (near(r)) return true;
-  }
-  return false;
-}
 
 let place: () => void = () => {};
 
 function initTuck(root: HTMLElement, launcher: HTMLButtonElement): void {
   const slot = root.querySelector<HTMLElement>("[data-chat-slot]");
   if (!slot) return;
-  let lastY = scrollY;
   let idle = 0;
   let raf = 0;
 
   const tuck = (on: boolean) => {
-    if (open) on = false;
+    // A mascot the visitor dragged ("float") keeps the spot they chose; the docked one yields.
+    if (open || launcher.dataset.mascot === "float") on = false;
     if (on && launcher === document.activeElement) on = false;
     launcher.classList.toggle("is-tucked", on);
   };
@@ -144,12 +123,6 @@ function initTuck(root: HTMLElement, launcher: HTMLButtonElement): void {
   addEventListener(
     "scroll",
     () => {
-      const y = scrollY;
-      const dy = y - lastY;
-      lastY = y;
-      // Out of the way while scrolling down; back on a scroll up (a sign of looking around).
-      if (dy > 2) tuck(true);
-      else if (dy < -2) tuck(false);
       clearTimeout(idle);
       clearTimeout(again);
       idle = window.setTimeout(settle, 180);
