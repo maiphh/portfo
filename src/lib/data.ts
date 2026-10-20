@@ -18,7 +18,7 @@ export function getMostRead(work: CollectionEntry<"work">[]): ViewCount[] | null
     .map((w) => ({
       slug: w.id,
       title: w.data.title,
-      href: `#${w.data.anchor}`,
+      href: `/work/${w.id}`,
       views: mockViews[w.id] ?? 0,
     }))
     .sort((a, b) => b.views - a.views);

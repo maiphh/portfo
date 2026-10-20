@@ -11,7 +11,7 @@ const VI_CODE = (s: string) => `<span class="vi" lang="vi">${s}</span>`;
 const P = {
   cvT: {
     source: "cv · Talentnet",
-    html: "AI Engineer Specialist, Sep 2025 – now. Document OCR and legal RAG, both built solo.",
+    html: "AI Engineer Specialist, Sep 2025 – now. Document OCR, legal RAG and payroll data validation, all built solo.",
   },
   ocr: {
     source: "case study · document OCR",
@@ -20,6 +20,10 @@ const P = {
   rag: {
     source: "case study · legal RAG",
     html: `Tag Chunker keeps the ${VI("Điều / Khoản / Điểm")} path on every chunk. Answers point to the correct document.`,
+  },
+  dv: {
+    source: "case study · payroll data validation",
+    html: "Each client's payroll rules are converted into code and varied data formats are read dynamically, so payroll is generated and checked in one pass — the manual checker step is replaced.",
   },
   cvG: { source: "cv · Garena", html: "Game Developer, Garena Free Fire, Dec 2023 – Sep 2025." },
   craft: {
@@ -56,6 +60,15 @@ const KB: Rule[] = [
     html: "Over 98% accurate, and it saves more than 90% of processing time [1]. A vision-language model reads the page, a schema says which fields to find, and rules check the result before it's handed on. He built it on his own at Talentnet [2].",
     citations: [
       { label: "Document OCR", href: "#work-ocr" },
+      { label: "CV", href: "#timeline" },
+    ],
+  },
+  {
+    re: /data ?validation|payroll rules|client rules|manual check|hr outsourcing|outsourc/i,
+    passages: [P.dv, P.cvT],
+    html: "In HR outsourcing payroll, each client has distinct rules and data formats. His pipeline uses AI to turn those client rules into code and read varied formats dynamically, so payroll is generated and validated in one pass — the manual checker step is replaced, and manual work drops a lot [1]. Built solo at Talentnet [2].",
+    citations: [
+      { label: "Payroll data validation", href: "#work-validation" },
       { label: "CV", href: "#timeline" },
     ],
   },
@@ -113,12 +126,13 @@ const KB: Rule[] = [
   },
   {
     re: /ship|production|built|work|do|experience|job/i,
-    passages: [P.cvT, P.ocr, P.rag],
-    html: `Two systems at Talentnet, both built solo [1]: a document OCR pipeline that's over 98% accurate and saves more than 90% of processing time [2], and a legal RAG payroll assistant whose answers point to the exact ${VI_CODE("Điều / Khoản / Điểm")} [3].`,
+    passages: [P.cvT, P.ocr, P.rag, P.dv],
+    html: `Three systems at Talentnet, all built solo [1]: a document OCR pipeline that's over 98% accurate and saves more than 90% of processing time [2], a legal RAG assistant whose answers point to the exact ${VI_CODE("Điều / Khoản / Điểm")} [3], and payroll data validation that turns each client's rules into code and replaces the manual checker step [4].`,
     citations: [
       { label: "CV", href: "#timeline" },
       { label: "Document OCR", href: "#work-ocr" },
       { label: "Legal RAG", href: "#work-rag" },
+      { label: "Payroll data validation", href: "#work-validation" },
     ],
   },
 ];
@@ -133,6 +147,7 @@ const NOPE: AskAnswer = {
 export const askSuggestions: readonly string[] = [
   "How accurate is the OCR pipeline?",
   "How does the legal RAG keep citations exact?",
+  "How does payroll data validation work?",
   "What did he build at Garena?",
   "Where did he study?",
 ];

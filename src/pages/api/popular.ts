@@ -14,7 +14,7 @@ export const GET: APIRoute = async () => {
     work ??= (await getWork()).map((w) => ({
       slug: w.id,
       title: w.data.title,
-      href: `/#${w.data.anchor}`,
+      href: `/work/${w.id}`,
     }));
     const result = await getPopular(getDb(), work);
     return Response.json(result, { headers: { "Cache-Control": POPULAR_CACHE_CONTROL } });

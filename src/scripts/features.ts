@@ -77,7 +77,11 @@ export function initMostRead() {
   const viewEls = $$("[data-views]");
   const render = () => {
     const items = viewEls
-      .map((el) => ({ n: Number(el.dataset.views), t: el.dataset.title ?? "", h: "#" + el.id }))
+      .map((el) => ({
+        n: Number(el.dataset.views),
+        t: el.dataset.title ?? "",
+        h: "/work/" + (el.dataset.slug ?? el.id),
+      }))
       .sort((a, b) => b.n - a.n);
     $$("[data-most]").forEach((ol) => {
       ol.innerHTML = items
@@ -99,15 +103,7 @@ export function initMostRead() {
   render();
 }
 
-/* ---------- 2. heatmap starts at "today"; timeline "now" tracks the real date ---------- */
-export function initHeatmap() {
-  const hm = $("[data-hm-scroll]");
-  if (hm) {
-    const toEnd = () => (hm.scrollLeft = hm.scrollWidth);
-    toEnd();
-    window.addEventListener("resize", toEnd);
-  }
-}
+/* ---------- 2. heatmap (fits its container now; timeline "now" tracks the real date) ---------- */
 
 /* ---------- 3. Ask (SAMPLE answers from src/lib/mocks/ask.ts) ---------- */
 export function initAsk() {

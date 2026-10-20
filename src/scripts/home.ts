@@ -5,7 +5,6 @@ import {
   initChart,
   initContact,
   initDevPanel,
-  initHeatmap,
   initMostRead,
   initNowMarker,
 } from "./features";
@@ -19,7 +18,6 @@ initHeroBg();
 initDevPanel();
 trackSections();
 initMostRead();
-initHeatmap();
 if (!USE_MOCKS) void initActivity();
 initNowMarker();
 initAsk();
