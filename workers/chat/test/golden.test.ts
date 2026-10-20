@@ -93,7 +93,7 @@ describe("golden Q&A", () => {
           const p = toolResult(inputs, "get_project") as { title: string } | null;
           expect(p).not.toBeNull();
           return {
-            text: "At Talentnet, Phu built two production tools on his own: a document OCR pipeline (over 98% accurate, saving more than 90% of processing time) and a legal RAG payroll assistant that keeps the Điều › Khoản › Điểm path on every chunk so answers cite the right document.",
+            text: "At Talentnet, Phu built three production tools on his own: a document OCR pipeline (over 98% accurate, saving more than 90% of processing time), a legal RAG payroll assistant that keeps the Điều › Khoản › Điểm path on every chunk, and a payroll data validation system that turns each client's rules into code.",
           };
         },
       ]),
@@ -104,10 +104,12 @@ describe("golden Q&A", () => {
       "list_projects",
       "get_project",
       "get_project",
+      "get_project",
     ]);
     expect(r.tools.filter((t) => t.name === "get_project").map((t) => t.args)).toEqual([
       { slug: "document-ocr" },
       { slug: "legal-rag" },
+      { slug: "data-validation" },
     ]);
     expect(r.text).toMatch(/document OCR/i);
     expect(r.text).toMatch(/legal RAG/i);
@@ -118,11 +120,18 @@ describe("golden Q&A", () => {
       expect.arrayContaining([
         { title: "Document OCR pipeline", href: "/work/document-ocr" },
         { title: "Legal RAG assistant", href: "/work/legal-rag" },
+        { title: "Payroll data validation", href: "/work/data-validation" },
         { title: "Experience", href: "/#timeline" },
       ]),
     );
     const statuses = r.events.filter((e) => e.event === "status").map((e) => e.data.tool);
-    expect(statuses).toEqual(["get_experience", "list_projects", "get_project", "get_project"]);
+    expect(statuses).toEqual([
+      "get_experience",
+      "list_projects",
+      "get_project",
+      "get_project",
+      "get_project",
+    ]);
   });
 
   it("Most viewed project?", async () => {
