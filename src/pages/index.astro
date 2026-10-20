@@ -1,6 +1,7 @@
 ---
 import Activity from "~/components/Activity.astro";
 import ChapterOcr from "~/components/ChapterOcr.astro";
+import ChapterValidation from "~/components/ChapterValidation.astro";
 import ChapterRag from "~/components/ChapterRag.astro";
 import Contact from "~/components/Contact.astro";
 import Craftland from "~/components/Craftland.astro";
@@ -25,6 +26,7 @@ const views = getViewCounts();
     <WorkIntro mostRead={getMostRead(work)} />
     <ChapterOcr entry={pick(work, "document-ocr")} views={views["document-ocr"]} />
     <ChapterRag entry={pick(work, "legal-rag")} views={views["legal-rag"]} />
+    <ChapterValidation entry={pick(work, "data-validation")} views={views["data-validation"]} />
     <Craftland entry={pick(work, "craftland")} views={views.craftland} />
     <SideProjects
       openportfo={pick(work, "openportfo")}

@@ -21,9 +21,11 @@ pnpm-debug.log*
 # OS / editor
 .DS_Store
 .idea/
+
 # Playwright
 /test-results/
 /playwright-report/
 
 .agents
 .grok
+skills-lock.json

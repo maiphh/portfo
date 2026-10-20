@@ -1,0 +1,95 @@
+---
+/** Chapter: Payroll data validation. Simple chapter like Craftland, no pinning. */
+import type { CollectionEntry } from "astro:content";
+import Icon from "./Icon.astro";
+import Steps from "./Steps.astro";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  views?: number | undefined;
+}
+const { entry, views } = Astro.props;
+const d = entry.data;
+---
+
+<article
+  class="chapter"
+  id={d.anchor}
+  aria-labelledby="dv-h"
+  data-views={views}
+  data-slug={entry.id}
+  data-title={d.title}
+>
+  <div class="wrap ch-grid">
+    <div class="ch-text">
+      <h2 id="dv-h">{d.headline}</h2>
+      <p class="meta-line">
+        {d.meta.map((m) => (
+          <span>{m}</span>
+        ))}
+      </p>
+      <Steps steps={d.steps} />
+      {d.note && <p class="note">{d.note}</p>}
+      <a class="link cs-link" href={`/work/${entry.id}`}>
+        Read the case study
+        <Icon name="arrow" />
+      </a>
+    </div>
+    <div
+      class="stage"
+      role="img"
+      aria-label="Illustration: two sample client rule sheets with different formats on the left, and a generated payroll list on the right where every row passes the converted rules."
+    >
+      <div class="dv" aria-hidden="true">
+        <div class="dv-doc dv-a">
+          <span class="dv-file">client-a · rules</span>
+          <div class="dv-row">
+            <span>overtime after 40h</span>
+            <b>× 1.5</b>
+          </div>
+          <div class="dv-row">
+            <span>night shift</span>
+            <b>+40,000</b>
+          </div>
+          <div class="dv-row">
+            <span>absence</span>
+            <b>deduct daily</b>
+          </div>
+        </div>
+        <div class="dv-doc dv-b">
+          <span class="dv-file">client-b · timesheet</span>
+          <div class="dv-row">
+            <span>format</span>
+            <b>auto-detected</b>
+          </div>
+          <div class="dv-row">
+            <span>columns</span>
+            <b>mapped</b>
+          </div>
+          <div class="dv-row">
+            <span>checker step</span>
+            <b>code, not hands</b>
+          </div>
+        </div>
+        <div class="dv-out">
+          <span class="dv-file">payroll · generated</span>
+          <div class="dv-row">
+            <span>nv-0142</span>
+            <b>12,480,000</b>
+          </div>
+          <div class="dv-row">
+            <span>nv-0187</span>
+            <b>9,940,000</b>
+          </div>
+          <div class="dv-row">
+            <span>nv-0203</span>
+            <b>14,125,000</b>
+          </div>
+          <div class="dv-ok">rules ✓ · formats ✓ · totals ✓</div>
+        </div>
+      </div>
+      <p class="stage-cap">sample rules, made-up numbers</p>
+    </div>
+  </div>
+  <!-- TODO(content): outcome metric for payroll data validation (how much manual work it removed). -->
+</article>
