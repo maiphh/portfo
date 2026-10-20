@@ -7,6 +7,7 @@ import hubotLatin from "@fontsource-variable/hubot-sans/files/hubot-sans-latin-w
 import familjenLatin from "@fontsource-variable/familjen-grotesk/files/familjen-grotesk-latin-wght-normal.woff2?url";
 import Chat from "~/components/Chat.astro";
 import Footer from "~/components/Footer.astro";
+import GsapTransitions from "~/components/GsapTransitions.astro";
 import Icons from "~/components/Icons.astro";
 import Nav from "~/components/Nav.astro";
 import { site } from "~/lib/site";
@@ -51,6 +52,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <!-- JS-on pre-hide for the hero intro, with a 2.5s failsafe (see .js rules in global.css). -->
     <script is:inline>
       document.documentElement.classList.add("js");
+      // Curtain page transition: arriving from an in-site exit covers before paint.
+      try {
+        if (
+          !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          sessionStorage.getItem("t-go") !== null
+        ) {
+          // t-covered closes the columns; t-shield paints the canvas the same
+          // color until those columns exist, so the new document can't flash.
+          document.documentElement.classList.add("t-covered", "t-shield");
+        }
+      } catch {
+        // storage is unavailable (some private modes) — no coverage flag, plain loads
+      }
       setTimeout(function () {
         if (!window.__hero && document.querySelector(".hero"))
           document.documentElement.classList.remove("js");
@@ -58,6 +72,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </script>
   </head>
   <body>
+    <GsapTransitions />
     <Icons />
     <a class="skip" href="#main">
       Skip to content

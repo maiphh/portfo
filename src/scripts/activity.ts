@@ -55,8 +55,6 @@ export function render(root: HTMLElement, s: GithubSummary): void {
   const status = $("[data-gh-status]", root);
   if (body) body.hidden = false;
   if (status) status.hidden = true;
-  const scroll = $("[data-hm-scroll]", root);
-  if (scroll) scroll.scrollLeft = scroll.scrollWidth;
 }
 
 export async function initActivity(): Promise<void> {

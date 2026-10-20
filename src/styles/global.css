@@ -1487,20 +1487,22 @@ sup.fn {
   }
 }
 .hm-scroll {
-  overflow-x: auto;
-  padding-bottom: 10px;
+  /* The heatmap fits its container; no sideways scrolling. */
+  overflow: hidden;
 }
 .hm {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, 14px);
-  gap: 4px;
-  width: max-content;
+  grid-template-rows: repeat(7, auto);
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  width: 100%;
 }
 .hm i {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  align-self: start;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 2px;
   background: #242422;
 }
 .hm .l1 {
@@ -3050,4 +3052,87 @@ footer {
 }
 .gh-grid[hidden] {
   display: none;
+}
+
+/* ---------- Payroll data validation (chapter) ---------- */
+.dv {
+  position: absolute;
+  inset: 7% 4.5% 12%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  grid-template-areas: "a" "b" "out";
+  gap: 10px;
+  align-content: center;
+}
+.dv-doc,
+.dv-out {
+  background: var(--sheet-2);
+  border: 1px solid var(--rule-2);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font: 400 clamp(0.62rem, 0.45rem + 0.4vw, 0.82rem)/1.4 var(--code);
+  min-width: 0;
+}
+.dv-a {
+  grid-area: a;
+}
+.dv-b {
+  grid-area: b;
+}
+.dv-out {
+  grid-area: out;
+}
+.dv-file {
+  display: inline-block;
+  margin-bottom: 8px;
+  font: 500 0.82em/1 var(--code);
+  color: var(--violet);
+  background: var(--violet-tint);
+  border: 1px solid rgba(179, 168, 255, 0.4);
+  border-radius: 2px;
+  padding: 3px 6px;
+}
+.dv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px dashed var(--rule-2);
+}
+.dv-row:first-of-type {
+  border-top: 0;
+}
+.dv-row span {
+  color: var(--muted);
+}
+.dv-row b {
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
+.dv-ok {
+  display: inline-block;
+  margin-top: 8px;
+  font: 500 0.85em var(--code);
+  color: var(--lime);
+  background: var(--lime-tint);
+  border: 1px solid var(--lime-line);
+  border-radius: 2px;
+  padding: 4px 8px;
+}
+@media (min-width: 1024px) {
+  .dv {
+    grid-template-columns: 1fr 1.05fr;
+    grid-template-rows: auto auto;
+    grid-template-areas: "a out" "b out";
+    align-items: center;
+    column-gap: 22px;
+  }
+}
+@media (max-width: 600px) {
+  .dv {
+    inset: 5% 4.5% 11%;
+  }
 }
