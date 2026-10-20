@@ -11,9 +11,11 @@ import {
 } from "./features";
 import { initMotion } from "./motion";
 import { initActivity } from "./activity";
+import { initHeroBg } from "./hero-bg";
 import { USE_MOCKS } from "~/lib/flags";
 import { trackSections } from "./analytics";
 
+initHeroBg();
 initDevPanel();
 trackSections();
 initMostRead();

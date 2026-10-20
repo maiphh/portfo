@@ -4,6 +4,44 @@ import Icon from "./Icon.astro";
 import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
 
+/** Paper ghost layers: decorative only, kept faint so they read as texture behind the sheet. */
+const ghostPages = [
+  {
+    cls: "g1",
+    file: "candidate-a.pdf",
+    title: 72,
+    lines: [96, 88, 92, 70, 84, 90, 58, 66, 94, 82, 48],
+    boxes: [
+      { k: "name", top: "17%", left: "8%", w: "46%", h: "7%" },
+      { k: "role", top: "56%", left: "8%", w: "58%", h: "8%" },
+    ],
+  },
+  {
+    cls: "g2",
+    file: "candidate-b.pdf",
+    title: 84,
+    lines: [90, 94, 86, 92, 64, 78, 88, 52, 74, 90, 68, 82],
+    boxes: [
+      { k: "email", top: "25%", left: "8%", w: "54%", h: "6%" },
+      { k: "skills[]", top: "63%", left: "8%", w: "68%", h: "8%" },
+    ],
+  },
+  {
+    cls: "g3",
+    file: "extract.json",
+    title: 56,
+    lines: [64, 82, 58, 74, 90, 62, 78, 54, 88, 70],
+    boxes: [{ k: "total", top: "38%", left: "12%", w: "62%", h: "8%" }],
+  },
+  {
+    cls: "g4",
+    file: "cv-draft.pdf",
+    title: 68,
+    lines: [88, 76, 92, 60, 84, 72, 90, 56, 80],
+    boxes: [{ k: "date", top: "30%", left: "10%", w: "48%", h: "7%" }],
+  },
+];
+
 type Val = string | string[];
 const record: [string, Val][] = [
   ["name", site.name],
@@ -31,7 +69,60 @@ const jsonHtml = [
 ].join("");
 ---
 
-<section class="hero" id="top" aria-labelledby="h1">
+<section class="hero" id="top" aria-labelledby="h1" data-hero>
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-bg-glow"></div>
+
+    <div class="hbg hbg-grid" data-hbg="grid">
+      <div class="hbg-grid-lines"></div>
+      <div class="hbg-grid-sweep"></div>
+      <div class="hbg-grid-sparks">
+        <i style="left:3%;top:22%;animation-delay:-1.4s"></i>
+        <i style="left:6.5%;top:71%;animation-delay:-5.2s"></i>
+        <i style="left:2.5%;top:88%;animation-delay:-7.6s"></i>
+        <i style="left:95%;top:16%;animation-delay:-3.1s"></i>
+        <i style="left:92%;top:47%;animation-delay:-6.4s"></i>
+        <i style="left:97%;top:82%;animation-delay:-2.2s"></i>
+        <i style="left:38%;top:3%;animation-delay:-4.8s"></i>
+        <i style="left:71%;top:95%;animation-delay:-8.3s"></i>
+      </div>
+      <span class="hbg-crop tl"></span>
+      <span class="hbg-crop tr"></span>
+      <span class="hbg-crop bl"></span>
+      <span class="hbg-crop br"></span>
+      <span class="hbg-note nw">src / mai-gia-phu-cv.pdf</span>
+      <span class="hbg-note ne">stage 01 · parse</span>
+      <span class="hbg-note sw">fields 07 / 07</span>
+      <span class="hbg-note se">mode: extract</span>
+    </div>
+
+    <div class="hbg hbg-pages" data-hbg="pages">
+      {ghostPages.map((p, i) => (
+        <div class={`ghost ${p.cls}`}>
+          <span class="ghost-file">
+            {p.file}
+            {i === 0 && <em>parsed</em>}
+          </span>
+          <span class="ghost-title" style={`width:${p.title}%`} />
+          <div class="ghost-lines">
+            {p.lines.map((w) => (
+              <i style={`width:${w}%`} />
+            ))}
+          </div>
+          {p.boxes.map((b) => (
+            <span
+              class="ghost-box"
+              style={`top:${b.top};left:${b.left};width:${b.w};height:${b.h}`}
+            >
+              <b>{b.k}</b>
+            </span>
+          ))}
+          {i === 1 && <span class="ghost-stamp">parsed</span>}
+        </div>
+      ))}
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="sheet" data-sheet>
       <div class="sheet-head" data-h>
