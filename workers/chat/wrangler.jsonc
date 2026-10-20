@@ -1,6 +1,7 @@
-// portfo-chat: the portfolio's chat Worker. Placeholder IDs only; nothing here is a secret.
-// Not deployed yet. Before `wrangler deploy`, create the resources listed in README.md
-// ("Before the first deploy") and replace every REPLACE_ME value.
+// portfo-chat: the portfolio's chat Worker. Nothing here is a secret.
+// Deployed at https://portfo-chat.poet-ung-ho.workers.dev. The top level is what is deployed
+// today (localhost only); env.production is the launch config (README "Environments").
+// A deploy stops if any value is still a placeholder: see build.command and README "Deploy guard".
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "portfo-chat",
@@ -8,6 +9,10 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "observability": { "enabled": true },
+
+  // Deploy guard: runs before every `wrangler deploy` / `versions upload` and fails on any
+  // REPLACE_ME value (scripts/check-config.ts). env.production overrides it with --env.
+  "build": { "command": "node scripts/check-config.ts" },
 
   // Workers AI: Llama 3.3 70B (chat + tool calling), Llama 3.1 8B (fallback), bge-m3 (embeddings).
   "ai": { "binding": "AI" },
@@ -30,11 +35,13 @@
   "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
 
+  // The values deployed today. Keep this block in sync with the dashboard.
   "vars": {
     // Origins allowed to call /chat. Their hostnames must also be on the Turnstile widget.
-    "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN,http://localhost:4321",
+    "ALLOWED_ORIGINS": "http://localhost:4321",
     // The Astro site, for get_github_stats (/api/activity) and get_popular_projects (/api/popular).
-    "SITE_URL": "https://REPLACE_ME_SITE_DOMAIN",
+    // Empty: those two tools return a tool error and the agent answers "I don't know".
+    "SITE_URL": "",
     // Runtime knobs (README "Runtime knobs"). Invalid values fall back to these defaults;
     // numbers are clamped to their range; models must be @cf/ ids.
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
@@ -47,4 +54,39 @@
   },
 
   // Secrets (never in this file): wrangler secret put TURNSTILE_SECRET_KEY / INGEST_SECRET / SESSION_SIGNING_KEY
+
+  "env": {
+    // `wrangler deploy --env production`. Same Worker (name), so the workers.dev URL and the
+    // secrets stay; only the vars change. wrangler does not inherit vars or bindings into an
+    // env, so they are repeated here: keep them in sync with the top level.
+    "production": {
+      "name": "portfo-chat",
+      "build": { "command": "node scripts/check-config.ts --env production" },
+      "ai": { "binding": "AI" },
+      "vectorize": [{ "binding": "VECTORIZE", "index_name": "portfo-chat" }],
+      "ratelimits": [
+        {
+          "name": "CHAT_BURST_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 3, "period": 10 },
+        },
+      ],
+      "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
+      "vars": {
+        // TODO(launch): the production site origin, e.g. "https://maiphh.dev". Keep
+        // localhost only if local dev should still reach the production Worker. The hostname
+        // must also be added to the Turnstile widget.
+        "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN",
+        // TODO(launch): the production site, e.g. "https://maiphh.dev" (no trailing slash).
+        "SITE_URL": "https://REPLACE_ME_SITE_DOMAIN",
+        "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+        "DAILY_MESSAGE_CAP": "50",
+        "VISITOR_LIMIT": "10",
+        "MAX_TOOL_ROUNDS": "3",
+        "MAX_TOKENS": "400",
+        "MIN_SCORE": "0.35",
+      },
+    },
+  },
 }

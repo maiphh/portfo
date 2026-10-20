@@ -101,6 +101,9 @@ jobs:
       - name: Type check
         run: pnpm typecheck && pnpm exec tsc --noEmit -p scripts
 
+      - name: Deploy guard (no REPLACE_ME in the top-level wrangler.jsonc config)
+        run: pnpm check:config
+
       - name: data/site.json matches the site content
         run: |
           pnpm corpus
