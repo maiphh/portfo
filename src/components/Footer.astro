@@ -21,6 +21,9 @@ const { base = "" } = Astro.props;
       <nav aria-label="Footer">
         <a href={`mailto:${site.email}`}>{site.email}</a>
         <a href={site.github}>GitHub</a>
+        <button type="button" class="foot-chat" data-chat-open>
+          Ask my assistant
+        </button>
         <a href={base ? "/" : "#top"}>Back to top</a>
       </nav>
     </div>
