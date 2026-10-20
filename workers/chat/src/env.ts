@@ -40,8 +40,14 @@ export interface Env {
   ALLOWED_ORIGINS?: string;
   /** The Astro site, for /api/activity and /api/popular, e.g. "https://maiphh.dev". */
   SITE_URL?: string;
+  /** Workers AI model for chat + tool calling (an @cf/ id). */
   CHAT_MODEL?: string;
-  CHAT_MODEL_FALLBACK?: string;
+  /** Model tried when a CHAT_MODEL call fails (an @cf/ id). */
+  CHAT_FALLBACK_MODEL?: string;
+  /** Tool rounds per turn (1 to 5). */
+  MAX_TOOL_ROUNDS?: string;
+  /** max_tokens on every model call (64 to 2048). */
+  MAX_TOKENS?: string;
   /** Messages per visitor per 10 minutes. */
   VISITOR_LIMIT?: string;
   /** Messages per day (Asia/Ho_Chi_Minh), across all visitors. */

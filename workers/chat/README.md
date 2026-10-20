@@ -37,9 +37,10 @@ Errors before the stream are JSON `{ error, message }`: `400 bad_request`,
 ## The agent
 
 - Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast` with Workers AI function calling;
-  `@cf/meta/llama-3.1-8b-instruct` if a call fails (`CHAT_MODEL`, `CHAT_MODEL_FALLBACK`).
+  `@cf/meta/llama-3.1-8b-instruct` if a call fails (`CHAT_MODEL`, `CHAT_FALLBACK_MODEL`).
 - At most **3 tool rounds** per turn (up to 4 calls each), then one call without tools
-  that must answer. `max_tokens` 400 on every call.
+  that must answer. `max_tokens` 400 on every call. All of these are
+  [runtime knobs](#runtime-knobs).
 - Tools (all read-only, zod-validated; bad arguments go back to the model as a tool error):
 
 | Tool                          | Source                                                           |
@@ -55,6 +56,49 @@ Errors before the stream are JSON `{ error, message }`: `400 bad_request`,
 - Enforced in code, not only in the prompt: sources are the links tools returned (never
   URLs the model writes); when no tool returned data the answer is a fixed "I don't know"
   (this also covers off-topic requests); Talentnet content is only what the site publishes.
+
+## Runtime knobs
+
+Plain `vars` in `wrangler.jsonc` (no secrets), read and validated on every request, so a
+change needs only a deploy (or `wrangler dev --var NAME:value` locally). A missing or invalid
+value falls back to its default; a whole number outside its range is clamped to the range
+(`"5000"` → `1000`); anything else (`"lots"`, `"3.5"`, `"1e3"`) uses the default. Models must
+be Workers AI ids starting with `@cf/`. `GET /health` reports the active values.
+
+| Var                   | Default                                    | Range         | Effect                                                                                                                             |
+| --------------------- | ------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `CHAT_MODEL`          | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | any `@cf/` id | The model for every chat and tool-calling call. Must support Workers AI function calling.                                          |
+| `CHAT_FALLBACK_MODEL` | `@cf/meta/llama-3.1-8b-instruct`           | any `@cf/` id | Retried once when a `CHAT_MODEL` call throws. Same value as `CHAT_MODEL` disables the fallback.                                    |
+| `DAILY_MESSAGE_CAP`   | `50`                                       | 1 to 1000     | Messages per day across all visitors (Ho Chi Minh City day). After it, `429 daily_limit` ("back tomorrow"). The main cost control. |
+| `VISITOR_LIMIT`       | `10`                                       | 1 to 100      | Messages per visitor per 10 minutes (`429 rate_limited` with `Retry-After`). The 3-per-10 s burst limit is fixed in `ratelimits`.  |
+| `MAX_TOOL_ROUNDS`     | `3`                                        | 1 to 5        | Tool-calling rounds per turn (up to 4 calls each) before one forced answer without tools. Each round is one more model call.       |
+| `MAX_TOKENS`          | `400`                                      | 64 to 2048    | `max_tokens` on every model call. Caps answer length and output cost.                                                              |
+
+Not knobs: `MIN_SCORE` (Vectorize match threshold, `0.35`), the 500-character input cap,
+the 30-minute session. `CLASSIFY_MODEL` (the contact-form classifier) is a Vercel env var of
+the Astro site, not a Worker var.
+
+### Cost
+
+Workers AI bills in Neurons: 10,000 free per day on both plans (reset 00:00 UTC), then
+$0.011 per 1,000 on Workers Paid; on Workers Free, calls fail once the allowance is used.
+A turn makes 1 + (tool rounds) model calls, and every call resends the system prompt, the
+tool definitions and the tool results so far, so the cost is mostly **input** tokens.
+
+Rough estimate for a typical turn (2 to 3 calls, ~9,000 input and ~300 output tokens), from
+the [pricing page](https://developers.cloudflare.com/workers-ai/platform/pricing/) on 2026-10-20:
+
+| `CHAT_MODEL`                               | Neurons per M in / out | Per turn | At cap 50 / day                                                                                    |
+| ------------------------------------------ | ---------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 26,668 / 204,805       | ~300     | ~15,000: over the free 10,000 (~$0.06/day on Paid; up to ~$0.30/day if every turn uses all rounds) |
+| `@cf/meta/llama-3.1-8b-instruct`           | 25,608 / 75,147        | ~250     | ~12,500: also near or over the free allowance (input is priced like 70B)                           |
+| `@cf/meta/llama-3.1-8b-instruct-fp8-fast`  | 4,119 / 34,868         | ~50      | ~2,500: well inside the free allowance                                                             |
+
+So with 70B, keep a full day near $0 with `DAILY_MESSAGE_CAP` around 25 to 30, or
+`MAX_TOOL_ROUNDS` 2. A small 8B model at cap 50 stays near $0 only in its `fp8-fast`
+variant; its tool-calling quality is unverified here. bge-m3 embeddings for
+`search_knowledge` are negligible (~1,075 Neurons per M tokens). Check the dashboard after
+launch: these are estimates, not measurements.
 
 ## Content
 
@@ -95,5 +139,6 @@ Nothing below exists yet. Create it, then replace `REPLACE_ME` in `wrangler.json
 7. **Worker secrets**: `wrangler secret put TURNSTILE_SECRET_KEY`, `INGEST_SECRET`,
    `SESSION_SIGNING_KEY` (`openssl rand -base64 32` for the last two).
 8. **Worker vars** in `wrangler.jsonc`: `ALLOWED_ORIGINS` (production origin, plus preview
-   origins if wanted) and `SITE_URL` (the production site).
+   origins if wanted) and `SITE_URL` (the production site). The runtime knobs already have
+   their defaults there.
 9. AI Gateway: not used.

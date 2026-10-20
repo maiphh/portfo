@@ -6,15 +6,7 @@
  * CORS: only ALLOWED_ORIGINS, and /chat refuses any other origin.
  */
 import { handleChat } from "./chat";
-import {
-  EMBED_DIMS,
-  EMBED_MODEL,
-  MAX_INPUT_CHARS,
-  MAX_TOKENS,
-  MAX_TOOL_ROUNDS,
-  TOP_K,
-  config,
-} from "./config";
+import { EMBED_DIMS, EMBED_MODEL, MAX_INPUT_CHARS, TOP_K, config } from "./config";
 import type { Env } from "./env";
 import { corsHeaders, error, withHeaders } from "./http";
 import { handleIngest } from "./ingest";
@@ -50,9 +42,9 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
             },
             limits: {
               inputChars: MAX_INPUT_CHARS,
-              maxTokens: MAX_TOKENS,
+              maxTokens: cfg.maxTokens,
               topK: TOP_K,
-              toolRounds: MAX_TOOL_ROUNDS,
+              toolRounds: cfg.maxToolRounds,
               perVisitorPer10Min: cfg.visitorLimit,
               dailyMessages: cfg.dailyCap,
             },

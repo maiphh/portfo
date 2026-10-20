@@ -9,10 +9,7 @@ export const MAX_INPUT_CHARS = 500;
 export const MAX_HISTORY_TURNS = 6;
 export const MAX_HISTORY_CHARS = 2000;
 export const MAX_BODY_BYTES = 32 * 1024;
-export const MAX_TOKENS = 400;
 export const TOP_K = 5;
-/** Tool rounds per turn; after that the model must answer without tools. */
-export const MAX_TOOL_ROUNDS = 3;
 /** Tool calls run per round (the model may ask for several at once). */
 export const MAX_CALLS_PER_ROUND = 4;
 /** Characters of one tool result sent back to the model. */
@@ -21,16 +18,48 @@ export const SESSION_TTL_MS = 30 * 60_000;
 export const VISITOR_WINDOW_MS = 10 * 60_000;
 export const SITE_FETCH_TIMEOUT_MS = 5000;
 
-const int = (v: string | undefined, fallback: number) => {
-  const n = Number.parseInt(v ?? "", 10);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-};
+/**
+ * Runtime knobs: plain wrangler.jsonc vars, validated on every request. A missing or invalid
+ * value falls back to its default; a number outside its range is clamped to the range.
+ */
+export const KNOBS = {
+  DAILY_MESSAGE_CAP: { default: 50, min: 1, max: 1000 },
+  VISITOR_LIMIT: { default: 10, min: 1, max: 100 },
+  MAX_TOOL_ROUNDS: { default: 3, min: 1, max: 5 },
+  MAX_TOKENS: { default: 400, min: 64, max: 2048 },
+} as const;
+
+/** Tool rounds per turn by default; after the last round the model must answer without tools. */
+export const MAX_TOOL_ROUNDS = KNOBS.MAX_TOOL_ROUNDS.default;
+export const MAX_TOKENS = KNOBS.MAX_TOKENS.default;
+
+/** Whole numbers only ("12", not "12abc" or "1e3"), clamped to [min, max]. */
+export function intKnob(
+  v: string | undefined,
+  k: { default: number; min: number; max: number },
+): number {
+  const raw = (v ?? "").trim();
+  if (!/^-?\d+$/.test(raw)) return k.default;
+  const n = Number(raw);
+  if (!Number.isSafeInteger(n)) return n > 0 ? k.max : k.min;
+  return Math.min(k.max, Math.max(k.min, n));
+}
+
+/** Only Workers AI catalogue ids, e.g. "@cf/meta/llama-3.1-8b-instruct". */
+const MODEL_ID = /^@cf\/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/i;
+
+export function modelKnob(v: string | undefined, fallback: string): string {
+  const raw = (v ?? "").trim();
+  return raw.length <= 100 && MODEL_ID.test(raw) ? raw : fallback;
+}
 
 export interface Config {
   chatModel: string;
   fallbackModel: string;
   visitorLimit: number;
   dailyCap: number;
+  maxToolRounds: number;
+  maxTokens: number;
   minScore: number;
   origins: string[];
   siteUrl: string | null;
@@ -39,10 +68,12 @@ export interface Config {
 export function config(env: Env): Config {
   const score = Number.parseFloat(env.MIN_SCORE ?? "");
   return {
-    chatModel: env.CHAT_MODEL || DEFAULT_CHAT_MODEL,
-    fallbackModel: env.CHAT_MODEL_FALLBACK || DEFAULT_FALLBACK_MODEL,
-    visitorLimit: int(env.VISITOR_LIMIT, 10),
-    dailyCap: int(env.DAILY_MESSAGE_CAP, 50),
+    chatModel: modelKnob(env.CHAT_MODEL, DEFAULT_CHAT_MODEL),
+    fallbackModel: modelKnob(env.CHAT_FALLBACK_MODEL, DEFAULT_FALLBACK_MODEL),
+    visitorLimit: intKnob(env.VISITOR_LIMIT, KNOBS.VISITOR_LIMIT),
+    dailyCap: intKnob(env.DAILY_MESSAGE_CAP, KNOBS.DAILY_MESSAGE_CAP),
+    maxToolRounds: intKnob(env.MAX_TOOL_ROUNDS, KNOBS.MAX_TOOL_ROUNDS),
+    maxTokens: intKnob(env.MAX_TOKENS, KNOBS.MAX_TOKENS),
     minScore: Number.isFinite(score) ? score : 0.35,
     origins: (env.ALLOWED_ORIGINS ?? "")
       .split(",")

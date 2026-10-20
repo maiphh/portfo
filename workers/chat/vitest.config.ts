@@ -17,8 +17,12 @@ export default defineConfig({
         bindings: {
           ALLOWED_ORIGINS: "https://site.test,http://localhost:4321",
           SITE_URL: "https://site.test",
+          CHAT_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          CHAT_FALLBACK_MODEL: "@cf/meta/llama-3.1-8b-instruct",
           VISITOR_LIMIT: "10",
           DAILY_MESSAGE_CAP: "50",
+          MAX_TOOL_ROUNDS: "3",
+          MAX_TOKENS: "400",
           TURNSTILE_SECRET_KEY: "test-turnstile-secret",
           INGEST_SECRET: "test-ingest-secret",
           SESSION_SIGNING_KEY: "test-session-key",

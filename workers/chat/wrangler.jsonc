@@ -35,10 +35,14 @@
     "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN,http://localhost:4321",
     // The Astro site, for get_github_stats (/api/activity) and get_popular_projects (/api/popular).
     "SITE_URL": "https://REPLACE_ME_SITE_DOMAIN",
+    // Runtime knobs (README "Runtime knobs"). Invalid values fall back to these defaults;
+    // numbers are clamped to their range; models must be @cf/ ids.
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    "CHAT_MODEL_FALLBACK": "@cf/meta/llama-3.1-8b-instruct",
-    "VISITOR_LIMIT": "10",
+    "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "DAILY_MESSAGE_CAP": "50",
+    "VISITOR_LIMIT": "10",
+    "MAX_TOOL_ROUNDS": "3",
+    "MAX_TOKENS": "400",
     "MIN_SCORE": "0.35",
   },
 

@@ -1,19 +1,13 @@
 /**
- * The agent loop: Workers AI function calling with at most MAX_TOOL_ROUNDS tool rounds,
+ * The agent loop: Workers AI function calling with at most cfg.maxToolRounds tool rounds,
  * then a forced final answer without tools. Enforced in code, not just in the prompt:
  *   - sources are only the links the tools actually returned (never model-written URLs);
  *   - no tool data means the fixed "I don't know" answer (also covers off-topic requests);
  *   - bad tool names or arguments come back to the model as tool errors, never a crash.
  */
-import {
-  MAX_CALLS_PER_ROUND,
-  MAX_TOKENS,
-  MAX_TOOL_RESULT_CHARS,
-  MAX_TOOL_ROUNDS,
-  type Config,
-} from "./config";
+import { MAX_CALLS_PER_ROUND, MAX_TOOL_RESULT_CHARS, type Config } from "./config";
 import type { AiBinding } from "./env";
-import { FORCE_ANSWER, NO_ANSWER, SYSTEM_PROMPT } from "./prompt";
+import { forceAnswer, NO_ANSWER, systemPrompt } from "./prompt";
 import { getTool, runTool, toolDefinitions, type Source, type ToolContext } from "./tools";
 
 export interface ChatMessage {
@@ -99,7 +93,7 @@ async function callModel(
 ): Promise<{ reply: ModelReply; model: string }> {
   const inputs: Record<string, unknown> = {
     messages: [...messages],
-    max_tokens: MAX_TOKENS,
+    max_tokens: cfg.maxTokens,
     temperature: 0.2,
   };
   if (withTools) inputs.tools = toolDefinitions();
@@ -128,7 +122,10 @@ export async function runAgent(opts: {
   emit: (e: AgentEvent) => void;
 }): Promise<AgentResult> {
   const { ai, cfg, emit } = opts;
-  const messages: ModelMessage[] = [{ role: "system", content: SYSTEM_PROMPT }, ...opts.history];
+  const messages: ModelMessage[] = [
+    { role: "system", content: systemPrompt(cfg.maxToolRounds) },
+    ...opts.history,
+  ];
   const cited = new Map<string, Source>();
   const calls: AgentResult["calls"] = [];
   let anyData = false;
@@ -136,9 +133,9 @@ export async function runAgent(opts: {
   let model = cfg.chatModel;
   let rounds = 0;
 
-  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const forced = round === MAX_TOOL_ROUNDS;
-    if (forced) messages.push({ role: "system", content: FORCE_ANSWER });
+  for (let round = 0; round <= cfg.maxToolRounds; round++) {
+    const forced = round === cfg.maxToolRounds;
+    if (forced) messages.push({ role: "system", content: forceAnswer(cfg.maxToolRounds) });
     const out = await callModel(ai, cfg, messages, !forced);
     model = out.model;
     const wanted = forced ? [] : out.reply.calls.slice(0, MAX_CALLS_PER_ROUND);
