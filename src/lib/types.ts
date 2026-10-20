@@ -45,26 +45,6 @@ export interface GithubSummary {
   feed: GithubFeedItem[];
 }
 
-export interface AskPassage {
-  /** e.g. "cv · Talentnet" */
-  source: string;
-  /** Trusted, repo-authored HTML (may contain `<span lang="vi">`). */
-  html: string;
-}
-
-export interface AskCitation {
-  label: string;
-  href: string;
-}
-
-/** Answer from POST /api/chat (streamed in the real version). */
-export interface AskAnswer {
-  passages: AskPassage[];
-  /** Trusted, repo-authored HTML. */
-  html: string;
-  citations: AskCitation[];
-}
-
 export type ContactRole = "recruiter" | "client" | "other";
 export type ContactCategory = ContactRole | "spam";
 

@@ -1,0 +1,50 @@
+// portfo-chat: the portfolio's chat Worker. Placeholder IDs only; nothing here is a secret.
+// Not deployed yet. Before `wrangler deploy`, create the resources listed in README.md
+// ("Before the first deploy") and replace every REPLACE_ME value.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfo-chat",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+
+  // Workers AI: Llama 3.3 70B (chat + tool calling), Llama 3.1 8B (fallback), bge-m3 (embeddings).
+  "ai": { "binding": "AI" },
+
+  // wrangler vectorize create portfo-chat --dimensions=1024 --metric=cosine
+  "vectorize": [{ "binding": "VECTORIZE", "index_name": "portfo-chat" }],
+
+  // Burst guard at the edge: 3 messages per 10 s per visitor. namespace_id is any integer
+  // unique in the account (chosen here, not a created resource). The binding only supports
+  // 10 s or 60 s periods, so the 10-per-10-minutes rule lives in the Quota Durable Object.
+  "ratelimits": [
+    {
+      "name": "CHAT_BURST_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 10 },
+    },
+  ],
+
+  // Exact counters: per-visitor 10-minute window and the daily message budget.
+  "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
+
+  "vars": {
+    // Origins allowed to call /chat. Their hostnames must also be on the Turnstile widget.
+    "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN,http://localhost:4321",
+    // The Astro site, for get_github_stats (/api/activity) and get_popular_projects (/api/popular).
+    "SITE_URL": "https://REPLACE_ME_SITE_DOMAIN",
+    // Runtime knobs (README "Runtime knobs"). Invalid values fall back to these defaults;
+    // numbers are clamped to their range; models must be @cf/ ids.
+    "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+    "DAILY_MESSAGE_CAP": "50",
+    "VISITOR_LIMIT": "10",
+    "MAX_TOOL_ROUNDS": "3",
+    "MAX_TOKENS": "400",
+    "MIN_SCORE": "0.35",
+  },
+
+  // Secrets (never in this file): wrangler secret put TURNSTILE_SECRET_KEY / INGEST_SECRET / SESSION_SIGNING_KEY
+}

@@ -214,11 +214,13 @@ const covered = !!slug;
     // Clear before reveal so SSR/stash text cannot flash in fully formed.
     gsap.set(readoutText, { text: "", autoAlpha: 1, y: 0 });
     show();
-    gsap.timeline().to(
-      readoutText,
-      { text: { value: cmd, delimiter: "" }, duration: TYPE_DUR, ease: "none" },
-      0,
-    );
+    gsap
+      .timeline()
+      .to(
+        readoutText,
+        { text: { value: cmd, delimiter: "" }, duration: TYPE_DUR, ease: "none" },
+        0,
+      );
   }
 
   /** Columns fold away from the top; the case study staggers in underneath. */

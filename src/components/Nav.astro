@@ -1,5 +1,4 @@
 ---
-import Icon from "./Icon.astro";
 import { site } from "~/lib/site";
 
 interface Props {
@@ -17,7 +16,6 @@ const links = [
 const menu = [
   { id: "work", label: "Work" },
   { id: "timeline", label: "Experience" },
-  { id: "ask", label: "Ask about my work" },
   { id: "activity", label: "Activity" },
   { id: "how", label: "How it works" },
   { id: "contact", label: "Contact" },
@@ -37,13 +35,6 @@ const menu = [
       ))}
     </ul>
     <div class="nav-end">
-      <a class="ask-btn" href={h("ask")} data-ask>
-        <Icon name="search" />
-        <span>
-          Ask<span class="long"> about my work</span>
-        </span>
-        <kbd aria-hidden="true">/</kbd>
-      </a>
       <a class="btn btn-lime" href={h("contact")}>
         Get in touch
       </a>

@@ -1,7 +1,6 @@
 /** Home page entry: features first (they work without motion), motion last. */
 import {
   drawOcrLeaders,
-  initAsk,
   initChart,
   initContact,
   initDevPanel,
@@ -20,7 +19,6 @@ trackSections();
 initMostRead();
 if (!USE_MOCKS) void initActivity();
 initNowMarker();
-initAsk();
 initContact();
 initChart();
 drawOcrLeaders();
