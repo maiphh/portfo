@@ -1,0 +1,133 @@
+---
+/**
+ * The chat window: a placeholder launcher (the mascot replaces it in PR 3), a floating panel at
+ * 1280px and up, and a bottom sheet below that. Static markup; ~/scripts/chat/boot wires the
+ * launcher and lazy-loads the panel code on first use.
+ */
+import "~/styles/chat.css";
+import { CHAT_MOCK } from "~/lib/chat/config";
+import { site } from "~/lib/site";
+
+const suggestions = [
+  { label: "What has he shipped?", q: "What has he shipped in production?" },
+  { label: "OCR accuracy", q: "How accurate is the OCR pipeline?" },
+  { label: "Legal RAG citations", q: "How does the legal RAG keep citations exact?" },
+  { label: "Work at Garena", q: "What did he build at Garena?" },
+];
+---
+
+<div class="chat-root" data-chat-root data-mock={CHAT_MOCK ? "true" : "false"}>
+  <span class="chat-launcher-slot" aria-hidden="true" data-chat-slot></span>
+  <button
+    type="button"
+    class="chat-launcher"
+    data-chat-launcher
+    aria-haspopup="dialog"
+    aria-controls="chat"
+    aria-expanded="false"
+    aria-label="Ask Phu's assistant"
+    title="Ask Phu's assistant (/)"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-7l-4.5 3.5v-3.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5Z"></path>
+    </svg>
+    <span class="chat-launcher-dot" aria-hidden="true"></span>
+  </button>
+
+  <div class="chat-scrim" data-chat-scrim hidden></div>
+
+  <section
+    id="chat"
+    class="chat"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="chat-title"
+    aria-describedby="chat-desc"
+    data-chat
+    hidden
+  >
+    <header class="chat-head">
+      <span class="chat-avatar" aria-hidden="true">
+        <i></i>
+      </span>
+      <div class="t">
+        <h2 id="chat-title">Phu's assistant</h2>
+        <p class="chat-status" id="chat-desc" data-chat-status>
+          Answers from his CV and case studies
+        </p>
+      </div>
+      <button type="button" class="chat-icon" data-chat-min aria-label="Minimize chat">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 12h12"></path>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="chat-icon"
+        data-chat-close
+        aria-label="Close chat and clear the conversation"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 7l10 10M17 7 7 17"></path>
+        </svg>
+      </button>
+    </header>
+
+    <div
+      class="chat-log"
+      data-chat-log
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation"
+      tabindex="0"
+    ></div>
+
+    <div class="chat-sugg" role="group" aria-label="Suggested questions" data-chat-sugg>
+      {suggestions.map((s) => (
+        <button type="button" data-q={s.q}>
+          {s.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="chat-turnstile" data-chat-turnstile hidden></div>
+
+    <form class="chat-form" data-chat-form novalidate>
+      <label class="sr-only" for="chat-input">
+        Ask about Phu's work
+      </label>
+      <input
+        id="chat-input"
+        name="q"
+        type="text"
+        maxlength="500"
+        autocomplete="off"
+        enterkeyhint="send"
+        placeholder="Ask about Phu's work"
+        aria-describedby="chat-count"
+        data-chat-input
+      />
+      <span class="chat-count num" id="chat-count" data-chat-count>
+        <span class="sr-only">Characters used: </span>
+        <span data-chat-used>0</span>/500
+      </span>
+      <button type="submit" class="chat-send" aria-label="Send" data-chat-send>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h13M13 6l6 6-6 6"></path>
+        </svg>
+      </button>
+    </form>
+
+    <p class="chat-foot" data-chat-foot>
+      {CHAT_MOCK
+        ? "Sample replies (†): the live assistant isn't connected yet. Facts come from Phu's CV and case studies."
+        : `Answers come from Phu's CV, case studies and GitHub, and can be wrong. Questions go through Cloudflare. Or email ${site.email}.`}
+    </p>
+    <p class="sr-only" aria-live="polite" data-chat-live></p>
+  </section>
+</div>
+
+<script>
+  import { bootChat } from "~/scripts/chat/boot";
+  bootChat();
+</script>

@@ -21,7 +21,7 @@ export const todos: readonly string[] = [
   "Payroll data validation: outcome metric (how much manual work it removed).",
   "LinkedIn URL, headshot, short bio.",
   "OpenPortfo, Mirror Now, Poet: live URLs, repos, any metrics.",
-  "Chat: the portfo-chat Cloudflare Worker (Workers AI + Vectorize) is built but not deployed; the chat window and mascot land next.",
+  "Chat: the window shows sample replies until the portfo-chat Worker is deployed, PUBLIC_CHAT_URL is set and mocks are off; the mascot lands next.",
   "Cloudflare Turnstile widget on the contact form.",
   "Reply-time promise on the contact section (left out rather than invented).",
   "All numbers marked † (views, GitHub stats, sync time, the OpenPortfo chart) are sample data.",
