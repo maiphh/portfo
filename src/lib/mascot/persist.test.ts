@@ -24,7 +24,7 @@ describe("mascot corner persist", () => {
     const s = mem();
     saveCorner("tl", s);
     expect(loadCorner(s)).toBe("tl");
-    expect(JSON.parse(s.getItem(STORAGE_KEY)!)).toEqual({ corner: "tl" });
+    expect(JSON.parse(s.getItem(STORAGE_KEY) ?? "null")).toEqual({ corner: "tl" });
   });
 
   it("rejects junk and missing storage", () => {
