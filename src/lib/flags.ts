@@ -12,3 +12,9 @@ function readBool(raw: string | undefined, fallback: boolean): boolean {
  * from `src/lib/mocks/*` instead of calling the Workers.
  */
 export const USE_MOCKS: boolean = readBool(import.meta.env.PUBLIC_USE_MOCKS, true);
+
+/**
+ * Case-study "motion cut" (the project's promo video). Off until Phu confirms each video can be
+ * embedded; while off the section isn't rendered at all.
+ */
+export const CASE_VIDEO: boolean = readBool(import.meta.env.PUBLIC_CASE_VIDEO, false);

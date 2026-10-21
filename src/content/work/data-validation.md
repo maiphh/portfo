@@ -3,7 +3,8 @@ title: Payroll data validation
 headline: Every client, its own rules — turned into code.
 summary: In HR outsourcing payroll, each client has distinct rules and data formats. AI converts client rules into code and reads varied formats dynamically, automating payroll generation and replacing the manual checker step to greatly reduce manual work.
 org: Talentnet
-meta: [Data validation, Payroll, Talentnet, In production]
+org_badge: Enterprise · Talentnet
+meta: [Data validation, Payroll, In production]
 period: Sep 2025 – now
 order: 3
 anchor: work-validation

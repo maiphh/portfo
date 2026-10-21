@@ -191,8 +191,12 @@ function init(block: HTMLElement) {
         const r = btn.getBoundingClientRect();
         const top = innerHeight - sheet.getBoundingClientRect().height;
         // Below the sticky site header, if there is one.
-        const head = document.querySelector("header.nav")?.getBoundingClientRect();
-        const min = head && head.top <= 0 && head.bottom > 0 ? head.bottom : 0;
+        // Below the sticky site header and any sticky bar marked data-sticky-top.
+        let min = 0;
+        for (const el of document.querySelectorAll("header.nav, [data-sticky-top]")) {
+          const b = el.getBoundingClientRect();
+          if (b.top <= innerHeight / 3 && b.bottom > 0) min = Math.max(min, b.bottom);
+        }
         if (r.bottom > top - 8 || r.top < min)
           scrollBy({
             top: r.top - Math.max(min + 8, (min + top - r.height) / 2),

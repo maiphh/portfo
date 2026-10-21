@@ -13,7 +13,22 @@ const work = defineCollection({
     /** One or two sentences, plain text. Used for meta descriptions and cards. */
     summary: z.string(),
     org: z.string(),
-    /** Chips under the headline, e.g. ["Document OCR", "Talentnet", "Solo", "In production"]. */
+    /** Neutral org badge, first in the meta row of the hero and the home card
+     * (e.g. "Enterprise · Talentnet"). Rendered as "<b>Enterprise</b> · Talentnet". */
+    org_badge: z
+      .string()
+      .regex(/^[^·]+ · [^·]+$/, 'Use "Kind · Org"')
+      .optional(),
+    /** Project accent for the case-study page: the main path, the signature object and the
+     * selected flow node. Lime stays the site accent in the nav and the mascot. */
+    accent: z
+      .object({
+        line: z.string().regex(/^#[0-9a-f]{6}$/i),
+        tint: z.string().regex(/^#[0-9a-f]{6}$/i),
+      })
+      .optional(),
+    /** Chips under the headline, e.g. ["Document OCR", "In production"]. Leave the org out when
+     * `org_badge` says it. */
     meta: z.array(z.string()).default([]),
     period: z.string().optional(),
     /** Order on the home page (1 = first). */

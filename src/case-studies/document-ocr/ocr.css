@@ -1,0 +1,324 @@
+/* Document OCR: the proof sheet (signature), the template highlight and the deep-dive artifacts.
+   Static state = the final state; scripts/case/ocr.ts animates only without reduced motion. */
+
+.ocr-proof {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+}
+@media (min-width: 600px) {
+  .ocr-proof {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: center;
+  }
+}
+.ocr-page {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-height: 440px;
+  background: #e9e8e1;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ocr-lines {
+  position: absolute;
+  left: 10%;
+  right: 12%;
+  top: 56%;
+  display: grid;
+  gap: 9px;
+}
+.ocr-lines i {
+  height: 6px;
+  border-radius: 2px;
+  background: #c9c8bf;
+}
+.ocr-lines i:nth-child(2) {
+  width: 82%;
+}
+.ocr-lines i:nth-child(4) {
+  width: 64%;
+}
+.ocr-box {
+  position: absolute;
+  left: 10%;
+  width: 56%;
+  height: 7%;
+  border: 1.5px solid #6f8f12;
+  background: rgba(212, 245, 107, 0.28);
+  border-radius: 2px;
+  transition:
+    border-color 0.25s,
+    background 0.25s;
+}
+.ocr-box em {
+  position: absolute;
+  left: -1.5px;
+  bottom: 100%;
+  padding: 1px 5px;
+  background: #141414;
+  color: var(--acc);
+  font: 500 12px/1.3 var(--code);
+  font-style: normal;
+  border-radius: 2px 2px 0 0;
+}
+.ocr-box:nth-of-type(4) {
+  left: auto;
+  right: 10%;
+  width: 34%;
+}
+.ocr-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--acc);
+  box-shadow: 0 0 12px var(--acc);
+  opacity: 0;
+}
+.ocr-cells {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ocr-cells div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--acc);
+  background: var(--acc-tint);
+  border-radius: 3px;
+  transition:
+    border-color 0.25s,
+    background 0.25s;
+}
+.ocr-cells dt {
+  font: 500 12px var(--code);
+  color: var(--muted);
+}
+.ocr-cells dd {
+  font: 500 14px var(--code);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  transition: opacity 0.25s;
+}
+/* Motion running: boxes and cells start empty and fill as the scan line passes. */
+.ocr-proof.is-anim .ocr-scan {
+  opacity: 1;
+}
+.ocr-proof.is-anim .ocr-box:not(.lit) {
+  border-color: transparent;
+  background: transparent;
+}
+.ocr-proof.is-anim .ocr-box:not(.lit) em {
+  opacity: 0;
+}
+.ocr-proof.is-anim .ocr-cells div:not(.lit) {
+  border-color: var(--rule-2);
+  background: transparent;
+}
+.ocr-proof.is-anim .ocr-cells div:not(.lit) dd {
+  opacity: 0;
+}
+
+/* highlight: the template package */
+.ocr-tpl {
+  display: grid;
+  gap: 20px;
+  padding: clamp(18px, 3vw, 32px);
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+}
+.ocr-tpl-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+  list-style: none;
+}
+.ocr-tpl-parts li {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--acc);
+  border-radius: 4px;
+  max-width: none;
+}
+.ocr-tpl-parts code {
+  color: var(--acc) !important;
+  font-size: 13.5px !important;
+}
+.ocr-tpl-parts span {
+  font-size: 15px;
+  line-height: 1.45;
+}
+.ocr-tpl-run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: none !important;
+}
+.ocr-tpl-run code {
+  padding: 8px 12px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--sheet-2);
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+.ocr-tpl-run i {
+  flex: 1 1 24px;
+  min-width: 24px;
+  border-top: 1.5px dashed var(--acc);
+}
+.ocr-tpl-note {
+  font-size: 15.5px !important;
+}
+
+/* deep dive: queue */
+.ocr-queue,
+.ocr-rule {
+  display: grid;
+  gap: 20px;
+  padding: clamp(16px, 2.5vw, 28px);
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  min-width: 0;
+}
+.ocr-lanes {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px 18px;
+  align-items: center;
+}
+.ocr-lanes span {
+  font-size: 14px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.ocr-lanes p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: none !important;
+}
+.ocr-lanes i {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--rule-2);
+}
+.ocr-lanes i.on {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+.ocr-lanes i.q.on {
+  background: transparent;
+  border-color: var(--acc);
+}
+.ocr-lanes i.b {
+  border-color: var(--faint);
+}
+.ocr-scroll {
+  min-width: 0;
+}
+.ocr-queue table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14.5px;
+}
+.ocr-queue th,
+.ocr-queue td {
+  padding: 10px 10px 10px 0;
+  border-top: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  font-weight: 450;
+}
+.ocr-queue thead th {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.ocr-queue thead th:last-child,
+.ocr-queue td.num {
+  width: 26%;
+}
+.ocr-queue td.num {
+  font-family: var(--code);
+  color: var(--ink);
+}
+
+/* deep dive: rules */
+.ocr-rule pre {
+  margin: 0;
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--sheet-2);
+  border-radius: 4px;
+  font: 500 13px/1.6 var(--code);
+  color: var(--ink);
+}
+.ocr-rule pre code {
+  font-size: 13px !important;
+  overflow-wrap: anywhere !important;
+}
+.ocr-rule .c {
+  color: var(--muted);
+}
+.ocr-rule-no {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+}
+.ocr-rule-no li {
+  padding: 4px 10px;
+  border: 1px solid var(--rule-2);
+  border-radius: 3px;
+  text-decoration: line-through;
+  text-decoration-color: var(--acc);
+  font-size: 13px !important;
+}
+
+/* deep dive: API */
+.ocr-api {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+  padding: clamp(16px, 2.5vw, 24px);
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+}
+.ocr-api div {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+}
+.ocr-api div > code {
+  color: var(--acc) !important;
+  font-size: 13.5px !important;
+}
+.ocr-api p {
+  font-size: 14.5px !important;
+  line-height: 1.5 !important;
+}
+.ocr-rule-no code {
+  font-size: 13px !important;
+}

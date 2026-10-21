@@ -38,11 +38,15 @@ Needs Node 22.22+ (see `.nvmrc`) and pnpm 10 (`corepack enable`).
 src/
   components/      One component per home-page section or chapter
     flow/FlowDiagram.astro  Reusable "How it works" flow: HTML node buttons, SVG edges, details panel / bottom sheet (scripts/flow.ts)
+    case/CaseStudy.astro  Shared case-study template (skeleton: opener, overview, highlight, video slot, flow, deep dives, limits, next)
+    OrgBadge.astro   "Enterprise · Talentnet" badge (from a work entry's org_badge)
+  case-studies/    Pages on the template: <slug>/Page.astro + data.ts, registered in index.ts
   content/work/    Case studies (Markdown/MDX), one file per project
   data/            experience.json (CV entries for the timeline)
   lib/
     flow/            Flow data types, data checks and edge geometry
-    flags.ts         Feature flags (PUBLIC_USE_MOCKS)
+    case.ts          Case-study data contract
+    flags.ts         Feature flags (PUBLIC_USE_MOCKS, PUBLIC_CASE_VIDEO)
     api.ts           PUBLIC_WORKER_URL helpers
     types.ts         Data contracts the Worker returns
     mocks/           Typed sample data (views, GitHub, contact, chat)

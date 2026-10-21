@@ -2996,3 +2996,53 @@ footer {
     inset: 5% 4.5% 11%;
   }
 }
+
+/* ---------- org badge: "Enterprise · Talentnet" (components/OrgBadge.astro) ---------- */
+.org-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--rule-2);
+  border-radius: 3px;
+  background: var(--sheet-2);
+  font: 600 13px/1 var(--text);
+  letter-spacing: 0.005em;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.org-badge b {
+  font-weight: 650;
+  color: var(--ink);
+}
+.org-badge .sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.meta-line .org-badge::before,
+.meta-line .org-badge + span::before {
+  display: none !important;
+}
+.meta-line:has(.org-badge) {
+  align-items: center;
+  column-gap: 14px;
+}
+@media (max-width: 599px) {
+  .org-badge {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 12.5px;
+    gap: 6px;
+  }
+  .cs-head .meta-line .org-badge {
+    margin-right: 100%;
+  }
+}
+/* Home chapter cards: the text column is narrow, so the badge takes its own line there. */
+.ch-text .meta-line .org-badge {
+  margin-right: 100%;
+}

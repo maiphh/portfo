@@ -22,7 +22,7 @@ export const mockReplies: MockReply[] = [
     keys: ["ocr", "accura", "document", "invoice", "pipeline"],
     steps: [{ tool: "get_project", label: "Reading the case study…" }],
     answer:
-      "The document OCR pipeline is over 98% accurate, and it saves more than 90% of processing time. A vision-language model reads each page, a schema says which fields to find, and rules check the result. Phu built it solo at Talentnet, and it's in production.",
+      "The document OCR pipeline is template-driven: a vision-language model reads each page, a schema says which fields to find, and rules check the result before operators review and export Excel. It runs in production at Talentnet. I don't have accuracy figures to share yet.",
     sources: [ocr, timeline],
   },
   {
@@ -58,7 +58,7 @@ export const fallbackReply: MockReply = {
     { tool: "get_experience", label: "Checking the CV…" },
   ],
   answer:
-    "Phu is an AI engineer in Ho Chi Minh City. In production he has shipped a document OCR pipeline (over 98% accurate) and a legal RAG assistant, both built solo at Talentnet, and earlier 14 game modes for Garena Free Fire's Craftland.",
+    "Phu is an AI engineer in Ho Chi Minh City. At Talentnet he has shipped a document OCR pipeline and a legal RAG assistant to production, and earlier 14 game modes for Garena Free Fire's Craftland.",
   sources: [ocr, rag, craftland],
 };
 
