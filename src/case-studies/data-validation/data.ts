@@ -2,7 +2,7 @@
  * DVP · payroll data validation case study. Sources: projects/dvp/{README,architecture,highlights}.md
  * (portfo main) and the DVP moodboard (portfo-design case-studies/moodboards/dvp.md,
  * flow-example/others/dvp-flow.html). No client rules or payroll data; no result figures (the
- * promo's on-screen numbers are not results); the promo video was not approved.
+ * promo's on-screen numbers are not results). The promo video is approved (Phu, 2026-10-22).
  */
 import type { CaseStudyData } from "~/lib/case";
 
@@ -22,14 +22,14 @@ export const dvp: CaseStudyData = {
     caption:
       "Illustration of the documented contract (projects/dvp/highlights.md). Body elided; no client rule.",
   },
-  // Not approved for the page: renders only if the slug is added to flags.CASE_VIDEOS.
+  // Approved by Phu (2026-10-22); on through flags.CASE_VIDEOS.
   video: {
     src: "/work/data-validation/motion.mp4",
     poster: "/work/data-validation/motion-poster.jpg",
     caption:
-      "The platform's 15-second promo cut. Figures on screen are promo illustration, not results.",
+      "The platform's 15-second promo cut, no sound. The row and the stat cards on screen are promo sample values, not results.",
     description:
-      "Rules, AI, pay title words; a plain-language rule translated into a function; the function run on a sample timesheet row with the mismatch flagged; the end card.",
+      "The title word AI. Rules, AI, code: a plain-language rule (net equals basic plus overtime plus allowance minus deductions) is translated into a net_pay function. Input, code, result: the function runs on a sample timesheet row, and the expected net pay disagrees with the sheet, so the row is flagged before the next run. Demo stat cards, then the end card, Talentnet DVP, Data Validation and Processing.",
   },
   how: {
     summary:
@@ -259,7 +259,7 @@ export const dvp: CaseStudyData = {
     notShown: [
       "Client rules, payroll files, layouts and employee data.",
       "Screens of the live app, source code and internal identifiers.",
-      "The promo video and its on-screen numbers, which are illustration, not results.",
+      "Result figures: the numbers in the promo cut are sample values, not results.",
       "A result figure, until one is confirmed for publication.",
     ],
     deprecated: [
