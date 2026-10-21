@@ -108,7 +108,7 @@
       ],
       "note": "Illustrated with a made-up invoice. Talentnet's documents and code stay private.",
       "links": [],
-      "body": "I built this pipeline on my own at Talentnet, where I've worked as an AI Engineer Specialist since September 2025. It runs in production.\r\n\r\n## How it works\r\n\r\nA vision-language model reads each document as an image, so the layout is part of what it sees. A schema tells it which fields to look for, and every field it finds gets a box and a name.\r\n\r\nA model alone will let some mistakes through, like a total that doesn't add up. A rule layer checks the extracted fields before anything moves on, and what comes out is structured data, ready for the next system.\r\n\r\n## Results\r\n\r\n- **Over 98%** accuracy.\r\n- **More than 90%** of processing time saved.\r\n\r\n## What I can't show\r\n\r\nTalentnet's documents and code stay private. The illustration on the home page uses a made-up invoice, not a real document."
+      "body": "I built this pipeline on my own at Talentnet, where I've worked as an AI Engineer Specialist since September 2025. It runs in production.\n\n## How it works\n\nA vision-language model reads each document as an image, so the layout is part of what it sees. A schema tells it which fields to look for, and every field it finds gets a box and a name.\n\nA model alone will let some mistakes through, like a total that doesn't add up. A rule layer checks the extracted fields before anything moves on, and what comes out is structured data, ready for the next system.\n\n## Results\n\n- **Over 98%** accuracy.\n- **More than 90%** of processing time saved.\n\n## What I can't show\n\nTalentnet's documents and code stay private. The illustration on the home page uses a made-up invoice, not a real document."
     },
     {
       "slug": "legal-rag",
@@ -149,7 +149,7 @@
       "outcomes": [],
       "note": "Illustration with placeholder text, not real legal content.",
       "links": [],
-      "body": "I built this payroll assistant on my own at Talentnet. It runs in production and answers questions from Vietnamese legal documents.\r\n\r\n## Why citations break\r\n\r\nVietnamese legal texts nest. A _Điều_ (article) holds _Khoản_ (clauses), and a _Khoản_ holds _Điểm_ (points). If you cut the text into fixed-size pieces, a passage forgets where it came from, and an answer built on it can't say which rule it is quoting.\r\n\r\n## The Tag Chunker\r\n\r\nMy Tag Chunker keeps the full path, _Điều › Khoản › Điểm_, on every chunk, so nothing is cited from nowhere. Each answer points to the correct document and to a reference a payroll team can cite.\r\n\r\n## What I can't show\r\n\r\nTalentnet's documents and code stay private. The illustration on the home page uses placeholder text, not real legal content."
+      "body": "I built this payroll assistant on my own at Talentnet. It runs in production and answers questions from Vietnamese legal documents.\n\n## Why citations break\n\nVietnamese legal texts nest. A _Điều_ (article) holds _Khoản_ (clauses), and a _Khoản_ holds _Điểm_ (points). If you cut the text into fixed-size pieces, a passage forgets where it came from, and an answer built on it can't say which rule it is quoting.\n\n## The Tag Chunker\n\nMy Tag Chunker keeps the full path, _Điều › Khoản › Điểm_, on every chunk, so nothing is cited from nowhere. Each answer points to the correct document and to a reference a payroll team can cite.\n\n## What I can't show\n\nTalentnet's documents and code stay private. The illustration on the home page uses placeholder text, not real legal content."
     },
     {
       "slug": "data-validation",
@@ -190,7 +190,7 @@
       "outcomes": [],
       "note": null,
       "links": [],
-      "body": "In HR outsourcing payroll, no two clients are alike: each one has distinct rules and a different data format. Keeping up means either hand-tailoring every client or leaving a person to check every run.\r\n\r\nThis project takes the other path. AI converts each client's rules into code, so the rules stop being tribal knowledge and start being executable. The pipeline reads the client's data formats dynamically instead of one fixed template, so a new client's files don't mean a rebuild.\r\n\r\nPayroll generation is automated, and validation runs inside that pass — the separate manual checker step is replaced, which greatly reduces the manual work in payroll.\r\n\r\n## What I can't show\r\n\r\nClient rules, file formats and payroll data stay private. The illustration on the home page uses made-up values."
+      "body": "In HR outsourcing payroll, no two clients are alike: each one has distinct rules and a different data format. Keeping up means either hand-tailoring every client or leaving a person to check every run.\n\nThis project takes the other path. AI converts each client's rules into code, so the rules stop being tribal knowledge and start being executable. The pipeline reads the client's data formats dynamically instead of one fixed template, so a new client's files don't mean a rebuild.\n\nPayroll generation is automated, and validation runs inside that pass — the separate manual checker step is replaced, which greatly reduces the manual work in payroll.\n\n## What I can't show\n\nClient rules, file formats and payroll data stay private. The illustration on the home page uses made-up values."
     },
     {
       "slug": "craftland",
@@ -225,7 +225,7 @@
       ],
       "note": null,
       "links": [],
-      "body": "From December 2023 to September 2025 I was a Game Developer at Garena Free Fire.\r\n\r\nI built 14 game modes on Craftland, Free Fire's creation platform. Two were officially featured, and together they drew about 6.2 million positive interactions from players."
+      "body": "From December 2023 to September 2025 I was a Game Developer at Garena Free Fire.\n\nI built 14 game modes on Craftland, Free Fire's creation platform. Two were officially featured, and together they drew about 6.2 million positive interactions from players."
     },
     {
       "slug": "openportfo",
@@ -246,7 +246,7 @@
       "outcomes": [],
       "note": "The chart on the home page is sample data.",
       "links": [],
-      "body": "OpenPortfo is one place to track crypto and Vietnamese stocks side by side.\r\n\r\nThe chart on the home page is an illustration with sample data, not a real portfolio."
+      "body": "OpenPortfo is one place to track crypto and Vietnamese stocks side by side.\n\nThe chart on the home page is an illustration with sample data, not a real portfolio."
     },
     {
       "slug": "mirror-now",

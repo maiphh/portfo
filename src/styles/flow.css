@@ -1,0 +1,429 @@
+/* The shared "How it works" flow (components/flow/FlowDiagram.astro, scripts/flow.ts).
+   Overflow rules from the flow spec: nodes are HTML, widths come from the grid, labels wrap
+   and clamp at two lines, and nothing sets a fixed width or height. */
+
+.flow-block {
+  --acc: var(--lime);
+  --acc-tint: var(--lime-tint);
+  margin-top: var(--s4);
+  min-width: 0;
+}
+.flow {
+  position: relative;
+  min-width: 0;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 28px;
+  container-type: inline-size;
+}
+.flow-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.flow-edges path {
+  fill: none;
+  stroke: var(--rule-2);
+  stroke-width: 1.5;
+  transition:
+    stroke 0.2s,
+    opacity 0.2s;
+}
+.flow-edges path.on {
+  stroke: var(--acc);
+  stroke-width: 2;
+}
+.flow-edges path.dim {
+  opacity: 0.35;
+}
+.flow-edges .pk {
+  fill: var(--acc);
+}
+.flow-nodes {
+  position: relative;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 40px 24px;
+  align-items: center;
+}
+.flow-nodes > li {
+  min-width: 0;
+}
+.flow-node {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 12px 22px 12px 14px;
+  background: var(--sheet-2);
+  border: 1px solid var(--faint);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.flow-node .t,
+.flow-node .s {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.flow-node .t {
+  font: 600 15px/1.3 var(--text);
+  color: var(--ink);
+  hyphens: auto;
+  padding-block: 1px;
+}
+.flow-node .s {
+  font: 500 12.5px/1.35 var(--code);
+  color: var(--muted);
+}
+.flow-node.key {
+  border-color: var(--acc);
+}
+.flow-node::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  top: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(-45deg);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+@media (hover: hover) {
+  .flow-node:hover {
+    background: var(--sheet-3);
+  }
+  .flow-node:hover::after {
+    opacity: 1;
+  }
+}
+.flow-node[aria-expanded="true"] {
+  background: var(--acc-tint);
+  border-color: var(--acc);
+  box-shadow: inset 3px 0 0 var(--acc);
+}
+.flow-node[aria-expanded="true"]::after {
+  opacity: 1;
+}
+.flow-node:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.flow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: none;
+}
+.flow-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-right: 6px;
+  border: 1px solid var(--acc);
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+/* ---------- details: in place under the flow (wide), all of them without JS ---------- */
+.flow-detail {
+  margin-top: 16px;
+  min-width: 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--sheet);
+  overflow: hidden;
+}
+.flow-block.is-enhanced .flow-detail[data-state="empty"] {
+  background: transparent;
+  border-style: dashed;
+}
+.flow-block.is-enhanced .flow-all {
+  display: none;
+}
+.flow-hint {
+  padding: 16px 20px;
+  color: var(--ink-2);
+  font-size: 15px;
+  max-width: none;
+}
+.flow-d + .flow-d {
+  border-top: 1px solid var(--rule);
+}
+.flow-d-in {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+@media (min-width: 900px) {
+  .flow-detail:not(.in-sheet) .flow-d-in {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 3fr) minmax(0, 5fr);
+    gap: 32px;
+    padding: 24px 28px 28px;
+  }
+}
+.flow-block.is-enhanced .flow-detail[data-state="open"] .flow-d-in {
+  border-top: 3px solid var(--acc);
+}
+.flow-d h3 {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  min-width: 0;
+  font: 650 22px/1.2 var(--display);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.flow-d h3 > span {
+  min-width: 0;
+}
+.flow-d h4 {
+  margin-bottom: 6px;
+  font: 600 13px var(--text);
+  color: var(--muted);
+}
+.flow-d p,
+.flow-d li {
+  max-width: none;
+  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.flow-d ul {
+  list-style: none;
+}
+.flow-d li {
+  padding: 3px 0;
+}
+.flow-d code {
+  font: 500 13.5px var(--code);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.flow-close {
+  all: unset;
+  flex: none;
+  box-sizing: border-box;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  font: 600 14px var(--text);
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.flow-close[hidden] {
+  display: none;
+}
+.flow-close:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .flow-close:hover {
+    color: var(--ink);
+    border-color: var(--faint);
+  }
+}
+
+/* ---------- narrow: a vertical path of rows, details in a bottom sheet ---------- */
+.flow.is-list {
+  padding: 18px 14px;
+}
+.flow-block:has(.flow.is-list) > .flow-detail {
+  display: none;
+}
+.flow.is-list .flow-nodes {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.flow.is-list .flow-nodes > li {
+  grid-area: auto !important;
+  position: relative;
+  padding: 0 0 14px 26px;
+}
+.flow.is-list .flow-nodes > li::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  border-left: 1.5px solid var(--rule-2);
+}
+.flow.is-list .flow-nodes > li:last-child::before {
+  bottom: auto;
+  height: 32px;
+}
+.flow.is-list .flow-nodes > li::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 27px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sheet);
+  border: 1.5px solid var(--faint);
+}
+.flow.is-list .flow-nodes > li.k::after {
+  border-color: var(--acc);
+  background: var(--acc);
+}
+.flow.is-list .flow-node {
+  min-height: 56px;
+}
+.flow.is-list .flow-node::after {
+  opacity: 1;
+}
+.flow.is-list .flow-edges {
+  display: none;
+}
+
+.flow-sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  /* Leaves room above for the site header and the opened row on short screens. */
+  max-height: min(82vh, 720px, calc(100vh - 140px));
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--rule-2);
+  border-radius: 12px 12px 0 0;
+  background: var(--sheet);
+  color: var(--ink);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.flow-sheet::backdrop {
+  background: rgba(10, 10, 10, 0.66);
+}
+.flow-sheet[open] {
+  animation: flow-sheet-in 0.28s var(--ease-out);
+}
+@keyframes flow-sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+.flow-grab {
+  width: 40px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 2px;
+  background: var(--rule-2);
+}
+.flow-acc {
+  height: 3px;
+  margin: 12px 20px 0;
+  border-radius: 2px;
+  background: var(--acc);
+}
+.flow-detail.in-sheet {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+.in-sheet .flow-d-in {
+  padding: 8px 20px calc(28px + env(safe-area-inset-bottom));
+}
+.in-sheet .flow-d h3 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  align-items: center;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--sheet);
+  font-size: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-edges path,
+  .flow-node,
+  .flow-node::after {
+    transition: none;
+  }
+  .flow-sheet[open] {
+    animation: none;
+  }
+}
+
+/* ---------- groups and edge styles (case-study flows) ---------- */
+.flow-groupbox {
+  position: absolute;
+  border: 1px dashed var(--rule-2);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.flow-groupbox span {
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  padding: 0 6px;
+  background: var(--sheet);
+  font: 600 12.5px var(--text);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.flow-gl {
+  display: none;
+  margin: 2px 0 8px;
+  line-height: 16px;
+  font: 600 12.5px var(--text);
+  color: var(--muted);
+}
+.flow.is-list .flow-nodes > li.run-start > .flow-gl {
+  display: block;
+}
+.flow.is-list .flow-nodes > li.run-start::after {
+  top: 53px;
+}
+.flow.is-list .flow-groupbox {
+  display: none;
+}
+.flow-legend i.g {
+  border: 1px dashed var(--rule-2);
+}
+.flow-edges path.dashed {
+  stroke-dasharray: 6 5;
+}
+.flow-edges path.dotted {
+  stroke-dasharray: 1.5 4;
+  stroke-linecap: round;
+}

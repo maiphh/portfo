@@ -23,11 +23,11 @@ flowchart TB
 
 `src/app/(store)`:
 
-| Path | Page |
-| --- | --- |
-| `/` | Catalog |
-| `/product/[slug]` | One product |
-| `/cart` | Cart and checkout |
+| Path                      | Page               |
+| ------------------------- | ------------------ |
+| `/`                       | Catalog            |
+| `/product/[slug]`         | One product        |
+| `/cart`                   | Cart and checkout  |
 | `/orders`, `/orders/[id]` | The buyer's orders |
 
 `src/storefront` is the shared presentation: price format, photo, variants, setup, status. Those modules and the store pages import `@/shop/store` and `@/shop/auth`. The look is the variables at the top of `src/app/globals.css`.
@@ -36,14 +36,14 @@ flowchart TB
 
 `src/app/(desk)/desk`:
 
-| Path | Page |
-| --- | --- |
-| `/desk` | Home of the desk |
-| `/desk/products` | Catalog the seller edits |
-| `/desk/orders`, `/desk/orders/[id]` | Orders |
-| `/desk/sales` | Sales |
-| `/desk/events` | Events |
-| `/desk/codes` | Codes |
+| Path                                | Page                     |
+| ----------------------------------- | ------------------------ |
+| `/desk`                             | Home of the desk         |
+| `/desk/products`                    | Catalog the seller edits |
+| `/desk/orders`, `/desk/orders/[id]` | Orders                   |
+| `/desk/sales`                       | Sales                    |
+| `/desk/events`                      | Events                   |
+| `/desk/codes`                       | Codes                    |
 
 Desk actions call `@/shop/desk`. They do not talk to PayOS or Postgres themselves.
 

@@ -1,6 +1,6 @@
 /**
  * The site's published content, generated from the Astro repo by `pnpm corpus`
- * (scripts/corpus.ts) and bundled into the Worker. Tools read it; ingest embeds it.
+ * (scripts/corpus.ts) and bundled into the Worker. The chat tools read it.
  */
 import raw from "../data/site.json";
 

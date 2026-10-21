@@ -53,7 +53,7 @@ const suggestions = [
       <div class="t">
         <h2 id="chat-title">Phu's assistant</h2>
         <p class="chat-status" id="chat-desc" data-chat-status>
-          Answers from his CV and case studies
+          Answers from his CV, work and GitHub
         </p>
       </div>
       <button type="button" class="chat-icon" data-chat-min aria-label="Minimize chat">
@@ -90,7 +90,6 @@ const suggestions = [
       ))}
     </div>
 
-
     <form class="chat-form" data-chat-form novalidate>
       <label class="sr-only" for="chat-input">
         Ask about Phu's work
@@ -119,7 +118,7 @@ const suggestions = [
 
     <p class="chat-foot" data-chat-foot>
       {CHAT_MOCK
-        ? "Sample replies (†): the live assistant isn't connected yet. Facts come from Phu's CV and case studies."
+        ? "Sample replies (†): the live assistant isn't connected yet. Facts come from Phu's CV, case studies and GitHub."
         : `Answers come from Phu's CV, case studies and GitHub, and can be wrong. Questions go through Cloudflare. Or email ${site.email}.`}
     </p>
     <p class="sr-only" aria-live="polite" data-chat-live></p>

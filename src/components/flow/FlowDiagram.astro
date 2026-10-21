@@ -1,0 +1,173 @@
+---
+/**
+ * The shared "How it works" flow (spec: portfo-design case-studies/moodboards/flow-pattern.md).
+ *
+ * Nodes are real buttons in an <ol> (DOM order = reading order of the path); CSS grid places
+ * them on wide containers and an SVG behind them draws the edges from the node boxes
+ * (scripts/flow.ts, redrawn on resize). Narrow containers get a vertical path of rows and a
+ * bottom sheet. One data source drives both. Without JS every node's details render as a list.
+ *
+ * Per-page motion hooks: the block dispatches `flow:select` (detail: { id, node, edges }) after a
+ * node opens and `flow:close` (detail: { id }) after it closes, so a page can add its own
+ * ≤0.7s select effect (skip it under reduced motion).
+ */
+import { flowProblems, richText, type FlowEdge, type FlowNode } from "~/lib/flow/types";
+import { COL_GAP, NODE_MIN } from "~/lib/flow/geometry";
+import "~/styles/flow.css";
+
+interface Props {
+  /** Unique on the page; prefixes the ids of the details region and the sheet. */
+  id: string;
+  cols: number;
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  /** Accessible name of the node list, e.g. "Parts of the site, in the order a visit uses them". */
+  label: string;
+  /** Legend text for `key` nodes; also read after each key node's title. */
+  keyLabel?: string;
+  /** Shown in the details region while nothing is selected. */
+  hint: string;
+  /** Group id → label (≤ 24 chars), for nodes with `group`. Each group gets a legend item. */
+  groups?: Record<string, string>;
+  /** Project accent and its selected-state tint; defaults to the site lime. */
+  accent?: { line: string; tint: string };
+  /** Home page only: a dot loops along each edge while the flow is on screen. */
+  packets?: boolean;
+}
+
+const {
+  id,
+  cols,
+  nodes,
+  edges,
+  label,
+  keyLabel,
+  hint,
+  groups = {},
+  accent,
+  packets = false,
+} = Astro.props;
+const problems = flowProblems(nodes, edges, cols, groups);
+if (problems.length) throw new Error(`<FlowDiagram id="${id}">:\n- ${problems.join("\n- ")}`);
+
+// Before (or without) JS, a container query picks the list at the same width scripts/flow.ts
+// uses (the content box, so padding is left out).
+const below = cols * NODE_MIN + (cols - 1) * COL_GAP;
+const fallback = `@container flow-${id} (width < ${below}px) { [data-flow="${id}"]:not(.is-js) .flow-nodes { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-flow="${id}"]:not(.is-js) .flow-nodes > li { grid-area: auto !important; } }`;
+---
+
+<div
+  class="flow-block"
+  data-flow-block
+  style={accent && `--acc:${accent.line};--acc-tint:${accent.tint}`}
+>
+  <style is:inline set:html={fallback}></style>
+  <div
+    class="flow"
+    data-flow={id}
+    data-cols={cols}
+    data-edges={JSON.stringify(edges)}
+    data-groups={JSON.stringify(groups)}
+    data-packets={packets ? "" : undefined}
+    style={`--cols:${cols};container-name:flow-${id}`}
+  >
+    <svg class="flow-edges" aria-hidden="true" data-flow-edges></svg>
+    <ol class="flow-nodes" aria-label={label}>
+      {nodes.map((n, i) => (
+        <li
+          class:list={{ k: n.key, "run-start": n.group && nodes[i - 1]?.group !== n.group }}
+          style={`grid-area:${n.at[0]}/${n.at[1]}`}
+          data-group={n.group}
+        >
+          {n.group && (
+            <span class="flow-gl" aria-hidden="true">
+              {groups[n.group]}
+            </span>
+          )}
+          <button
+            type="button"
+            class:list={["flow-node", { key: n.key }]}
+            data-node={n.id}
+            aria-expanded="false"
+            aria-controls={`${id}-detail`}
+          >
+            <span class="t">{n.title}</span>
+            {n.key && keyLabel && <span class="sr-only">, {keyLabel}</span>}
+            {n.group && <span class="sr-only">, part of {groups[n.group]}</span>}
+            {n.sub && <span class="s">{n.sub}</span>}
+          </button>
+        </li>
+      ))}
+    </ol>
+    {(keyLabel || Object.keys(groups).length > 0) && (
+      <p class="flow-legend">
+        {keyLabel && (
+          <span>
+            <i aria-hidden="true" />
+            {keyLabel}
+          </span>
+        )}
+        {Object.values(groups).map((g) => (
+          <span>
+            <i class="g" aria-hidden="true" />
+            {g}
+          </span>
+        ))}
+      </p>
+    )}
+  </div>
+
+  <div
+    class="flow-detail"
+    id={`${id}-detail`}
+    role="region"
+    aria-live="polite"
+    aria-label="Details for the selected part"
+    data-flow-detail
+    data-state="empty"
+  >
+    <p class="flow-hint" data-flow-hint hidden>
+      {hint}
+    </p>
+    <div class="flow-all" data-flow-all>
+      {nodes.map((n) => (
+        <section class="flow-d" data-detail={n.id}>
+          <div class="flow-d-in">
+            <h3>
+              <span>{n.title}</span>
+              <button type="button" class="flow-close" data-flow-close hidden>
+                Close<span class="sr-only"> details</span>
+              </button>
+            </h3>
+            <div>
+              <h4>What it does</h4>
+              <p set:html={richText(n.details.does)} />
+            </div>
+            <div>
+              <h4>Tech</h4>
+              <ul>
+                {n.details.tech.map((t) => (
+                  <li set:html={richText(t)} />
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4>Key decision</h4>
+              <p set:html={richText(n.details.why)} />
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+
+  <dialog class="flow-sheet" id={`${id}-sheet`} aria-labelledby={`${id}-sheet-h`} data-flow-sheet>
+    <div class="flow-grab" aria-hidden="true"></div>
+    <div class="flow-acc" aria-hidden="true"></div>
+    <div class="flow-detail in-sheet" data-flow-sheet-body></div>
+  </dialog>
+</div>
+
+<script>
+  import "~/scripts/flow";
+</script>

@@ -33,15 +33,15 @@ A new discount is another producer in the list `priceCart` already takes (`src/s
 
 ## Stack
 
-| Piece | Choice |
-| --- | --- |
-| Shop | TypeScript, no React inside `src/shop` |
-| Example host | Next.js 16.3.6, React 19 |
-| Database | Postgres via Drizzle (`drizzle-orm` 0.45) and `@neondatabase/serverless` |
-| Auth | Neon Auth (`@neondatabase/auth`). `ADMIN_EMAILS` grants the admin role |
-| Payments | PayOS (`@payos/node` 2.0.5). Webhook `/api/hooks/payos` |
-| Images | Cloudinary |
-| Tests | Vitest 5 |
+| Piece        | Choice                                                                   |
+| ------------ | ------------------------------------------------------------------------ |
+| Shop         | TypeScript, no React inside `src/shop`                                   |
+| Example host | Next.js 16.3.6, React 19                                                 |
+| Database     | Postgres via Drizzle (`drizzle-orm` 0.45) and `@neondatabase/serverless` |
+| Auth         | Neon Auth (`@neondatabase/auth`). `ADMIN_EMAILS` grants the admin role   |
+| Payments     | PayOS (`@payos/node` 2.0.5). Webhook `/api/hooks/payos`                  |
+| Images       | Cloudinary                                                               |
+| Tests        | Vitest 5                                                                 |
 
 `npm test` needs no credentials. A real database needs `DATABASE_URL`, then `npm run db:push` on an empty database or `npm run db:migrate` when tables already exist.
 
@@ -49,8 +49,8 @@ Architecture: [architecture.md](architecture.md). Highlights: [highlights.md](hi
 
 ## Implementations
 
-| Shop | Role | Pack |
-| --- | --- | --- |
+| Shop       | Role                                                 | Pack                                         |
+| ---------- | ---------------------------------------------------- | -------------------------------------------- |
 | Mirror Now | First test storefront and seller desk on this engine | [mirror-now/README.md](mirror-now/README.md) |
 
 Today the shop sources are copied into the Mirror Now repo. They are not consumed as a published package. The relationship to keep is still this one: one engine, many storefronts.

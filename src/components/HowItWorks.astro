@@ -1,5 +1,147 @@
 ---
-/** How this site works: the v1 architecture (docs/architecture.md) as a live graph. */
+/**
+ * How this site works: the real architecture (workers/portfo, astro.config.mjs) as a flow.
+ * Keep this in step with docs/architecture.md when the architecture changes.
+ */
+import FlowDiagram from "~/components/flow/FlowDiagram.astro";
+import type { FlowEdge, FlowNode } from "~/lib/flow/types";
+
+// Wide layout: 4 columns × 5 rows. DOM order is the order a visit uses the parts.
+const nodes: FlowNode[] = [
+  {
+    id: "browser",
+    title: "Your browser",
+    sub: "this page",
+    at: [3, 1],
+    details: {
+      does: "Loads prebuilt pages, then calls the Worker directly for contact, page views, GitHub activity and chat.",
+      tech: ["Astro islands, no framework runtime", "`fetch` + server-sent events for chat"],
+      why: "No backend sits between the page and the Worker, so nothing runs unless you use it.",
+    },
+  },
+  {
+    id: "pages",
+    title: "Static pages",
+    sub: "Vercel · prebuilt",
+    at: [1, 1],
+    details: {
+      does: "Serves every page as prebuilt HTML, CSS and JS. Only a small health check runs on demand.",
+      tech: ["Astro, static output", "`@astrojs/vercel` adapter"],
+      why: "Static pages are fast and cheap to host. Everything dynamic lives in one Worker.",
+    },
+  },
+  {
+    id: "worker",
+    title: "portfo Worker",
+    sub: "contact · views · chat",
+    at: [3, 2],
+    key: true,
+    details: {
+      does: "One Cloudflare Worker for everything dynamic: `/contact`, `/view`, `/popular`, `/activity` and `/chat`, plus the scheduled GitHub sync.",
+      tech: [
+        "Cloudflare Workers, TypeScript",
+        "D1, Workers AI, a Durable Object and Rate Limiting bindings",
+      ],
+      why: "One deploy and one set of bindings instead of separate services for chat and data.",
+    },
+  },
+  {
+    id: "d1",
+    title: "Cloudflare D1",
+    sub: "messages · views · GitHub",
+    at: [1, 3],
+    key: true,
+    details: {
+      does: "Stores contact messages, page views and a snapshot of public GitHub repos and activity.",
+      tech: ["SQLite on D1", "views keyed by `visitor_hash`: SHA-256(IP + UA + daily salt)"],
+      why: "No cookies and no raw IPs. One view per visitor, page and day.",
+    },
+  },
+  {
+    id: "quota",
+    title: "Chat limits",
+    sub: "Durable Object · rate limit",
+    at: [2, 3],
+    key: true,
+    details: {
+      does: "Caps the chat: 3 messages per 10 seconds, about 10 per visitor every 10 minutes, 50 a day in total.",
+      tech: ["Rate Limiting binding (burst)", "`Quota` Durable Object (window and daily budget)"],
+      why: "The Rate Limiting binding only supports 10 s or 60 s periods, so longer windows live in a Durable Object.",
+    },
+  },
+  {
+    id: "ai",
+    title: "Workers AI",
+    sub: "Llama 3.3 · tool calling",
+    at: [3, 3],
+    key: true,
+    details: {
+      does: "Answers chat questions only from tool results: projects, experience, contact details and GitHub stats.",
+      tech: [
+        "Llama 3.3 70B (fp8-fast), Llama 3.1 8B fallback",
+        "read-only tools over bundled JSON and D1",
+      ],
+      why: 'Small, typed tools instead of vector search: answers cite their sources, and unknowns get a plain "I don\'t know".',
+    },
+  },
+  {
+    id: "resend",
+    title: "Resend",
+    sub: "one email per message",
+    at: [4, 3],
+    details: {
+      does: "Sends me each contact message in the same request that stored it. Reply-to is the sender.",
+      tech: ["Resend HTTP API", "called from the Worker"],
+      why: "No queue: you see right away whether the message went through. If the email fails, the message is kept and you're told.",
+    },
+  },
+  {
+    id: "email",
+    title: "Email to Phu",
+    sub: "reply-to is you",
+    at: [4, 4],
+    details: {
+      does: "Lands in my inbox; replying goes straight to the address you entered.",
+      tech: ["plain text email"],
+      why: "Your message reaches a person, not a ticket system.",
+    },
+  },
+  {
+    id: "cron",
+    title: "Cron Trigger",
+    sub: "every 6 hours",
+    at: [5, 1],
+    key: true,
+    details: {
+      does: "Runs the Worker's GitHub sync on a schedule, so pages read a snapshot instead of calling GitHub.",
+      tech: ["Cloudflare Cron Trigger `17 */6 * * *`", "staging table, then a swap"],
+      why: "Visitors never wait on GitHub, and its rate limits never reach the page.",
+    },
+  },
+  {
+    id: "github",
+    title: "GitHub API",
+    sub: "public repos and activity",
+    at: [5, 3],
+    details: {
+      does: "Source of the public repositories and contribution activity shown on the site.",
+      tech: ["GitHub GraphQL API", "read-only token"],
+      why: "Only public data is synced, and only by the cron job.",
+    },
+  },
+];
+
+const edges: FlowEdge[] = [
+  ["browser", "pages"],
+  ["browser", "worker"],
+  ["worker", "d1"],
+  ["worker", "quota"],
+  ["worker", "ai"],
+  ["worker", "resend"],
+  ["resend", "email"],
+  ["cron", "worker"],
+  ["worker", "github"],
+];
 ---
 
 <section class="sec chapter" id="how" aria-labelledby="how-h">
@@ -10,133 +152,19 @@
       </h2>
       <p>
         Static pages on Vercel, one Cloudflare Worker for contact, views, GitHub and chat. Nothing
-        runs that doesn't need to.
+        runs that doesn't need to. Select any part to see what it does.
       </p>
     </div>
-    <div class="graph" data-graph>
-      <svg
-        class="g-d"
-        viewBox="0 0 1200 430"
-        role="img"
-        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls the portfo Worker for contact, views, GitHub and chat; the Worker uses D1, Resend and Workers AI; a Cron Trigger syncs GitHub."
-      >
-        <path class="e" id="e1" d="M190 210 C230 210 230 90 270 90"></path>
-        <path class="e" id="e2" d="M190 220 C230 220 230 245 270 245"></path>
-        <path class="e" id="e3" d="M500 245 H580"></path>
-        <path class="e" id="e4" d="M810 230 C850 230 850 95 890 95"></path>
-        <path class="e" id="e5" d="M810 240 H890"></path>
-        <path class="e" id="e6" d="M1005 130 V200"></path>
-        <path class="e" id="e7" d="M1120 92 C1175 92 1175 375 1120 375"></path>
-        <path class="e" id="e8" d="M695 340 V290"></path>
-        <g class="nb">
-          <rect x="20" y="180" width="170" height="70" rx="4"></rect>
-          <text x="40" y="210">
-            Your browser
-          </text>
-          <text class="sub" x="40" y="232">
-            this page
-          </text>
-        </g>
-        <g class="nb">
-          <rect x="270" y="55" width="230" height="70" rx="4"></rect>
-          <text x="290" y="85">
-            Vercel, static pages
-          </text>
-          <text class="sub" x="290" y="107">
-            prebuilt, no server
-          </text>
-        </g>
-        <g class="nb key">
-          <rect x="270" y="210" width="230" height="75" rx="4"></rect>
-          <text x="290" y="240">
-            portfo Worker
-          </text>
-          <text class="sub" x="290" y="262">
-            contact · views · GitHub · chat
-          </text>
-        </g>
-        <g class="nb key">
-          <rect x="580" y="205" width="230" height="85" rx="4"></rect>
-          <text x="600" y="236">
-            Cloudflare D1
-          </text>
-          <text class="sub" x="600" y="258">
-            messages · views
-          </text>
-          <text class="sub" x="600" y="276">
-            GitHub snapshot
-          </text>
-        </g>
-        <g class="nb">
-          <rect x="890" y="55" width="230" height="75" rx="4"></rect>
-          <text x="910" y="85">
-            Resend
-          </text>
-          <text class="sub" x="910" y="107">
-            one email per message
-          </text>
-        </g>
-        <g class="nb">
-          <rect x="890" y="200" width="230" height="75" rx="4"></rect>
-          <text x="910" y="230">
-            Workers AI
-          </text>
-          <text class="sub" x="910" y="252">
-            Llama 3.3 · tools
-          </text>
-        </g>
-        <g class="nb">
-          <rect x="890" y="345" width="230" height="60" rx="4"></rect>
-          <text x="910" y="373">
-            Email to Phu
-          </text>
-          <text class="sub" x="910" y="393">
-            reply-to is the sender
-          </text>
-        </g>
-        <g class="nb">
-          <rect x="580" y="340" width="230" height="60" rx="4"></rect>
-          <text x="600" y="368">
-            Cron Trigger
-          </text>
-          <text class="sub" x="600" y="388">
-            GitHub sync every 6 h
-          </text>
-        </g>
-        <circle class="pk" r="4.5" data-pk="e2"></circle>
-        <circle class="pk" r="4.5" data-pk="e3"></circle>
-        <circle class="pk v" r="4.5" data-pk="e5"></circle>
-        <circle class="pk" r="4.5" data-pk="e4"></circle>
-        <circle class="pk" r="4.5" data-pk="e6"></circle>
-        <circle class="pk v" r="4.5" data-pk="e8"></circle>
-        <circle class="pk" r="4.5" data-pk="e7"></circle>
-      </svg>
-      <ol class="graph-m">
-        <li>
-          <b>Vercel</b>
-          <span>Static pages only. The browser calls the Worker directly.</span>
-        </li>
-        <li>
-          <b>portfo + D1</b>
-          <span>
-            Messages, views and GitHub data. Contact emails via Resend in the same request. Chat
-            tools read bundled JSON and D1.
-          </span>
-        </li>
-        <li>
-          <b>Cron Trigger</b>
-          <span>Pulls public GitHub activity every 6 hours into D1.</span>
-        </li>
-        <li>
-          <b>Workers AI</b>
-          <span>Llama 3.3 answers from read-only tools over the CV, case studies and D1.</span>
-        </li>
-        <li>
-          <b>Resend</b>
-          <span>One email per contact submit; you wait for it, then get a confirmation.</span>
-        </li>
-      </ol>
-    </div>
+    <FlowDiagram
+      id="how"
+      cols={4}
+      nodes={nodes}
+      edges={edges}
+      label="Parts of this site, in the order a visit uses them"
+      keyLabel="runs on Cloudflare"
+      hint="Select any part of the diagram to see what it does, the tech behind it and the key decision."
+      packets
+    />
     <div class="how-notes">
       <p>
         <b>The chat</b> runs on the same Cloudflare Worker as the data APIs. It only answers from

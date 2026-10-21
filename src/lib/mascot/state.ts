@@ -19,7 +19,6 @@ const TOOL_POSES: Record<string, ToolPose> = {
   list_projects: { gaze: "sweep", ripple: 1 },
   get_project: { gaze: "down", ripple: 0.8 },
   get_experience: { gaze: "up", ripple: 0.9 },
-  get_cv: { gaze: "up", ripple: 0.9 },
   get_contact: { gaze: "center", ripple: 0.7 },
   get_github_stats: { gaze: "right", ripple: 1.2 },
   get_popular_projects: { gaze: "left", ripple: 1.2 },

@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # The built static site with the chat's mock stream (PUBLIC_USE_MOCKS defaults on):
-    # no Worker, Turnstile or secret is needed.
+    # no Worker or secret is needed.
     steps:
       - uses: actions/checkout@v7
 

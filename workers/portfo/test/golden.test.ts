@@ -36,7 +36,10 @@ function scripted(steps: ((inputs: Record<string, unknown>) => Reply)[]) {
   };
 }
 
-async function ask(question: string, script: (inputs: Record<string, unknown>, n: number) => Reply) {
+async function ask(
+  question: string,
+  script: (inputs: Record<string, unknown>, n: number) => Reply,
+) {
   if (!vi.isMockFunction(globalThis.fetch)) mockFetch();
   const ai = fakeAi(script);
   const { res, text } = await call(

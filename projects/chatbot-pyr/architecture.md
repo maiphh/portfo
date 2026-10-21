@@ -44,14 +44,14 @@ flowchart TB
 
 ## Ingest
 
-| Entry | What runs |
-| --- | --- |
-| `upload_link` | `crawl_tvpl_api` only. Law id is the number before `.aspx`. HTML chunker walks `<p>` and splits only on `<a name="dieu_N">`. Prefix is `[Số: … > Điều N. Title]`. |
-| PDF / image | Pages rendered to images, then a vision model, one page at a time. The prompt forces `## Điều`, `### Khoản`, `#### Điểm`, and tells the model not to invent a Điều on a continued page. |
-| Dispatch upload | Hybrid chunker (`chunk_with_llm`). |
-| General upload | Same hybrid chunker. `process_general` passes the dispatch type, so it does not use the semantic splitter that `chunk()` would pick for `GENERAL`. |
-| Email | A separate LLM chunk prompt. |
-| Q&A log | Word table parser with fill-down for a merged topic column. |
+| Entry           | What runs                                                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upload_link`   | `crawl_tvpl_api` only. Law id is the number before `.aspx`. HTML chunker walks `<p>` and splits only on `<a name="dieu_N">`. Prefix is `[Số: … > Điều N. Title]`.                       |
+| PDF / image     | Pages rendered to images, then a vision model, one page at a time. The prompt forces `## Điều`, `### Khoản`, `#### Điểm`, and tells the model not to invent a Điều on a continued page. |
+| Dispatch upload | Hybrid chunker (`chunk_with_llm`).                                                                                                                                                      |
+| General upload  | Same hybrid chunker. `process_general` passes the dispatch type, so it does not use the semantic splitter that `chunk()` would pick for `GENERAL`.                                      |
+| Email           | A separate LLM chunk prompt.                                                                                                                                                            |
+| Q&A log         | Word table parser with fill-down for a merged topic column.                                                                                                                             |
 
 `upload_link` calls `crawl_tvpl_api` directly. A missing law id or a failed request returns nothing and the link is rejected. `crawl()` would try `web_crawl` (a scrape of `div.content1`) after the API throws, but the upload path does not call `crawl()`. The scrape is unused.
 
@@ -87,30 +87,30 @@ There is no architecture markdown in the backend. These are code-vs-code conflic
 
 ### Backend
 
-| Piece | Choice | Source |
-| --- | --- | --- |
-| Language / runtime | Python 3.12 | `Dockerfile` (`python:3.12-slim`) |
-| API | FastAPI, Uvicorn | `requirements.txt`, `Dockerfile` |
-| Database | PostgreSQL, SQLAlchemy, asyncpg for requests, psycopg2 for sync | `requirements.txt`, `app/services/db.py` |
-| Vectors | pgvector, `Vector(4096)`, cosine distance | `app/models/document.py`, `knowledge.query_async` |
-| Schema | `create_all_tables()` plus `run_migrations()` on startup | `app/main.py` |
-| LLM and VLM | On-prem LLM, chat completions over HTTP (`httpx`) | `app/services/llm.py` |
-| Embeddings | On-prem LLM embeddings, model `qwen3-embed-8b` | `app/services/embedding/` |
-| Rerank | `sentence-transformers` `CrossEncoder`, default `BAAI/bge-reranker-v2-m3` | `app/services/search.py` |
-| PDF render | pypdfium2 path via `pdf_to_base64` (poppler in the image) | `Dockerfile`, `app/services/util.py` |
-| Other files | Docling for non-PDF text, `extract-msg` and the stdlib `email` package for mail | `extract.py` |
-| HTML | BeautifulSoup | `crawl.py`, `chunk_html` |
-| Auth | MSAL access token in, PyJWT session out, Entra tenant | `app/routers/auth.py` |
+| Piece              | Choice                                                                          | Source                                            |
+| ------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Language / runtime | Python 3.12                                                                     | `Dockerfile` (`python:3.12-slim`)                 |
+| API                | FastAPI, Uvicorn                                                                | `requirements.txt`, `Dockerfile`                  |
+| Database           | PostgreSQL, SQLAlchemy, asyncpg for requests, psycopg2 for sync                 | `requirements.txt`, `app/services/db.py`          |
+| Vectors            | pgvector, `Vector(4096)`, cosine distance                                       | `app/models/document.py`, `knowledge.query_async` |
+| Schema             | `create_all_tables()` plus `run_migrations()` on startup                        | `app/main.py`                                     |
+| LLM and VLM        | On-prem LLM, chat completions over HTTP (`httpx`)                               | `app/services/llm.py`                             |
+| Embeddings         | On-prem LLM embeddings, model `qwen3-embed-8b`                                  | `app/services/embedding/`                         |
+| Rerank             | `sentence-transformers` `CrossEncoder`, default `BAAI/bge-reranker-v2-m3`       | `app/services/search.py`                          |
+| PDF render         | pypdfium2 path via `pdf_to_base64` (poppler in the image)                       | `Dockerfile`, `app/services/util.py`              |
+| Other files        | Docling for non-PDF text, `extract-msg` and the stdlib `email` package for mail | `extract.py`                                      |
+| HTML               | BeautifulSoup                                                                   | `crawl.py`, `chunk_html`                          |
+| Auth               | MSAL access token in, PyJWT session out, Entra tenant                           | `app/routers/auth.py`                             |
 
 ### Frontend
 
-| Piece | Choice | Source |
-| --- | --- | --- |
-| Framework | Next.js 16.0.7 | `package.json` |
-| UI | React 19.2.0, TypeScript 5 | `package.json` |
-| Styling | Tailwind CSS 4 | `package.json` |
-| Auth | `@azure/msal-browser` ^4.27 | `package.json` |
-| Answer rendering | `react-markdown`, `remark-gfm` | `package.json` |
-| Components | Radix (alert dialog, select, scroll area, collapsible, slot) | `package.json` |
+| Piece            | Choice                                                       | Source         |
+| ---------------- | ------------------------------------------------------------ | -------------- |
+| Framework        | Next.js 16.0.7                                               | `package.json` |
+| UI               | React 19.2.0, TypeScript 5                                   | `package.json` |
+| Styling          | Tailwind CSS 4                                               | `package.json` |
+| Auth             | `@azure/msal-browser` ^4.27                                  | `package.json` |
+| Answer rendering | `react-markdown`, `remark-gfm`                               | `package.json` |
+| Components       | Radix (alert dialog, select, scroll area, collapsible, slot) | `package.json` |
 
 Version string on `GET /api/health` is `0303261615`.

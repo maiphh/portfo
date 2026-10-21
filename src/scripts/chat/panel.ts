@@ -24,8 +24,8 @@ import { tidy } from "~/lib/chat/text";
 const SHEET = window.matchMedia("(max-width: 1279.98px)");
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
 const WELCOME =
-  "Hi! Ask me about Phu's work: his projects, experience and how things were built. I answer from his CV and case studies.";
-const IDLE_STATUS = "Answers from his CV and case studies";
+  "Hi! Ask me about Phu's work: his projects, experience and how things were built. I answer from his CV, case studies and public GitHub activity.";
+const IDLE_STATUS = "Answers from his CV, work and GitHub";
 
 const $ = <T extends HTMLElement>(s: string, c: ParentNode = document) => {
   const el = c.querySelector<T>(s);

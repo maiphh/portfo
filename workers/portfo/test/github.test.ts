@@ -93,9 +93,9 @@ describe("github sync", () => {
     const live = await env.DB.prepare("SELECT COUNT(*) AS n FROM github_activity").first<{
       n: number;
     }>();
-    const staging = await env.DB.prepare(
-      "SELECT COUNT(*) AS n FROM github_activity_next",
-    ).first<{ n: number }>();
+    const staging = await env.DB.prepare("SELECT COUNT(*) AS n FROM github_activity_next").first<{
+      n: number;
+    }>();
     expect(live?.n).toBe(120);
     expect(staging?.n).toBe(0);
 
@@ -129,9 +129,7 @@ describe("github sync", () => {
       log: console,
       login: "maiphh",
     });
-    const before = await env.DB.prepare(
-      "SELECT date, repo_id, commits FROM github_activity",
-    ).all();
+    const before = await env.DB.prepare("SELECT date, repo_id, commits FROM github_activity").all();
     expect(before.results?.length).toBe(1);
 
     const stagingBound = new WeakSet<object>();
@@ -174,13 +172,11 @@ describe("github sync", () => {
     });
     expect(result).toMatchObject({ ok: false, error: "sync_failed" });
 
-    const after = await env.DB.prepare(
-      "SELECT date, repo_id, commits FROM github_activity",
-    ).all();
+    const after = await env.DB.prepare("SELECT date, repo_id, commits FROM github_activity").all();
     expect(after.results).toEqual(before.results);
-    const staging = await env.DB.prepare(
-      "SELECT COUNT(*) AS n FROM github_activity_next",
-    ).first<{ n: number }>();
+    const staging = await env.DB.prepare("SELECT COUNT(*) AS n FROM github_activity_next").first<{
+      n: number;
+    }>();
     expect(staging?.n).toBe(0);
   });
 });

@@ -9,13 +9,13 @@ This is a client-facing site. The useful record is what it contains and how a do
 
 ## Pages
 
-| Path | What a visitor gets |
-| --- | --- |
-| `/` | Home. Hero, who POET is, activities, memories. Photos are from real trips. |
-| `team/` | The people who keep the group going. |
-| `dong-hanh/` | Corporate partnership packages. Left as their own page. |
-| `ung-ho/` | An individual donation. PayOS checkout, then a receipt. The return URL does not mark the gift paid. |
-| `admin/` | Publish a paid gift onto the public wall. Username and password, with a bearer token still accepted as a fallback. |
+| Path         | What a visitor gets                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `/`          | Home. Hero, who POET is, activities, memories. Photos are from real trips.                                         |
+| `team/`      | The people who keep the group going.                                                                               |
+| `dong-hanh/` | Corporate partnership packages. Left as their own page.                                                            |
+| `ung-ho/`    | An individual donation. PayOS checkout, then a receipt. The return URL does not mark the gift paid.                |
+| `admin/`     | Publish a paid gift onto the public wall. Username and password, with a bearer token still accepted as a fallback. |
 
 Shared chrome is three web components: `site-header`, `site-footer`, `site-lightbox`. Copy and layout live in plain HTML and one stylesheet.
 

@@ -37,9 +37,11 @@ Needs Node 22.22+ (see `.nvmrc`) and pnpm 10 (`corepack enable`).
 ```
 src/
   components/      One component per home-page section or chapter
+    flow/FlowDiagram.astro  Reusable "How it works" flow: HTML node buttons, SVG edges, details panel / bottom sheet (scripts/flow.ts)
   content/work/    Case studies (Markdown/MDX), one file per project
   data/            experience.json (CV entries for the timeline)
   lib/
+    flow/            Flow data types, data checks and edge geometry
     flags.ts         Feature flags (PUBLIC_USE_MOCKS)
     api.ts           PUBLIC_WORKER_URL helpers
     types.ts         Data contracts the Worker returns
@@ -49,7 +51,7 @@ src/
     work/[slug].astro Case-study pages
     api/health.ts    Tiny Vercel probe (no database)
   scripts/         Client code: features.ts, analytics.ts, activity.ts, chat/, …
-  styles/global.css
+  styles/          global.css, flow.css
 docs/architecture.md
 workers/
   portfo/          contact, views, GitHub, chat (D1 + Resend + Cron + Workers AI)
@@ -67,9 +69,9 @@ Add `?dev` to the URL (with mocks on) to see the open content TODOs.
 
 Copy `.env.example` to `.env` for local work. **Never commit `.env` or any secret.** In production, set the same variables in the Vercel project settings. Only `PUBLIC_*` variables reach the browser.
 
-| You want                      | Set                                                                                                                                    |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Site with sample data         | nothing (defaults)                                                                                                                     |
+| You want                             | Set                                                                                                             |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Site with sample data                | nothing (defaults)                                                                                              |
 | Live contact / views / GitHub / chat | `PUBLIC_USE_MOCKS=false`, `PUBLIC_WORKER_URL`. Secrets live on the Worker (`workers/portfo/.dev.vars.example`). |
 
 There is **no** `DATABASE_URL`, `RESEND_*`, `GITHUB_TOKEN`, `CRON_SECRET`, or `VISITOR_HASH_SALT` on Vercel.
@@ -85,7 +87,7 @@ wrangler d1 migrations apply portfo --local
 pnpm dev
 ```
 
-The committed `database_id` is a local placeholder (`00000000-…0001`). Replace it after `wrangler d1 create portfo`. Top-level `ALLOWED_ORIGINS` stays `http://localhost:4321` so local deploy/dev works; `env.production` still has `REPLACE_ME` until launch.
+`wrangler.jsonc` carries the `database_id` of the `portfo` D1 database (an id, not a secret). On a fresh account, replace it in both blocks after `wrangler d1 create portfo`. Top-level `ALLOWED_ORIGINS` stays `http://localhost:4321` so local deploy/dev works; `env.production` still has `REPLACE_ME` until launch.
 
 The live URL is whatever `wrangler deploy` prints for `portfo`. After the site points at `PUBLIC_WORKER_URL`, the old `portfo-chat` Worker can be deleted in the Cloudflare dashboard.
 

@@ -23,14 +23,14 @@ flowchart TB
 
 `worker/src/index.js` is a router. It matches the method and the path, then calls a handler. It does not run SQL, call PayOS, or validate a body inline. CORS preflight and the origin gate for `/api/*` sit in `http.js`.
 
-| Path | Who |
-| --- | --- |
-| `POST /api/donations` | Create a payment. The Worker asks PayOS for a link and stores the row. |
-| `GET /api/donations` | Public wall. Published gifts only. |
-| `GET /api/donations/:code` | Status for the receipt page. |
-| `POST /api/webhooks/payos` | PayOS says a payment landed. Signature is checked in `payos.js`. |
-| `POST /api/admin/login` and the admin donation routes | Session, then show, publish, or hide a gift. |
-| Return and cancel URLs | `routes-pages.js` sends the browser to the receipt. Those URLs do not write `paid`. |
+| Path                                                  | Who                                                                                 |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `POST /api/donations`                                 | Create a payment. The Worker asks PayOS for a link and stores the row.              |
+| `GET /api/donations`                                  | Public wall. Published gifts only.                                                  |
+| `GET /api/donations/:code`                            | Status for the receipt page.                                                        |
+| `POST /api/webhooks/payos`                            | PayOS says a payment landed. Signature is checked in `payos.js`.                    |
+| `POST /api/admin/login` and the admin donation routes | Session, then show, publish, or hide a gift.                                        |
+| Return and cancel URLs                                | `routes-pages.js` sends the browser to the receipt. Those URLs do not write `paid`. |
 
 Handlers live in `routes-donations.js`, `routes-webhook.js`, `routes-admin.js`, `routes-pages.js`, and `gifts.js`. `store.js` is the D1 access. `validation.js` checks the create payload. `mask.js` is how a name becomes “Ẩn danh”.
 

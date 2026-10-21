@@ -29,12 +29,12 @@ That is the anti-starvation rule. A 200-page PDF cannot fill every extract slot 
 
 Render and extract are separate stages. Render concurrency defaults to 4, extract to 8. Operators set those two numbers. The rest is derived so the caps cannot drift (`docs/specs/design-pipeline-capacity.md`):
 
-| Cap | Formula | At the default extract concurrency of 8 |
-| --- | --- | --- |
-| Ready-to-extract buffer | 2 × extract | 16 |
-| Units one pod may hold | ready buffer + extract | 24 |
-| Units one session may hold | extract / 2, raised to a fair share of the pipeline when several sessions are active | 4, then shared |
-| VLM, OCR, and LLM concurrency | equal to extract | 8 |
+| Cap                           | Formula                                                                              | At the default extract concurrency of 8 |
+| ----------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------- |
+| Ready-to-extract buffer       | 2 × extract                                                                          | 16                                      |
+| Units one pod may hold        | ready buffer + extract                                                               | 24                                      |
+| Units one session may hold    | extract / 2, raised to a fair share of the pipeline when several sessions are active | 4, then shared                          |
+| VLM, OCR, and LLM concurrency | equal to extract                                                                     | 8                                       |
 
 Render fills the ready buffer while extract is busy, up to that buffer, so the vision model is not idle waiting for the next raster. When several sessions have work, the per-session ceiling is the pipeline depth divided across them, and never below the fairness floor. Semaphores change size only when they are idle, so a hot reload cannot corrupt the permit count. A wedged unit is reclaimed with `SKIP LOCKED` and a short lock timeout. The worker does not wait on a row another pod still holds.
 
