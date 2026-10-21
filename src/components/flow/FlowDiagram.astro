@@ -9,7 +9,8 @@
  *
  * Per-page motion hooks: the block dispatches `flow:select` (detail: { id, node, edges }) after a
  * node opens and `flow:close` (detail: { id }) after it closes, so a page can add its own
- * ≤0.7s select effect (skip it under reduced motion).
+ * ≤0.7s select effect (skip it under reduced motion). `autoplay` highlights without selecting,
+ * so it dispatches neither.
  */
 import { flowProblems, richText, type FlowEdge, type FlowNode } from "~/lib/flow/types";
 import { COL_GAP, NODE_MIN } from "~/lib/flow/geometry";
@@ -33,6 +34,12 @@ interface Props {
   accent?: { line: string; tint: string };
   /** Home page only: a dot loops along each edge while the flow is on screen. */
   packets?: boolean;
+  /**
+   * Home page only: while idle, step through the nodes in path order (about 2.8s each) and
+   * light the edge into each one. Highlight only; paused while someone uses the flow, off
+   * screen or in a hidden tab, and off under reduced motion (scripts/flow.ts).
+   */
+  autoplay?: boolean;
 }
 
 const {
@@ -46,6 +53,7 @@ const {
   groups = {},
   accent,
   packets = false,
+  autoplay = false,
 } = Astro.props;
 const problems = flowProblems(nodes, edges, cols, groups);
 if (problems.length) throw new Error(`<FlowDiagram id="${id}">:\n- ${problems.join("\n- ")}`);
@@ -69,6 +77,7 @@ const fallback = `@container flow-${id} (width < ${below}px) { [data-flow="${id}
     data-edges={JSON.stringify(edges)}
     data-groups={JSON.stringify(groups)}
     data-packets={packets ? "" : undefined}
+    data-autoplay={autoplay ? "" : undefined}
     style={`--cols:${cols};container-name:flow-${id}`}
   >
     <svg class="flow-edges" aria-hidden="true" data-flow-edges></svg>

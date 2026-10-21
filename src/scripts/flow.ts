@@ -5,12 +5,20 @@
  * - opens a node's details below the flow (grid) or in a bottom sheet (list), keeps the
  *   selection when the layout flips, and returns focus to the node on close;
  * - arrow keys / Home / End move between nodes, Esc closes;
- * - motion (edges drawing in once, the home page's packets) only without reduced motion.
+ * - motion (edges drawing in once, the home page's packets) only without reduced motion;
+ * - `autoplay` (home page): while nobody is using the flow, steps through the nodes in DOM
+ *   (path) order and lights the edge into each one. Highlight only: no panel, sheet, focus,
+ *   scrolling or aria change. Paused on hover, keyboard focus, touch, a selection, off screen
+ *   or in a hidden tab; resumes RESUME ms after the person lets go. Off under reduced motion.
  */
 import { edgeGeom, listBelow, type Box } from "~/lib/flow/geometry";
 
 const NS = "http://www.w3.org/2000/svg";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+/** Autoplay: time on each node, the wait before the first step, and the idle time before resuming. */
+const STEP = 2800;
+const FIRST = 2000;
+const RESUME = 6000;
 
 function must<T>(v: T | null | undefined, what: string): T {
   if (v == null) throw new Error(`[flow] missing ${what}`);
@@ -46,6 +54,7 @@ function init(block: HTMLElement) {
   let current: string | null = null;
   let drawnIn = false;
   let inView = false;
+  let auto: ReturnType<typeof autoplay> | null = null;
 
   block.classList.add("is-enhanced");
   flow.classList.add("is-js");
@@ -165,6 +174,7 @@ function init(block: HTMLElement) {
       p.classList.toggle("on", on);
       p.classList.toggle("dim", current !== null && !on);
     }
+    auto?.paint();
   }
 
   function render(nid: string, into: HTMLElement, headingId: string) {
@@ -303,6 +313,132 @@ function init(block: HTMLElement) {
     if (inView) drawIn();
   }
 
+  /**
+   * Idle tour of the flow. Holds are the reasons it is paused; it runs when there are none.
+   * Interaction holds (hover, focus, touch, select) also clear the highlight, so it never
+   * competes with what the person is looking at; view and hidden only freeze it.
+   */
+  function autoplay() {
+    const lis = nodes.map((n) => must(n.closest("li"), "node li"));
+    const holds = new Set<string>(["view"]);
+    const later = new Map<string, number>();
+    const HANDS = ["hover", "focus", "touch", "select"];
+    let at = -1;
+    let prev = -1;
+    let lit = false;
+    let timer = 0;
+
+    const activeId = () => (lit && current === null && at >= 0 ? nodes[at]?.dataset.node : null);
+
+    function into(nid: string): SVGPathElement[] {
+      const paths = [...svg.querySelectorAll<SVGPathElement>("path")];
+      const from = prev >= 0 ? nodes[prev]?.dataset.node : null;
+      for (const pick of [
+        (p: SVGPathElement) => p.dataset.b === nid && p.dataset.a === from,
+        (p: SVGPathElement) => p.dataset.b === nid,
+        (p: SVGPathElement) => p.dataset.a === nid,
+      ]) {
+        const e = paths.filter(pick);
+        if (e.length) return e;
+      }
+      return [];
+    }
+
+    function paint() {
+      const nid = activeId();
+      nodes.forEach((n, i) => {
+        const on = nid != null && n.dataset.node === nid;
+        n.classList.toggle("is-auto", on);
+        lis[i]?.classList.toggle("is-auto", on);
+        lis[i]?.classList.toggle("is-auto-in", nid != null && i === at - 1);
+      });
+      const e = nid != null ? into(nid) : [];
+      for (const p of svg.querySelectorAll<SVGPathElement>("path"))
+        p.classList.toggle("auto", e.includes(p));
+    }
+
+    function step() {
+      prev = at;
+      at = (at + 1) % nodes.length;
+      lit = true;
+      paint();
+      timer = window.setTimeout(step, STEP);
+    }
+
+    function sync() {
+      clearTimeout(timer);
+      const run = !reduce.matches && current === null && holds.size === 0;
+      flow.dataset.auto = run ? "running" : "paused";
+      if (run) {
+        timer = window.setTimeout(step, lit ? STEP : FIRST);
+        return;
+      }
+      if (reduce.matches || current !== null || HANDS.some((h) => holds.has(h))) {
+        lit = false;
+        paint();
+      }
+    }
+
+    function hold(why: string) {
+      clearTimeout(later.get(why));
+      later.delete(why);
+      holds.add(why);
+      sync();
+    }
+    function release(why: string, after = 0) {
+      clearTimeout(later.get(why));
+      later.delete(why);
+      if (!holds.has(why)) return;
+      if (!after) {
+        holds.delete(why);
+        sync();
+        return;
+      }
+      later.set(
+        why,
+        window.setTimeout(() => {
+          later.delete(why);
+          holds.delete(why);
+          sync();
+        }, after),
+      );
+    }
+
+    flow.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "touch") hold("hover");
+    });
+    flow.addEventListener("pointerleave", (e) => {
+      if (e.pointerType !== "touch") release("hover", RESUME);
+    });
+    // A touch is momentary: pause, and resume once the diagram has been left alone.
+    block.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      hold("touch");
+      release("touch", RESUME);
+    });
+    // Keyboard focus only: a mouse click focuses the button too, and that is covered by hover
+    // and select, so focus left on a clicked node doesn't keep the tour stopped.
+    block.addEventListener("focusin", (e) => {
+      if ((e.target as Element).matches(":focus-visible")) hold("focus");
+    });
+    block.addEventListener("focusout", (e) => {
+      if (!block.contains(e.relatedTarget as Node | null)) release("focus", RESUME);
+    });
+    block.addEventListener("flow:select", () => hold("select"));
+    block.addEventListener("flow:close", () => release("select", RESUME));
+    document.addEventListener("visibilitychange", () =>
+      document.hidden ? hold("hidden") : release("hidden"),
+    );
+    reduce.addEventListener("change", sync);
+
+    sync();
+    return {
+      paint,
+      view: (on: boolean) => (on ? release("view") : hold("view")),
+    };
+  }
+  if (flow.hasAttribute("data-autoplay")) auto = autoplay();
+
   setMode();
   draw();
   new ResizeObserver(() => requestAnimationFrame(layout)).observe(flow);
@@ -310,6 +446,7 @@ function init(block: HTMLElement) {
   new IntersectionObserver(
     (entries) => {
       inView = entries.some((e) => e.isIntersecting);
+      auto?.view(inView);
       if (inView) {
         drawIn();
         svg.unpauseAnimations();

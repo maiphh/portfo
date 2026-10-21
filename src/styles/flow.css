@@ -71,7 +71,8 @@
   text-align: left;
   transition:
     border-color 0.2s,
-    background 0.2s;
+    background 0.2s,
+    box-shadow 0.3s;
 }
 .flow-node .t,
 .flow-node .s {
@@ -124,6 +125,26 @@
 }
 .flow-node[aria-expanded="true"]::after {
   opacity: 1;
+}
+/* Autoplay (home page): the node the idle tour is on, and the edge into it. Not a selection:
+   no tint, no aria-expanded. */
+.flow-node.is-auto {
+  border-color: var(--acc);
+  background: color-mix(in srgb, var(--acc) 9%, var(--sheet-2));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--acc) 30%, transparent),
+    0 0 18px color-mix(in srgb, var(--acc) 22%, transparent);
+}
+.flow-edges path.auto {
+  stroke: var(--acc);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+  animation: flow-run 0.8s linear infinite;
+}
+@keyframes flow-run {
+  to {
+    stroke-dashoffset: -13;
+  }
 }
 .flow-node:focus-visible {
   outline: 2px solid var(--ink);
@@ -304,6 +325,14 @@
 .flow.is-list .flow-node {
   min-height: 56px;
 }
+.flow.is-list .flow-nodes > li.is-auto::after {
+  border-color: var(--acc);
+  background: var(--acc);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acc) 30%, transparent);
+}
+.flow.is-list .flow-nodes > li.is-auto-in::before {
+  border-left-color: var(--acc);
+}
 .flow.is-list .flow-node::after {
   opacity: 1;
 }
@@ -378,6 +407,9 @@
   .flow-node,
   .flow-node::after {
     transition: none;
+  }
+  .flow-edges path.auto {
+    animation: none;
   }
   .flow-sheet[open] {
     animation: none;
