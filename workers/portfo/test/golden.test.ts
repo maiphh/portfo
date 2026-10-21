@@ -120,7 +120,7 @@ describe("golden Q&A", () => {
       expect.arrayContaining([
         { title: "Document OCR pipeline", href: "/work/document-ocr" },
         { title: "Legal RAG assistant", href: "/work/legal-rag" },
-        { title: "Payroll data validation", href: "/work/data-validation" },
+        { title: "DVP · payroll data validation", href: "/work/data-validation" },
         { title: "Experience", href: "/#timeline" },
       ]),
     );

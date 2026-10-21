@@ -418,3 +418,116 @@
 .cs2-out .icon {
   transform: rotate(180deg);
 }
+
+/* ---------- shared mock primitives for case-study artifacts (illustrations) ----------
+   .mk          a panel                  .mk-chips   a wrapping row of mono chips
+   .mk-code     a code block (wraps)     .mk-scroll  a table that may scroll sideways
+   .mk-label    a small mono heading     .acc / .bad chip and outline variants */
+.mk {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+  padding: clamp(16px, 2.5vw, 28px);
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+}
+.mk p {
+  max-width: 62ch;
+}
+.mk-label {
+  font: 500 13px/1.4 var(--code);
+  color: var(--ink-2);
+}
+.mk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mk-chips > li {
+  min-width: 0;
+  max-width: 100%;
+  padding: 7px 11px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--sheet-2);
+  font: 500 13px/1.35 var(--code);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.mk-chips > li.acc {
+  border-color: var(--acc);
+  background: var(--acc-tint);
+  color: var(--acc);
+}
+.mk-chips > li.bad {
+  border-color: #ff9d8a;
+  color: #ff9d8a;
+  text-decoration: line-through;
+}
+.mk-chips > li.sep {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+.mk-code {
+  margin: 0;
+  padding: 16px 18px;
+  background: var(--ground, #141414);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  font: 400 13.5px/1.6 var(--code);
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mk-code code {
+  font: inherit;
+  background: none;
+  padding: 0;
+}
+.mk-code .c {
+  color: var(--muted);
+}
+.mk-code .k {
+  color: var(--acc);
+}
+.mk-scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+.mk-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.mk-scroll th,
+.mk-scroll td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule-2);
+  text-align: left;
+  vertical-align: top;
+}
+.mk-scroll thead th {
+  font: 500 13px var(--code);
+  color: var(--ink-2);
+}
+.mk-scroll .num {
+  font-family: var(--code);
+  font-variant-numeric: tabular-nums;
+}
+.mk-two {
+  display: grid;
+  gap: 18px;
+}
+@media (min-width: 700px) {
+  .mk-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

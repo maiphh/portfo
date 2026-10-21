@@ -11,6 +11,8 @@ const page = document.querySelector<HTMLElement>("[data-case]");
 
 const motions: Record<string, () => Promise<{ default: (root: HTMLElement) => void }>> = {
   ocr: () => import("./ocr"),
+  rag: () => import("./rag"),
+  dvp: () => import("./dvp"),
 };
 
 if (page) {

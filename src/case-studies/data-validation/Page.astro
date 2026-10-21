@@ -1,0 +1,149 @@
+---
+/** DVP · payroll data validation on the shared case-study template. Concept: the rule compiler. */
+import type { CollectionEntry } from "astro:content";
+import CaseStudy from "~/components/case/CaseStudy.astro";
+import { dvp } from "./data";
+import "./dvp.css";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  prev?: CollectionEntry<"work"> | undefined;
+  next?: CollectionEntry<"work"> | undefined;
+}
+const { entry, prev, next } = Astro.props;
+
+// Made-up rows (not client data, not the promo's sample values).
+const rows = [
+  { id: "E-101", expected: "1,240.00", sheet: "1,240.00" },
+  { id: "E-102", expected: "980.50", sheet: "980.50" },
+  { id: "E-103", expected: "1,105.00", sheet: "1,150.00", off: "+45.00" },
+  { id: "E-104", expected: "1,312.25", sheet: "1,312.25" },
+];
+const ladder = [
+  ["1", "Full translation prompt", "model default", "runtime default"],
+  ["2 … N−1", "Compact repair: previous code + error class", "0.35", "low → medium → high"],
+  ["N", "Same repair prompt", "0.35", "high"],
+];
+---
+
+<CaseStudy entry={entry} prev={prev} next={next} data={dvp}>
+  <div slot="signature" class="dvp-sig" data-compiler>
+    <p class="dvp-rule">
+      <span class="mk-label">rule, in plain language</span>
+      <q>Net pay is base pay plus overtime and allowance, minus deductions.</q>
+    </p>
+    <pre class="mk-code dvp-fn"><code data-fn><span class="k">def</span> calculate_net_pay(data, context):
+    <span class="k">return</span> (data["base"] + data["overtime"]
+            + data["allowance"] - data["deductions"])</code></pre>
+    <div class="mk-scroll" data-scroll-x>
+      <table class="dvp-rows">
+        <caption class="sr-only">Made-up rows checked by the rule</caption>
+        <thead>
+          <tr>
+            <th scope="col">Row</th>
+            <th scope="col">Expected</th>
+            <th scope="col">On the sheet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr class:list={{ flag: r.off }} data-row>
+              <th scope="row">{r.id}</th>
+              <td class="num">{r.expected}</td>
+              <td class="num">
+                <span>{r.sheet}</span>
+                {r.off && <em>off by {r.off}</em>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div slot="highlight" class="mk dvp-contract">
+    <pre class="mk-code"><code><span class="c"># one function, one JSON envelope · PROMPT_VERSION "v4" is in the cache key</span>
+<span class="k">def</span> calculate_&lt;rule_id&gt;(data, context):
+    <span class="c"># no imports · only the sheets and earlier rules the formula cites</span>
+    ...</code></pre>
+    <ul class="mk-chips" aria-label="What the contract fixes">
+      <li class="acc">one signature</li>
+      <li class="acc">no imports</li>
+      <li class="acc">cited sheets only</li>
+      <li class="acc">≤ 3 examples</li>
+      <li class="acc">rule text fenced as payload</li>
+    </ul>
+    <p>
+      The rule text is fenced as payload, so a formula can't rewrite the instructions. Changing the
+      contract without bumping the version would reuse old code; tests pin it at <code>"v4"</code>.
+    </p>
+  </div>
+
+  <div slot="dive-ladder" class="mk">
+    <div class="mk-scroll" data-scroll-x>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Attempt</th>
+            <th scope="col">Prompt</th>
+            <th scope="col">Temperature</th>
+            <th scope="col">Reasoning</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ladder.map(([a, p, t, r], i) => (
+            <tr>
+              <th scope="row" class="num">{a}</th>
+              <td>{p}</td>
+              <td class="num">{t}</td>
+              <td>{i > 0 ? <span class="dvp-tag">{r}</span> : r}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Out of budget: one diagnostic call that may not emit code. The rule becomes a stub returning
+      <code>None</code>; the batch continues.
+    </p>
+  </div>
+
+  <div slot="dive-gate" class="mk">
+    <ul class="mk-chips dvp-steps" aria-label="The gate, in order">
+      <li>completion</li>
+      <li class="sep" aria-hidden="true">→</li>
+      <li>strip fences</li>
+      <li class="sep" aria-hidden="true">→</li>
+      <li>AST check</li>
+      <li class="sep" aria-hidden="true">→</li>
+      <li>dry-run, with a deadline</li>
+      <li class="sep" aria-hidden="true">→</li>
+      <li class="acc">stored function</li>
+    </ul>
+    <p class="mk-label">on a pay month, a TypeError gets</p>
+    <ul class="mk-chips" aria-label="Execution retries">
+      <li>auto-cast retry</li>
+      <li>all-text retry</li>
+      <li class="acc">field = None, row continues</li>
+    </ul>
+  </div>
+
+  <div slot="dive-sandbox" class="mk">
+    <p class="mk-label">__import__ allows</p>
+    <ul class="mk-chips" aria-label="Allowed imports">
+      <li>re</li>
+      <li>math</li>
+      <li>datetime</li>
+      <li>decimal</li>
+      <li>statistics</li>
+      <li>collections</li>
+    </ul>
+    <p class="mk-label">rejected</p>
+    <ul class="mk-chips" aria-label="Rejected">
+      <li class="bad">import …</li>
+      <li class="bad">open</li>
+      <li class="bad">setattr(…)</li>
+      <li class="bad">a helper used as the rule</li>
+    </ul>
+  </div>
+</CaseStudy>
