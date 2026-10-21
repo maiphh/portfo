@@ -37,7 +37,7 @@ export const dvp: CaseStudyData = {
     stack: [
       { label: "API", value: "FastAPI", version: "/api/v2" },
       { label: "Frontend", value: "Next.js", version: "16.1.5" },
-      { label: "Database", value: "PostgreSQL", version: "SQLAlchemy 2.0" },
+      { label: "Database", value: "PostgreSQL" },
       { label: "Rules", value: "Generated Python, sandboxed" },
       { label: "LLM", value: "On-prem, over HTTP" },
       { label: "Sign-in", value: "Microsoft Entra ID" },
@@ -299,6 +299,7 @@ export const dvp: CaseStudyData = {
         ],
       },
     ],
-    stackSource: "Versions from the project's requirements, Dockerfile and package.json when the pack was written.",
+    stackSource:
+      "Versions from the project's requirements, Dockerfile and package.json when the pack was written.",
   },
 };

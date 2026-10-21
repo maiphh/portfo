@@ -28,8 +28,8 @@ export const legalRag: CaseStudyData = {
     stack: [
       { label: "API", value: "FastAPI", version: "Python 3.12" },
       { label: "Frontend", value: "Next.js", version: "16.0.7" },
-      { label: "Vectors", value: "PostgreSQL + pgvector", version: "Vector(4096)" },
-      { label: "Embeddings", value: "On-prem", version: "qwen3-embed-8b" },
+      { label: "Vectors", value: "pgvector", version: "4096-d" },
+      { label: "Embeddings", value: "On-prem qwen3-embed-8b" },
       { label: "LLM and VLM", value: "On-prem LLM" },
       { label: "Sign-in", value: "Microsoft Entra ID" },
     ],
@@ -88,7 +88,7 @@ export const legalRag: CaseStudyData = {
           group: "in",
           details: {
             does: "Walks the paragraphs and starts a new chunk only at the page's own article anchor, then writes the document address at the head of the chunk.",
-            tech: ["Splits on `<a name=\"dieu_N\">`", `Prefix \`${examplePrefix}\``],
+            tech: ['Splits on `<a name="dieu_N">`', `Prefix \`${examplePrefix}\``],
             why: "It doesn't split on the word 'Điều': a paragraph that mentions another article would become a false boundary. The citation comes from the document's own structure.",
           },
         },
@@ -100,7 +100,10 @@ export const legalRag: CaseStudyData = {
           group: "in",
           details: {
             does: "An uploaded file with no anchors to trust. Pages are rendered to images and read one at a time, in order.",
-            tech: ["pypdfium2 page render", "Docling for other text files, an email parser for mail"],
+            tech: [
+              "pypdfium2 page render",
+              "Docling for other text files, an email parser for mail",
+            ],
             why: "One page at a time keeps the order exact, so a page that starts mid-article can be joined to the one before.",
           },
         },
@@ -141,7 +144,10 @@ export const legalRag: CaseStudyData = {
           key: true,
           details: {
             does: "Stores each chunk with its address prefix and its embedding.",
-            tech: ["pgvector `Vector(4096)`, cosine distance", "Schema created and migrated on startup"],
+            tech: [
+              "pgvector `Vector(4096)`, cosine distance",
+              "Schema created and migrated on startup",
+            ],
             why: "The address travels with the text it labels, so whatever retrieval returns can already say where it came from.",
           },
         },
@@ -226,7 +232,8 @@ export const legalRag: CaseStudyData = {
         "Each block is then labelled with the previous block's level as a hint, so a block that opens with '3.' or 'c)' stays under that article. The first good document id and the longest complete title are locked, so a middle page can't wipe the citation header.",
       ],
       shows: "The model is never asked to fix a split that a rule can see.",
-      caption: "Schematic of the repair rules in projects/chatbot-pyr/highlights.md. No document content.",
+      caption:
+        "Schematic of the repair rules in projects/chatbot-pyr/highlights.md. No document content.",
     },
     {
       id: "fallback",
@@ -237,7 +244,8 @@ export const legalRag: CaseStudyData = {
         "Last, near-duplicates are removed: a chunk that closely matches the one before it, or that is contained in it within the same Điều, is dropped and the longer one stays.",
       ],
       shows: "Each step degrades to a simpler method instead of losing text.",
-      caption: "Illustration of the documented fallback chain (projects/chatbot-pyr/highlights.md).",
+      caption:
+        "Illustration of the documented fallback chain (projects/chatbot-pyr/highlights.md).",
     },
     {
       id: "refuse",
@@ -296,6 +304,7 @@ export const legalRag: CaseStudyData = {
         ],
       },
     ],
-    stackSource: "Versions from the project's requirements, Dockerfile and package.json when the pack was written.",
+    stackSource:
+      "Versions from the project's requirements, Dockerfile and package.json when the pack was written.",
   },
 };

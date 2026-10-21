@@ -26,21 +26,43 @@ const address = [`Số: ${EXAMPLE.docNo}`, EXAMPLE.article, EXAMPLE.clause];
       ))}
     </p>
     <div class="rag-page" aria-hidden="true">
-      <p class="rag-art">{EXAMPLE.article}. {EXAMPLE.articleTitle}</p>
+      <p class="rag-art">
+        {EXAMPLE.article}. {EXAMPLE.articleTitle}
+      </p>
       <div class="rag-k">
         <b>1.</b>
-        <span class="rag-bars"><i></i><i></i></span>
+        <span class="rag-bars">
+          <i></i>
+          <i></i>
+        </span>
       </div>
       <div class="rag-k rag-chunk" data-chunk>
         <code class="rag-prefix">{examplePrefix}</code>
         <b>2.</b>
-        <span class="rag-bars"><i></i><i></i><i></i></span>
-        <div class="rag-d"><b>a)</b><span class="rag-bars"><i></i></span></div>
-        <div class="rag-d"><b>b)</b><span class="rag-bars"><i></i></span></div>
+        <span class="rag-bars">
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
+        <div class="rag-d">
+          <b>a)</b>
+          <span class="rag-bars">
+            <i></i>
+          </span>
+        </div>
+        <div class="rag-d">
+          <b>b)</b>
+          <span class="rag-bars">
+            <i></i>
+          </span>
+        </div>
       </div>
       <div class="rag-k">
         <b>3.</b>
-        <span class="rag-bars"><i></i><i></i></span>
+        <span class="rag-bars">
+          <i></i>
+          <i></i>
+        </span>
       </div>
     </div>
   </div>
@@ -52,11 +74,17 @@ const address = [`Số: ${EXAMPLE.docNo}`, EXAMPLE.article, EXAMPLE.clause];
     </div>
     <ul class="mk-chips" aria-label="The address path a chunk keeps">
       <li>document number</li>
-      <li class="sep" aria-hidden="true">›</li>
+      <li class="sep" aria-hidden="true">
+        ›
+      </li>
       <li>Điều</li>
-      <li class="sep" aria-hidden="true">›</li>
+      <li class="sep" aria-hidden="true">
+        ›
+      </li>
       <li>Khoản</li>
-      <li class="sep" aria-hidden="true">›</li>
+      <li class="sep" aria-hidden="true">
+        ›
+      </li>
       <li>Điểm</li>
     </ul>
     <div class="rag-paths">
@@ -116,7 +144,9 @@ const address = [`Số: ${EXAMPLE.docNo}`, EXAMPLE.article, EXAMPLE.clause];
   <div slot="dive-refuse" class="mk rag-refuse" data-refuse>
     <div class="rag-q">
       <p class="mk-label">a question with no qualifying chunk</p>
-      <p class="rag-fallback" lang="vi">Xin lỗi, tôi không tìm thấy thông tin cần thiết.</p>
+      <p class="rag-fallback" lang="vi">
+        Xin lỗi, tôi không tìm thấy thông tin cần thiết.
+      </p>
     </div>
     <ul class="mk-chips" aria-label="Retrieval defaults">
       <li>top_k 6</li>

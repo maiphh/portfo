@@ -259,6 +259,8 @@ test("the animation loop pauses while the tab is hidden", async ({ page }) => {
 const PANELS = [
   { page: "/", flow: "how", node: '[data-node="worker"]' },
   { page: "/work/document-ocr/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+  { page: "/work/legal-rag/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+  { page: "/work/data-validation/", flow: "cs", node: "[data-flow=cs] [data-node]" },
 ];
 
 for (const width of [1280, 1440])

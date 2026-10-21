@@ -32,7 +32,7 @@ const ladder = [
       <span class="mk-label">rule, in plain language</span>
       <q>Net pay is base pay plus overtime and allowance, minus deductions.</q>
     </p>
-    <pre class="mk-code dvp-fn"><code data-fn><span class="k">def</span> calculate_net_pay(data, context):
+    <pre class="mk-code dvp-fn"><code><span class="k">def</span> <span data-sig>calculate_net_pay(data, context):</span>
     <span class="k">return</span> (data["base"] + data["overtime"]
             + data["allowance"] - data["deductions"])</code></pre>
     <div class="mk-scroll" data-scroll-x>
@@ -93,7 +93,9 @@ const ladder = [
         <tbody>
           {ladder.map(([a, p, t, r], i) => (
             <tr>
-              <th scope="row" class="num">{a}</th>
+              <th scope="row" class="num">
+                {a}
+              </th>
               <td>{p}</td>
               <td class="num">{t}</td>
               <td>{i > 0 ? <span class="dvp-tag">{r}</span> : r}</td>
@@ -103,7 +105,7 @@ const ladder = [
       </table>
     </div>
     <p>
-      Out of budget: one diagnostic call that may not emit code. The rule becomes a stub returning
+      Out of budget: one diagnostic call that may not emit code. The rule becomes a stub returning{" "}
       <code>None</code>; the batch continues.
     </p>
   </div>
@@ -111,13 +113,21 @@ const ladder = [
   <div slot="dive-gate" class="mk">
     <ul class="mk-chips dvp-steps" aria-label="The gate, in order">
       <li>completion</li>
-      <li class="sep" aria-hidden="true">→</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
       <li>strip fences</li>
-      <li class="sep" aria-hidden="true">→</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
       <li>AST check</li>
-      <li class="sep" aria-hidden="true">→</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
       <li>dry-run, with a deadline</li>
-      <li class="sep" aria-hidden="true">→</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
       <li class="acc">stored function</li>
     </ul>
     <p class="mk-label">on a pay month, a TypeError gets</p>

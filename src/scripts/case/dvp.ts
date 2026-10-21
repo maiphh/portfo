@@ -1,8 +1,9 @@
 /**
  * DVP motion (loaded by scripts/case/page.ts only without reduced motion):
- * - the authored moment: the plain rule scrambles into its function once the opener is in view,
- *   then, scrubbed with the scroll, the rows are checked one at a time and the one mismatch gets
- *   a coral outline (no shake);
+ * - the authored moment, played once when the opener is in view: the function name scrambles in
+ *   from the plain rule, then the rows are checked one at a time and the one mismatch gets a
+ *   coral outline (no shake). The opener sits at the top of the page, so it plays rather than
+ *   scrubs (there may be no scroll room to finish a scrub);
  * - the flow select effect: a chip travels each lit edge once and stops; model edges stay dotted.
  */
 import { gsap } from "gsap";
@@ -14,34 +15,18 @@ gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin);
 
 function compiler(root: HTMLElement) {
   const sig = root.querySelector<HTMLElement>("[data-compiler]");
-  const fn = sig?.querySelector<HTMLElement>("[data-fn]");
-  if (!sig || !fn) return;
+  const name = sig?.querySelector<HTMLElement>("[data-sig]");
+  if (!sig || !name) return;
   const rows = [...sig.querySelectorAll<HTMLElement>("[data-row]")];
   sig.classList.add("is-anim");
-  // Scramble only the signature line's text nodes; the markup (keywords) stays.
-  const name = [...fn.childNodes].find(
-    (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.includes("calculate_"),
-  );
-  if (name?.textContent) {
-    const span = document.createElement("span");
-    span.textContent = name.textContent;
-    name.replaceWith(span);
-    gsap.from(span, {
-      duration: 1.1,
-      scrambleText: { text: span.textContent, chars: "lowerCase", revealDelay: 0.3 },
-      scrollTrigger: { trigger: sig, start: "top 85%", once: true },
-    });
-  }
-  const at = (p: number) =>
-    rows.forEach((r, i) => r.classList.toggle("lit", p >= (i + 1) / (rows.length + 1)));
-  ScrollTrigger.create({
-    trigger: sig,
-    start: "top 75%",
-    end: "bottom 45%",
-    scrub: true,
-    onUpdate: (st) => at(st.progress),
-    onRefresh: (st) => at(st.progress),
+  const text = name.textContent ?? "";
+  const tl = gsap.timeline({ paused: true });
+  tl.to(name, {
+    duration: 1.1,
+    scrambleText: { text, chars: "lowerCase", revealDelay: 0.25, speed: 0.6 },
   });
+  rows.forEach((r) => tl.call(() => r.classList.add("lit"), undefined, "+=0.32"));
+  ScrollTrigger.create({ trigger: sig, start: "top 85%", once: true, onEnter: () => tl.play() });
 }
 
 export default function dvp(root: HTMLElement) {
