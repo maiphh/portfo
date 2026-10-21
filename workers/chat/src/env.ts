@@ -20,6 +20,7 @@ export interface VectorIndex {
     vectors: { id: string; values: number[]; metadata?: Record<string, unknown> }[],
   ): Promise<unknown>;
   deleteByIds(ids: string[]): Promise<unknown>;
+  getByIds(ids: string[]): Promise<{ id: string; metadata?: Record<string, unknown> }[]>;
 }
 
 export interface Env {

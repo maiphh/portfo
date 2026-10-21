@@ -175,6 +175,15 @@ describe("get_popular_projects", () => {
     mockFetch({ popular: { items: [], days: 7 } });
     expect((await okResult("get_popular_projects", {})).empty).toBe(true);
   });
+
+  it("is a tool error, with no fetch, when SITE_URL is empty", async () => {
+    const f = mockFetch();
+    expect(await runTool("get_popular_projects", {}, toolCtx({ SITE_URL: "" }))).toMatchObject({
+      ok: false,
+      error: expect.stringContaining("not configured"),
+    });
+    expect(f.seen).toHaveLength(0);
+  });
 });
 
 describe("search_knowledge", () => {

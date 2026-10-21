@@ -62,9 +62,17 @@ export interface Match {
   metadata?: Record<string, unknown>;
 }
 
-export function fakeVectorize(matches: Match[] = []) {
-  const upserts: { id: string; values: number[]; metadata?: Record<string, unknown> }[] = [];
+type Stored = { id: string; values: number[]; metadata?: Record<string, unknown> };
+
+/**
+ * A Vectorize index in memory. Like the real one, deleteByIds and getByIds reject more than
+ * 100 ids per call (VECTOR_DELETE_ERROR 40007). `store` persists across ingests in a test.
+ */
+export function fakeVectorize(matches: Match[] = [], store = new Map<string, Stored>()) {
+  const upserts: Stored[] = [];
   const deletes: string[] = [];
+  const deleteCalls: string[][] = [];
+  const getCalls: string[][] = [];
   const queries: { vector: number[]; options: unknown }[] = [];
   const index: VectorIndex = {
     async query(vector, options) {
@@ -72,15 +80,31 @@ export function fakeVectorize(matches: Match[] = []) {
       return { matches: matches.slice(0, options.topK) };
     },
     async upsert(v) {
+      if (v.length > 1000) throw new Error("max upsert batch is 1000");
       upserts.push(...v);
+      for (const x of v) store.set(x.id, x);
       return { mutationId: "m1" };
     },
     async deleteByIds(ids) {
+      if (ids.length > 100)
+        throw new Error(
+          `VECTOR_DELETE_ERROR (code = 40007): max id count is 100, got ${ids.length}`,
+        );
+      deleteCalls.push(ids);
       deletes.push(...ids);
+      for (const id of ids) store.delete(id);
       return { mutationId: "m2" };
     },
+    async getByIds(ids) {
+      if (ids.length > 100) throw new Error(`max id count is 100, got ${ids.length}`);
+      getCalls.push(ids);
+      return ids.flatMap((id) => {
+        const v = store.get(id);
+        return v ? [v] : [];
+      });
+    },
   };
-  return { index, upserts, deletes, queries };
+  return { index, upserts, deletes, deleteCalls, getCalls, queries, store };
 }
 
 export const talentnetMatch: Match = {

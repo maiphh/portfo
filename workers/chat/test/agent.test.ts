@@ -97,6 +97,36 @@ describe("agent loop", () => {
     ).toBe(NO_ANSWER);
   });
 
+  it('SITE_URL empty (the deployed state): GitHub and popular tools are tool errors, answer is "I don\'t know"', async () => {
+    const f = mockFetch();
+    const ai = fakeAi([
+      { calls: [{ name: "get_github_stats" }, { name: "get_popular_projects" }] },
+      { text: "He made 999 commits and Legal RAG is the most viewed." },
+    ]);
+    const env = testEnv({ AI: ai.ai, VECTORIZE: fakeVectorize([]).index, SITE_URL: "" });
+    const cfg = config(env);
+    const result = await runAgent({
+      ai: ai.ai,
+      cfg,
+      history: [{ role: "user", content: "How active is he on GitHub, and what's popular?" }],
+      ctx: { env, cfg },
+      emit: () => {},
+    });
+    expect(result.calls.map((c) => [c.name, c.ok])).toEqual([
+      ["get_github_stats", false],
+      ["get_popular_projects", false],
+    ]);
+    // The model saw the errors as tool results...
+    const toolMsgs = (ai.chatCalls()[1]?.inputs.messages as { role: string; content: string }[])
+      .filter((m) => m.role === "tool")
+      .map((m) => m.content);
+    expect(toolMsgs.every((c) => c.includes("not configured"))).toBe(true);
+    // ...no request left the Worker, and the made-up answer was replaced.
+    expect(f.seen).toHaveLength(0);
+    expect(result.text).toBe(NO_ANSWER);
+    expect(result.sources).toEqual([]);
+  });
+
   it("refuses off-topic requests: an answer without any tool data becomes the fixed reply", async () => {
     const { result } = await agent(
       [{ text: "Sure! Here's a poem about the sea..." }],
