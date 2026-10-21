@@ -32,6 +32,8 @@ interface Front {
   period?: string;
   order: number;
   anchor: string;
+  /** False: home page only, no case study (links go to the home section). */
+  page?: boolean;
   steps?: { title: string; body: string }[];
   facts?: { value: string; label: string }[];
   note?: string;
@@ -87,7 +89,7 @@ async function main() {
       period: front.period ?? null,
       tags: front.meta ?? [],
       order: front.order,
-      href: `/work/${slug}`,
+      href: front.page === false ? `/#${front.anchor}` : `/work/${slug}`,
       homeHref: `/#${front.anchor}`,
       confidential: front.confidential ?? false,
       approach: (front.steps ?? []).map((s) => ({ title: plain(s.title), body: plain(s.body) })),

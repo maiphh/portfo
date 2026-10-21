@@ -1,0 +1,100 @@
+/* Ecom: the engine core with storefronts around it (signature) and the illustrations.
+   Static state = the final state; scripts/case/ecom.ts animates only without reduced motion. */
+.ec-sig {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  min-width: 0;
+}
+.ec-skins {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ec-skin {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--sheet-2);
+  min-width: 0;
+  transition:
+    opacity 0.35s,
+    border-color 0.35s;
+}
+.ec-skin b {
+  font-weight: 650;
+  color: var(--ink);
+}
+.ec-skin span {
+  font: 500 12.5px/1.4 var(--code);
+  color: var(--ink-2);
+}
+.ec-skin.built {
+  border-color: var(--acc);
+}
+.ec-skin.planned {
+  border-style: dashed;
+}
+.ec-seam {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 12.5px var(--code);
+  color: var(--muted);
+}
+.ec-seam::before,
+.ec-seam::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dashed var(--rule-2);
+}
+.ec-seam span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.ec-core {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1.5px solid var(--acc);
+  border-radius: 4px;
+  background: var(--acc-tint);
+}
+.ec-rule {
+  font: 500 12.5px var(--code);
+  color: var(--acc);
+}
+.ec-res {
+  font-family: var(--code);
+  font-size: 14px;
+  color: var(--acc);
+}
+.ec-res.bad {
+  color: #ff9d8a;
+}
+.ec-demo {
+  font-size: 13px;
+}
+.ec-small {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+/* Motion running: one storefront at a time snaps onto the engine; the core never moves. */
+.ec-sig.is-anim [data-skin]:not(.lit) {
+  opacity: 0.25;
+}
+.ec-sig.is-anim [data-core]:not(.lit) .ec-rule {
+  opacity: 0;
+}
+.ec-sig [data-core] .ec-rule {
+  transition: opacity 0.4s;
+}

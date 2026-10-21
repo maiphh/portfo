@@ -1,0 +1,134 @@
+---
+/** OpenPortfo on the shared case-study template. Concept: two markets, one book. */
+import type { CollectionEntry } from "astro:content";
+import CaseStudy from "~/components/case/CaseStudy.astro";
+import { AGENT_TOOLS, openportfo } from "./data";
+import "./op.css";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  prev?: CollectionEntry<"work"> | undefined;
+  next?: CollectionEntry<"work"> | undefined;
+}
+const { entry, prev, next } = Astro.props;
+
+// Sample holdings (the same names as the home card's sample chart), no amounts.
+const book = [
+  { sym: "BTC", market: "Crypto", src: "CoinGecko" },
+  { sym: "ETH", market: "Crypto", src: "CoinGecko" },
+  { sym: "FPT", market: "HOSE", src: "vnstock" },
+  { sym: "VNM", market: "HOSE", src: "vnstock" },
+];
+const img = (name: string) => `/work/openportfo/${name}.webp`;
+---
+
+<CaseStudy entry={entry} prev={prev} next={next} data={openportfo}>
+  <div slot="signature" class="op-sig" data-book>
+    <p class="mk-label">one book · sample holdings</p>
+    <div class="mk-scroll">
+      <table class="op-book">
+        <caption class="sr-only">Sample holdings and where each is priced from</caption>
+        <thead>
+          <tr>
+            <th scope="col">Holding</th>
+            <th scope="col">Market</th>
+            <th scope="col">Priced from</th>
+          </tr>
+        </thead>
+        <tbody>
+          {book.map((r) => (
+            <tr data-row>
+              <th scope="row">{r.sym}</th>
+              <td>{r.market}</td>
+              <td class="op-src">{r.src}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="op-refresh" data-refresh>
+      <span aria-hidden="true">↻</span> one refresh · one batch · cached for minutes
+    </p>
+  </div>
+
+  <div slot="highlight" class="op-hl">
+    <img
+      class="shot op-agent"
+      src={img("agent")}
+      width="444"
+      height="708"
+      loading="lazy"
+      decoding="async"
+      alt="The OpenPortfo chat panel: 'What can I help with?', with slash commands /search, /add, /remove, /holdings, /portfolio and /quote."
+    />
+    <div class="mk">
+      <p class="mk-label">the agent's tools · accent = changes data</p>
+      <ul class="mk-chips" aria-label="Agent tools">
+        {AGENT_TOOLS.map((t) => (
+          <li class:list={{ acc: t.changes }}>
+            {t.name}
+            {t.changes && <span class="sr-only"> (changes data)</span>}
+          </li>
+        ))}
+      </ul>
+      <p>
+        The model proposes a tool call; the API runs it against the signed-in user's own holdings,
+        watchlist and quotes. Tools get the resolved user, never a token, so there is no credential
+        to leak into a model request.
+      </p>
+      <p>
+        Before a tool that changes data runs, the turn's request id is marked in a per-user ledger.
+        A retried message gets the first turn's answer back (or is told the outcome is unclear)
+        instead of adding the same holding twice. The prompt forbids claiming a change unless a tool
+        succeeded.
+      </p>
+    </div>
+  </div>
+
+  <div slot="dive-markets" class="shots">
+    <img
+      class="shot"
+      src={img("markets")}
+      width="1200"
+      height="750"
+      loading="lazy"
+      decoding="async"
+      alt="Vietnam stocks: a HOSE industry heatmap with quotes powered by vnstock."
+    />
+    <img
+      class="shot"
+      src={img("asset-btc")}
+      width="1200"
+      height="750"
+      loading="lazy"
+      decoding="async"
+      alt="Bitcoin's asset page: a price-history chart with 7D, 30D, 90D and 1Y ranges."
+    />
+  </div>
+
+  <div slot="dive-fakes" class="mk mk-two">
+    <div>
+      <p class="mk-label">tests and a local demo</p>
+      <pre class="mk-code"><code>STORAGE_BACKEND=<span class="k">memory</span>
+AUTH_MODE=<span class="k">fake</span>
+<span class="c"># token "fake:alice" is the user</span></code></pre>
+    </div>
+    <div>
+      <p class="mk-label">deployed</p>
+      <pre class="mk-code"><code>STORAGE_BACKEND=<span class="k">aws</span>
+<span class="c"># DynamoDB + S3, same API</span>
+<span class="c"># LocalStack :4566 without an account</span></code></pre>
+    </div>
+  </div>
+
+  <img
+    slot="dive-clock"
+    class="shot"
+    src={img("portfolio")}
+    width="1200"
+    height="700"
+    loading="lazy"
+    decoding="async"
+    alt="The portfolio page: value, cost basis and profit-and-loss cards, and an empty daily profit-and-loss grid that says snapshots appear after the snapshot job runs."
+  />
+</CaseStudy>

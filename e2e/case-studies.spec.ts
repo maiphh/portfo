@@ -1,7 +1,9 @@
 /**
  * Every page on the shared case-study template (e2e/case-study.spec.ts goes deeper on the
  * first one, Document OCR): overflow, flow label clamp and min font at the audit widths, the
- * flow's details panel and mobile sheet, reduced motion, and the page's authored moment.
+ * flow's details panel and mobile sheet, reduced motion, and the page's authored moment. Then
+ * the public projects' links, credit and screenshots, the order of the case studies, and the
+ * retired URLs.
  */
 import { expect, test } from "@playwright/test";
 import { overflowReport } from "./overflow";
@@ -48,6 +50,42 @@ export const PAGES: CasePage[] = [
     dives: 3,
     sig: "[data-compiler]",
     lit: "tr.flag",
+  },
+  {
+    slug: "openportfo",
+    title: /OpenPortfo/,
+    badge: false,
+    node: "agent",
+    heading: /Chat agent/,
+    groups: ["Daily clock"],
+    dotted: 1,
+    dives: 3,
+    sig: "[data-book]",
+    lit: "[data-refresh]",
+  },
+  {
+    slug: "ecom",
+    title: /Ecom shop template/,
+    badge: false,
+    node: "orders",
+    heading: /orders\/machine\.ts/,
+    groups: ["src/shop engine"],
+    dotted: 0,
+    dives: 3,
+    sig: "[data-engine]",
+    lit: "[data-core]",
+  },
+  {
+    slug: "poet",
+    title: /Poet/,
+    badge: false,
+    node: "worker",
+    heading: /Worker poet-donations/,
+    groups: [],
+    dotted: 0,
+    dives: 3,
+    sig: "[data-money]",
+    lit: "[data-paid]",
   },
 ];
 
@@ -125,6 +163,114 @@ for (const p of PAGES) {
     });
   });
 }
+
+/** Order of the case studies (home order, without Craftland, which has no page). */
+const ORDER = ["document-ocr", "legal-rag", "data-validation", "openportfo", "ecom", "poet"];
+
+test("previous and next step through every case study, and only case studies", async ({ page }) => {
+  for (const [i, slug] of ORDER.entries()) {
+    await page.goto(`/work/${slug}/`);
+    const nav = page.locator(".cs2-next");
+    const prev = nav.locator("a:not(.next)");
+    const next = nav.locator("a.next");
+    if (i === 0) await expect(prev).toHaveCount(0);
+    else await expect(prev).toHaveAttribute("href", `/work/${ORDER[i - 1]}`);
+    if (i === ORDER.length - 1) await expect(next).toHaveCount(0);
+    else await expect(next).toHaveAttribute("href", `/work/${ORDER[i + 1]}`);
+  }
+});
+
+test("retired URLs forward: Craftland to its home card, Mirror Now to the Ecom page", async ({
+  page,
+}) => {
+  await page.goto("/work/craftland/");
+  await page.waitForURL(/\/#work-craftland$/);
+  await expect(page.locator("#work-craftland")).toBeAttached();
+  await page.goto("/work/mirror-now");
+  await page.waitForURL(/\/work\/ecom#mirror-now$/);
+  await expect(page.locator("section#mirror-now h2")).toHaveText(
+    /Mirror Now: the first shop built on the template/,
+  );
+});
+
+test("the home page links only to pages that exist", async ({ page, request }) => {
+  await page.goto("/");
+  await expect(page.locator('#work-craftland a[href^="/work/"]')).toHaveCount(0);
+  const hrefs = await page
+    .locator('a[href^="/work/"]')
+    .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href") ?? ""))]);
+  expect(hrefs.length).toBeGreaterThan(0);
+  for (const h of hrefs) {
+    expect(h).not.toMatch(/craftland|mirror-now/);
+    expect((await request.get(h)).status(), h).toBe(200);
+  }
+});
+
+test.describe("public projects: links, credit and real screenshots", () => {
+  test("OpenPortfo: repository link and the OpenStock credit", async ({ page }) => {
+    await page.goto("/work/openportfo/");
+    await expect(
+      page.locator('.cs2-links a[href="https://github.com/maiphh/openportfo"]'),
+    ).toBeVisible();
+    const credit = page.locator("[data-credit]");
+    await expect(credit).toContainText(/cloned from/);
+    await expect(
+      credit.locator('a[href="https://github.com/Open-Dev-Society/OpenStock"]'),
+    ).toBeVisible();
+    // A personal project (Phu, 2026-10-22), not presented as coursework.
+    await expect(page.locator(".cs2-open .meta-line")).toContainText("Personal project");
+    expect(await page.locator("main").innerText()).not.toMatch(/assessment|RMIT|coursework/i);
+  });
+
+  test("Ecom: illustrations only (private repos), Mirror Now as the first shop", async ({
+    page,
+  }) => {
+    await page.goto("/work/ecom/");
+    await expect(page.locator(".cs2-rail a[href='#mirror-now']")).toBeVisible();
+    await expect(page.locator("main img")).toHaveCount(0);
+    await expect(page.locator('main a[href*="github.com"]')).toHaveCount(0);
+    await expect(page.locator("main")).toContainText(/the first shop built on the template/i);
+  });
+
+  test("POET: links, and only the vetted captures (no photos of children)", async ({ page }) => {
+    await page.goto("/work/poet/");
+    await expect(page.locator('.cs2-links a[href="https://maiphh.github.io/poet/"]')).toBeVisible();
+    await expect(page.locator('.cs2-links a[href="https://github.com/maiphh/poet"]')).toBeVisible();
+    const srcs = await page
+      .locator("main img")
+      .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
+    expect(srcs).toEqual(
+      ["form", "home-hero", "letter", "wall"].map((n) => `/work/poet/${n}.webp`),
+    );
+  });
+
+  for (const slug of ["openportfo", "poet"])
+    test(`${slug}: every screenshot loads, has alt text and keeps its aspect ratio`, async ({
+      page,
+    }) => {
+      await page.goto(`/work/${slug}/`);
+      // Deep dives are an accordion on narrow screens.
+      await page.evaluate(() => {
+        for (const d of document.querySelectorAll("details")) d.open = true;
+      });
+      const imgs = page.locator("main img");
+      const n = await imgs.count();
+      expect(n).toBeGreaterThan(0);
+      for (let i = 0; i < n; i++) {
+        const img = imgs.nth(i);
+        await img.scrollIntoViewIfNeeded();
+        await expect(img).toHaveAttribute("alt", /\S{3,}/);
+        await expect
+          .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0))
+          .toBe(true);
+        const r = await img.evaluate((el: HTMLImageElement) => ({
+          shown: el.clientWidth / el.clientHeight,
+          real: el.naturalWidth / el.naturalHeight,
+        }));
+        expect(Math.abs(r.shown - r.real)).toBeLessThan(0.02);
+      }
+    });
+});
 
 test.describe("DVP promo cut (approved 2026-10-22)", () => {
   const URL = "/work/data-validation/";

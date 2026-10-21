@@ -14,7 +14,7 @@ export interface MockReply {
 
 const ocr: Source = { title: "Document OCR pipeline", href: "/work/document-ocr" };
 const rag: Source = { title: "Legal RAG assistant", href: "/work/legal-rag" };
-const craftland: Source = { title: "Free Fire Craftland", href: "/work/craftland" };
+const craftland: Source = { title: "Free Fire Craftland", href: "/#work-craftland" };
 const timeline: Source = { title: "Experience", href: "/#timeline" };
 
 export const mockReplies: MockReply[] = [

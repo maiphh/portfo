@@ -74,7 +74,22 @@ export interface CaseVideo {
   description: string;
 }
 
+/** An extra section after the deep dives (e.g. the first shop built on a template). Its body is
+ * the `extra` slot. */
+export interface CaseExtra {
+  id: string;
+  /** Short label for the depth rail. */
+  rail: string;
+  title: string;
+  paragraphs: string[];
+  caption?: string;
+}
+
 export interface CaseStudyData {
+  /** Credit line under the opener's lede, e.g. for a UI cloned from an open-source project:
+   * `lead`, then a link to the source, then `rest`. */
+  credit?: { lead: string; label: string; href: string; rest?: string };
+  extra?: CaseExtra;
   /** Key into scripts/case/motion.ts: the page's one authored moment and its flow select effect. */
   motion?: string;
   /** Caption under the opener's signature object. */

@@ -6,6 +6,8 @@
  *   signature      the opener's signature object (right of the headline)
  *   highlight      the one component that proves the claim
  *   dive-<id>      the artifact for each deep dive
+ *   extra          the body of the optional extra section (data.extra), after the deep dives
+ * The opener lists the entry's `links` (live site, repository) and an optional credit line.
  * The accent comes from the work entry; the badge from its `org_badge`.
  */
 import type { CollectionEntry } from "astro:content";
@@ -28,7 +30,7 @@ interface Props {
 const { entry, prev, next, data } = Astro.props;
 const d = entry.data;
 const acc = d.accent ?? { line: "#d4f56b", tint: "#262b17" };
-const { overview: o, how, dives, limits } = data;
+const { overview: o, how, dives, limits, extra } = data;
 
 const dive = await Promise.all(
   dives.map(async (x) => ({ ...x, artifact: await Astro.slots.render(`dive-${x.id}`) })),
@@ -38,6 +40,7 @@ const rail = [
   { href: "#overview", label: "Overview" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#deep-dives", label: "Deep dives" },
+  ...(extra ? [{ href: `#${extra.id}`, label: extra.rail }] : []),
   { href: "#limits", label: "Limits" },
 ];
 const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."]), ...d.todo];
@@ -69,6 +72,27 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           </p>
           <h1 id="cs-h">{d.headline}</h1>
           <p class="lede">{d.summary}</p>
+          {data.credit && (
+            <p class="cs2-credit" data-credit>
+              {data.credit.lead}{" "}
+              <a class="link" href={data.credit.href} rel="noopener">
+                {data.credit.label}
+              </a>
+              {data.credit.rest}
+            </p>
+          )}
+          {d.links.length > 0 && (
+            <ul class="cs2-links" aria-label="Links">
+              {d.links.map((l) => (
+                <li>
+                  <a class="link" href={l.href} rel="noopener">
+                    {l.label}
+                    <Icon name="out" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <figure class="cs2-sig">
           <slot name="signature" />
@@ -214,6 +238,23 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           </details>
         ))}
       </section>
+
+      {extra && (
+        <section class="cs2-sec cs2-extra" id={extra.id} aria-labelledby="extra-h">
+          <h2 id="extra-h">{extra.title}</h2>
+          <div class="cs2-extra-in">
+            <div class="cs2-dive-text">
+              {extra.paragraphs.map((p) => (
+                <p set:html={richText(p)} />
+              ))}
+            </div>
+            <figure>
+              <slot name="extra" />
+              {extra.caption && <figcaption>{extra.caption}</figcaption>}
+            </figure>
+          </div>
+        </section>
+      )}
 
       <section class="cs2-sec cs2-limits" id="limits" aria-labelledby="lim-h">
         <h2 id="lim-h">Limits and what isn't shown</h2>

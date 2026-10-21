@@ -78,7 +78,8 @@ export function initMostRead() {
       .map((el) => ({
         n: Number(el.dataset.views),
         t: el.dataset.title ?? "",
-        h: "/work/" + (el.dataset.slug ?? el.id),
+        // Work without a case study (Craftland) links to its home section instead.
+        h: el.dataset.href ?? "/work/" + (el.dataset.slug ?? el.id),
       }))
       .sort((a, b) => b.n - a.n);
     $$("[data-most]").forEach((ol) => {

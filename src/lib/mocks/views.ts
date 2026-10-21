@@ -5,6 +5,6 @@ export const mockViews: Readonly<Record<string, number>> = {
   "legal-rag": 962,
   "data-validation": 907,
   openportfo: 438,
-  "mirror-now": 301,
+  ecom: 301,
   poet: 127,
 };
