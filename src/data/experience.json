@@ -23,7 +23,7 @@
     "order": 1,
     "note": {
       "lead": "At Talentnet",
-      "text": "I built the document OCR pipeline (over 98% accurate, more than 90% of processing time saved), the legal RAG assistant and the payroll data validation system — all on my own."
+      "text": "I build AI systems that run in production: the document OCR pipeline, the legal RAG assistant and DVP, the payroll data validation platform."
     }
   },
   {

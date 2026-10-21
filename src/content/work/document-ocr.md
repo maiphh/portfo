@@ -21,7 +21,7 @@ steps:
     body: Structured output, ready for the next system.
 note: Illustrated with a made-up invoice. Talentnet's documents and code stay private.
 todo:
-  - "Result figures: the project pack's go-live numbers differ from the site's earlier '>98% / >90%'. Confirm which figures, if any, the page shows."
+  - "Result figures: the project pack's go-live numbers differ from the accuracy and time-saved figures the site showed before. Confirm which figures, if any, the page shows."
   - "Confirm whether the page says the pipeline was built solo (the pack doesn't say so)."
   - "motion.mp4 is Talentnet-branded: confirm it can be embedded (the video slot is off until then)."
 ---

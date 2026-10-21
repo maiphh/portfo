@@ -15,7 +15,7 @@ export const ocr: CaseStudyData = {
     solution:
       "A template-driven platform. An admin binds a workbook, a field schema, prompts and rules; a vision-language model reads each page into that schema, rules clean the fields, and operators correct them beside the source page and export Excel.",
     outcomeTodo:
-      "The pack's go-live figures differ from the site's earlier '>98% / >90%'. Confirm which figures, if any, the page shows.",
+      "The pack's go-live figures differ from the accuracy and time-saved figures the site showed before. Confirm which figures, if any, the page shows.",
   },
   highlight: {
     title: "A new document is configuration, not a new pipeline",
