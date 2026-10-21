@@ -69,13 +69,13 @@ Implemented on the same FastAPI app. There is no second gateway. Spec: `docs/spe
 
 Auth is `Authorization: Bearer` with an API key or a user JWT. A key is stored as a SHA-256 hash, shown once at creation, and acts as the user it belongs to. That user's admission caps still apply. Revoked keys are rejected.
 
-| Call | What the other application gets |
-| --- | --- |
-| `POST /api/v1/ocr` | Multipart: one or more PDFs or images, plus `template_slug` or `template_id`. Optional `correlation_id` so the caller can match the job. Default `wait_seconds` is 0, so the response is **202** with `session_id` and `result_url` as soon as the job is queued. `wait_seconds` may be 1–60. If the job finishes inside that window the response is **200** with the result. The request never runs extraction inline. |
-| `GET /api/v1/ocr/{session_id}` | While running, **202** and status only. When completed, **200** with `records` (post-processed fields per page) and the filled workbook (base64, or omit it with `include=records`). |
-| `GET /api/v1/ocr/{session_id}/download` | The filled `.xlsx` as a file. |
-| `GET /api/v1/ocr/templates` | Active templates (`id`, `slug`, `name`, `field_count`) so the caller can pick a `template_slug`. |
-| `GET /api/v1/ocr/sessions` | The caller's sessions, filterable by `correlation_id`. |
+| Call                                    | What the other application gets                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/ocr`                      | Multipart: one or more PDFs or images, plus `template_slug` or `template_id`. Optional `correlation_id` so the caller can match the job. Default `wait_seconds` is 0, so the response is **202** with `session_id` and `result_url` as soon as the job is queued. `wait_seconds` may be 1–60. If the job finishes inside that window the response is **200** with the result. The request never runs extraction inline. |
+| `GET /api/v1/ocr/{session_id}`          | While running, **202** and status only. When completed, **200** with `records` (post-processed fields per page) and the filled workbook (base64, or omit it with `include=records`).                                                                                                                                                                                                                                    |
+| `GET /api/v1/ocr/{session_id}/download` | The filled `.xlsx` as a file.                                                                                                                                                                                                                                                                                                                                                                                           |
+| `GET /api/v1/ocr/templates`             | Active templates (`id`, `slug`, `name`, `field_count`) so the caller can pick a `template_slug`.                                                                                                                                                                                                                                                                                                                        |
+| `GET /api/v1/ocr/sessions`              | The caller's sessions, filterable by `correlation_id`.                                                                                                                                                                                                                                                                                                                                                                  |
 
 A webhook, if configured, sends ids and status only. The caller then `GET`s the result. The payload is not pushed. `POST /ocr` requires a template. Custom extraction (no template) is a browser path and is rejected here. The job enters the same Postgres work-unit queue as the UI, with the same frozen schema, rules, and prompts.
 
@@ -85,30 +85,30 @@ Versions from `frontend/package-lock.json` and `backend` `uv export` at collecti
 
 ### Frontend
 
-| Piece | Choice |
-| --- | --- |
-| Framework | Next.js 16.2.10 (App Router) |
-| UI | React 19.2.3, TypeScript 5.9.3 |
-| Styling | Tailwind CSS 4.3.3 |
-| Data fetching | SWR 2.4.1 |
-| Auth client | `@azure/msal-browser` 4.30.0 (Microsoft Entra) |
+| Piece           | Choice                                             |
+| --------------- | -------------------------------------------------- |
+| Framework       | Next.js 16.2.10 (App Router)                       |
+| UI              | React 19.2.3, TypeScript 5.9.3                     |
+| Styling         | Tailwind CSS 4.3.3                                 |
+| Data fetching   | SWR 2.4.1                                          |
+| Auth client     | `@azure/msal-browser` 4.30.0 (Microsoft Entra)     |
 | Charts / tables | recharts, `@tanstack/react-table`, `@xyflow/react` |
 
 ### Backend
 
-| Piece | Choice |
-| --- | --- |
-| Language | Python ≥ 3.11 |
-| API | FastAPI 0.136.3, Uvicorn 0.49.0 |
-| ORM / migrations | SQLAlchemy 2.0.50, Alembic 1.18.4 |
-| DB drivers | asyncpg 0.31.0 (requests), psycopg2-binary 2.9.12 (sync / Alembic) |
-| Database | PostgreSQL 15+ (also the durable work queue) |
-| Job model | In-process durable worker + `extraction_work_units` claimed with `SKIP LOCKED`; no Redis |
-| Validation / settings | Pydantic 2.13.4, pydantic-settings |
-| HTTP / auth | httpx 0.28.1, PyJWT 2.13.0 |
-| PDF / images | pypdfium2 5.10.1, pdf-inspector 1.18.0, Pillow 12.2.0, openpyxl 3.1.5 |
-| Inference | Configurable VLM provider, or OCR + LLM providers (hybrid). Boot default `EXTRACTION_ENGINE=vlm`. |
-| File storage | Local blob store only (`IMAGE_STORE_TYPE=local`). `IMAGE_STORE_TYPE=s3` is reserved and raises `NotImplementedError`. |
+| Piece                 | Choice                                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Language              | Python ≥ 3.11                                                                                                         |
+| API                   | FastAPI 0.136.3, Uvicorn 0.49.0                                                                                       |
+| ORM / migrations      | SQLAlchemy 2.0.50, Alembic 1.18.4                                                                                     |
+| DB drivers            | asyncpg 0.31.0 (requests), psycopg2-binary 2.9.12 (sync / Alembic)                                                    |
+| Database              | PostgreSQL 15+ (also the durable work queue)                                                                          |
+| Job model             | In-process durable worker + `extraction_work_units` claimed with `SKIP LOCKED`; no Redis                              |
+| Validation / settings | Pydantic 2.13.4, pydantic-settings                                                                                    |
+| HTTP / auth           | httpx 0.28.1, PyJWT 2.13.0                                                                                            |
+| PDF / images          | pypdfium2 5.10.1, pdf-inspector 1.18.0, Pillow 12.2.0, openpyxl 3.1.5                                                 |
+| Inference             | Configurable VLM provider, or OCR + LLM providers (hybrid). Boot default `EXTRACTION_ENGINE=vlm`.                     |
+| File storage          | Local blob store only (`IMAGE_STORE_TYPE=local`). `IMAGE_STORE_TYPE=s3` is reserved and raises `NotImplementedError`. |
 
 ## Reserved or unimplemented
 

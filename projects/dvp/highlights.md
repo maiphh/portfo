@@ -22,11 +22,11 @@ The rule text is fenced as payload, so a formula cannot rewrite the instructions
 
 One rule gets a semantic budget, default 5 attempts, inside a 180-second deadline that covers the model call and the validator (`docs/architecture/engine/translator.md`).
 
-| Attempt | Prompt | Temperature | Reasoning |
-| --- | --- | --- | --- |
-| 1 | Full translation prompt | model default | runtime default |
-| 2 … N−1 | Compact repair prompt | 0.35 | one step higher (`low` → `medium` → `high`) |
-| N | Same repair prompt | 0.35 | `high` |
+| Attempt | Prompt                  | Temperature   | Reasoning                                   |
+| ------- | ----------------------- | ------------- | ------------------------------------------- |
+| 1       | Full translation prompt | model default | runtime default                             |
+| 2 … N−1 | Compact repair prompt   | 0.35          | one step higher (`low` → `medium` → `high`) |
+| N       | Same repair prompt      | 0.35          | `high`                                      |
 
 The repair prompt is not the first prompt again. It sends the contract recap, the rule text, the previous code, the error class, and a fix hint. Fields are relevance-ranked and capped at 80. Earlier rules are capped at 40. Few-shot examples are left out. The error class is one of `syntax`, `security`, `field`, `list_dict`, `runtime_type`, `other`.
 

@@ -24,7 +24,14 @@ describe("deploy guard", () => {
   it("env.production repeats bindings and fails on REPLACE_ME", () => {
     const top = effectiveConfig(wrangler);
     const prod = (wrangler.env as Record<string, Record<string, unknown>>).production ?? {};
-    for (const key of ["ai", "d1_databases", "ratelimits", "durable_objects", "migrations", "triggers"])
+    for (const key of [
+      "ai",
+      "d1_databases",
+      "ratelimits",
+      "durable_objects",
+      "migrations",
+      "triggers",
+    ])
       expect(prod[key], key).toEqual(top[key]);
     expect(Object.keys(prod.vars as object).sort()).toEqual(
       [...Object.keys(top.vars as object), "ENVIRONMENT"].sort(),

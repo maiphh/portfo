@@ -52,9 +52,7 @@ describe("POST /contact", () => {
 
   it("honeypot stores nothing and does not email", async () => {
     const { seen } = mockResend(true);
-    const { res } = await call(
-      contactRequest({ ...good, website: "http://spam.test" }),
-    );
+    const { res } = await call(contactRequest({ ...good, website: "http://spam.test" }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, status: "sent" });
     const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM contact_messages").first<{
@@ -66,9 +64,7 @@ describe("POST /contact", () => {
 
   it("returns 400 with field errors on bad input", async () => {
     mockResend(true);
-    const { res } = await call(
-      contactRequest({ name: "A", email: "bad", message: "hi" }),
-    );
+    const { res } = await call(contactRequest({ name: "A", email: "bad", message: "hi" }));
     expect(res.status).toBe(400);
     const data = (await res.json()) as { error: string; fieldErrors: Record<string, string> };
     expect(data.error).toBe("invalid");

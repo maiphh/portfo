@@ -4,26 +4,26 @@ What is deployed today: static Astro on Vercel, plus one Cloudflare Worker named
 
 ## Where each feature runs
 
-| Feature               | Runtime                                                                 | Store                                                                              |
-| --------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Pages, case studies   | Astro on Vercel (`@astrojs/vercel`). Pages prerendered.                 | None                                                                               |
-| Chat agent            | Worker `portfo` (`workers/portfo`) `POST /chat`                         | Durable Object `Quota`, Rate Limiting binding; tools read bundled JSON + D1        |
-| Contact form          | Worker `POST /contact`                                                  | D1: `contact_messages`. Email via Resend in the same request.                      |
-| Page views, most-read | Worker `POST /view`, `GET /popular`                                     | D1: `page_views`                                                                   |
-| GitHub activity       | Worker `GET /activity`; sync is Cron Trigger + `POST /cron/github-sync` | D1: `github_repos`, `github_activity`, `github_activity_next`, `sync_runs`         |
+| Feature               | Runtime                                                                 | Store                                                                       |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Pages, case studies   | Astro on Vercel (`@astrojs/vercel`). Pages prerendered.                 | None                                                                        |
+| Chat agent            | Worker `portfo` (`workers/portfo`) `POST /chat`                         | Durable Object `Quota`, Rate Limiting binding; tools read bundled JSON + D1 |
+| Contact form          | Worker `POST /contact`                                                  | D1: `contact_messages`. Email via Resend in the same request.               |
+| Page views, most-read | Worker `POST /view`, `GET /popular`                                     | D1: `page_views`                                                            |
+| GitHub activity       | Worker `GET /activity`; sync is Cron Trigger + `POST /cron/github-sync` | D1: `github_repos`, `github_activity`, `github_activity_next`, `sync_runs`  |
 
 There is no Neon Postgres, no job queue, no LLM classification of contact messages, no Vectorize, and no second Worker. The chat burst limit and Durable Object quota live on the same Worker as the data APIs.
 
 ## Data model (D1)
 
-| Table                   | Key columns                                                                             | Used by     |
-| ----------------------- | --------------------------------------------------------------------------------------- | ----------- |
-| `contact_messages`      | id, name, email, body, role, visitor_hash, created_at                                   | Contact     |
-| `page_views`            | id, slug, visitor_hash, referrer_host, day, created_at; UNIQUE(visitor_hash, slug, day) | Analytics   |
-| `github_repos`          | repo_id PK, name, url, description, language, stars, topics (JSON text), pushed_at      | GitHub sync |
-| `github_activity`       | date, repo_id, commits, prs, issues                                                     | GitHub sync |
-| `github_activity_next`  | staging table for atomic swap                                                           | GitHub sync |
-| `sync_runs`             | id, kind, started_at, finished_at, status, error                                        | GitHub sync |
+| Table                  | Key columns                                                                             | Used by     |
+| ---------------------- | --------------------------------------------------------------------------------------- | ----------- |
+| `contact_messages`     | id, name, email, body, role, visitor_hash, created_at                                   | Contact     |
+| `page_views`           | id, slug, visitor_hash, referrer_host, day, created_at; UNIQUE(visitor_hash, slug, day) | Analytics   |
+| `github_repos`         | repo_id PK, name, url, description, language, stars, topics (JSON text), pushed_at      | GitHub sync |
+| `github_activity`      | date, repo_id, commits, prs, issues                                                     | GitHub sync |
+| `github_activity_next` | staging table for atomic swap                                                           | GitHub sync |
+| `sync_runs`            | id, kind, started_at, finished_at, status, error                                        | GitHub sync |
 
 Timestamps are ISO-8601 text. Days are `YYYY-MM-DD` in Asia/Ho_Chi_Minh.
 `visitor_hash` = SHA-256(IP + UA + daily salt): no cookies, no raw IPs stored.

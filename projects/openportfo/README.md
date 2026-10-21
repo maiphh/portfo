@@ -28,15 +28,15 @@ Quotes are pulled when someone opens or refreshes the book, and once a day by a 
 
 ## Stack
 
-| Piece | Choice | Where it runs |
-| --- | --- | --- |
-| UI | Next.js 15, client-rendered. Charts are `lightweight-charts`. Tailwind 4, Radix | Static export. The design uses S3 and CloudFront. The lab build served the export from Elastic Beanstalk because CloudFront was blocked |
-| API | FastAPI, Python 3.12, Pydantic, httpx, PyJWT | Elastic Beanstalk |
-| Edge | API Gateway HTTP API, `/api/*` proxied to FastAPI | REST only. Chat SSE, if used, goes to Beanstalk directly |
-| Jobs | EventBridge to Lambda | Daily RSS, portfolio snapshot, optional SES email. Not the user-facing API |
-| Records | DynamoDB | Users, holdings, watchlist, settings, news, price cache |
-| Files | S3, queried with Athena | Price history and daily snapshots |
-| Local stand-in | Docker Compose LocalStack, or in-memory fakes (`AUTH_MODE=fake`, `STORAGE_BACKEND=memory`) | Tests stay on the fakes |
+| Piece          | Choice                                                                                     | Where it runs                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| UI             | Next.js 15, client-rendered. Charts are `lightweight-charts`. Tailwind 4, Radix            | Static export. The design uses S3 and CloudFront. The lab build served the export from Elastic Beanstalk because CloudFront was blocked |
+| API            | FastAPI, Python 3.12, Pydantic, httpx, PyJWT                                               | Elastic Beanstalk                                                                                                                       |
+| Edge           | API Gateway HTTP API, `/api/*` proxied to FastAPI                                          | REST only. Chat SSE, if used, goes to Beanstalk directly                                                                                |
+| Jobs           | EventBridge to Lambda                                                                      | Daily RSS, portfolio snapshot, optional SES email. Not the user-facing API                                                              |
+| Records        | DynamoDB                                                                                   | Users, holdings, watchlist, settings, news, price cache                                                                                 |
+| Files          | S3, queried with Athena                                                                    | Price history and daily snapshots                                                                                                       |
+| Local stand-in | Docker Compose LocalStack, or in-memory fakes (`AUTH_MODE=fake`, `STORAGE_BACKEND=memory`) | Tests stay on the fakes                                                                                                                 |
 
 There are two frontends in the repo. `frontend/` is the Next.js app. `frontend-temp/` is a small Vite viewer used while the API was the thing under test.
 
