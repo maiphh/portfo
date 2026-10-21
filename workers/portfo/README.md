@@ -10,16 +10,16 @@ The live URL is whatever `wrangler deploy` prints for Worker name `portfo`. The 
 
 ## Routes
 
-| Method    | Path                | Notes                                                                    |
-| --------- | ------------------- | ------------------------------------------------------------------------ |
+| Method    | Path                | Notes                                                                     |
+| --------- | ------------------- | ------------------------------------------------------------------------- |
 | `POST`    | `/chat`             | Agent loop with read-only tools, streamed as SSE. Only `ALLOWED_ORIGINS`. |
-| `POST`    | `/contact`          | Honeypot → validate → store → Resend (same request)                      |
-| `POST`    | `/view`             | Page-view beacon; one row per visitor + slug + local day                 |
-| `GET`     | `/popular?days=`    | Most-read case studies (1–30, default 7)                                 |
-| `GET`     | `/activity`         | GitHub summary for the home page                                         |
-| `POST`    | `/cron/github-sync` | Bearer `CRON_SECRET`; Cron Trigger also runs every 6 hours               |
-| `GET`     | `/health`           | Liveness; models, limits, tools, booleans for which secrets are set      |
-| `OPTIONS` | `*`                 | CORS preflight                                                           |
+| `POST`    | `/contact`          | Honeypot → validate → store → Resend (same request)                       |
+| `POST`    | `/view`             | Page-view beacon; one row per visitor + slug + local day                  |
+| `GET`     | `/popular?days=`    | Most-read case studies (1–30, default 7)                                  |
+| `GET`     | `/activity`         | GitHub summary for the home page                                          |
+| `POST`    | `/cron/github-sync` | Bearer `CRON_SECRET`; Cron Trigger also runs every 6 hours                |
+| `GET`     | `/health`           | Liveness; models, limits, tools, booleans for which secrets are set       |
+| `OPTIONS` | `*`                 | CORS preflight                                                            |
 
 CORS allows only `ALLOWED_ORIGINS`. Requests with no `Origin` are allowed for data routes and
 cron/curl; `/chat` still requires an allowed browser Origin.
@@ -52,7 +52,7 @@ pnpm dev
 ```
 
 Secrets are documented in `.dev.vars.example`. Vars (`ALLOWED_ORIGINS`, `ENVIRONMENT`, chat
-model knobs) live in `wrangler.jsonc`. The committed `database_id` is a local placeholder until
-you create the real D1 database. Top-level config stays deployable for local dev (no
+model knobs) live in `wrangler.jsonc`. The committed `database_id` is the `portfo` D1 database (an id,
+not a secret); on a fresh account replace it after `wrangler d1 create portfo`. Top-level config stays deployable for local dev (no
 `REPLACE_ME`); `env.production` fails the deploy guard until its placeholders are filled and
 `ALLOWED_ORIGINS` includes an `https://` origin with `ENVIRONMENT=production`.

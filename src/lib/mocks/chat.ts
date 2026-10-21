@@ -28,7 +28,7 @@ export const mockReplies: MockReply[] = [
   {
     keys: ["rag", "legal", "citation", "cite", "chunk", "law"],
     steps: [
-      { tool: "search_site", label: "Searching the CV and case studies…" },
+      { tool: "list_projects", label: "Looking up projects…" },
       { tool: "get_project", label: "Reading the case study…" },
     ],
     answer:
@@ -55,7 +55,7 @@ export const fallbackReply: MockReply = {
   keys: [],
   steps: [
     { tool: "list_projects", label: "Looking up projects…" },
-    { tool: "get_cv", label: "Checking the CV…" },
+    { tool: "get_experience", label: "Checking the CV…" },
   ],
   answer:
     "Phu is an AI engineer in Ho Chi Minh City. In production he has shipped a document OCR pipeline (over 98% accurate) and a legal RAG assistant, both built solo at Talentnet, and earlier 14 game modes for Garena Free Fire's Craftland.",

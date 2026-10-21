@@ -1,6 +1,6 @@
 /**
- * Builds data/site.json from the site's real content, so the Worker's tools and the
- * ingest corpus never drift from what the site publishes:
+ * Builds data/site.json from the site's real content, so the Worker's chat tools
+ * never drift from what the site publishes:
  *   - src/lib/site.ts            name, role, city, email, GitHub
  *   - src/data/experience.json   the CV timeline
  *   - src/content/work/*.md      the case studies (frontmatter + body)
