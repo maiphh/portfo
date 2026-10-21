@@ -6,6 +6,7 @@ org: Charity project
 meta: [Charity project, GitHub Pages]
 order: 7
 anchor: work-poet
+accent: { line: "#f6c43f", tint: "#33290f" }
 links:
   - { label: Live site, href: https://maiphh.github.io/poet/ }
   - { label: Repository, href: https://github.com/maiphh/poet }

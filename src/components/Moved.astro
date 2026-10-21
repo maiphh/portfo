@@ -1,0 +1,30 @@
+---
+/**
+ * A retired case-study URL. Static hosting can't send a 301 for both /work/x and /work/x/, so
+ * this page sends the browser on with a meta refresh, points search engines at the new place and
+ * stays out of the index and the sitemap.
+ */
+interface Props {
+  to: string;
+  title: string;
+}
+const { to, title } = Astro.props;
+const href = new URL(to.split("#")[0] ?? "/", Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <link rel="canonical" href={href} />
+    <title>{title} has moved</title>
+  </head>
+  <body>
+    <p>
+      {title} has moved: <a href={to}>{to}</a>
+    </p>
+  </body>
+</html>

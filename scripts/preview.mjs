@@ -15,6 +15,9 @@ const types = {
   ".xml": "application/xml",
   ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
+  ".webp": "image/webp",
+  ".jpg": "image/jpeg",
+  ".mp4": "video/mp4",
   ".ico": "image/x-icon",
 };
 

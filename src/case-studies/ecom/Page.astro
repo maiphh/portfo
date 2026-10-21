@@ -1,0 +1,194 @@
+---
+/** Ecom shop template on the shared case-study template. Concept: one engine, many storefronts.
+ * Both repos are private, so every artifact is an illustration (labelled in its caption). */
+import type { CollectionEntry } from "astro:content";
+import CaseStudy from "~/components/case/CaseStudy.astro";
+import { ecom } from "./data";
+import "./ecom.css";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  prev?: CollectionEntry<"work"> | undefined;
+  next?: CollectionEntry<"work"> | undefined;
+}
+const { entry, prev, next } = Astro.props;
+
+const skins = [
+  { name: "Mirror Now", sub: "storefront + seller desk", state: "built" },
+  { name: "Next client shop", sub: "a sibling, same engine", state: "planned" },
+];
+const rules: [event: string, from: string, result: string, ok: boolean][] = [
+  ["payment_received", "awaiting_payment, amount and order id match", "paid", true],
+  ["payment_received", "cancelled", "rejected: unapplied", false],
+  ["payment_received", "any other state", "rejected: illegal", false],
+  ["fulfil", "collect_on_delivery", "paid (provider cod), receipt written", true],
+];
+const buyer: [string, string][] = [
+  ["/", "Catalog"],
+  ["/product/[slug]", "One product"],
+  ["/cart", "Cart and checkout"],
+  ["/orders, /orders/[id]", "The buyer's orders"],
+];
+const desk: [string, string][] = [
+  ["/desk", "Home of the desk"],
+  ["/desk/products", "Catalog the seller edits"],
+  ["/desk/orders", "Orders"],
+  ["/desk/sales · events · codes", "Sales, events, codes"],
+];
+---
+
+<CaseStudy entry={entry} prev={prev} next={next} data={ecom}>
+  <div slot="signature" class="ec-sig" data-engine>
+    <ul class="ec-skins" aria-label="Storefronts on the engine">
+      {skins.map((s) => (
+        <li class:list={["ec-skin", s.state]} data-skin>
+          <b>{s.name}</b>
+          <span>{s.sub}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="ec-seam" aria-hidden="true">
+      <span>@/shop/store · @/shop/desk</span>
+    </div>
+    <div class="ec-core" data-core>
+      <p class="mk-label">src/shop · createShop</p>
+      <ul class="mk-chips" aria-label="What the engine owns">
+        <li>catalog</li>
+        <li>cart</li>
+        <li>priceCart</li>
+        <li>stock</li>
+        <li>PaymentPort</li>
+        <li class="acc">orders/machine</li>
+      </ul>
+      <p class="ec-rule">no next · no react · no @/app</p>
+    </div>
+  </div>
+
+  <div slot="highlight" class="mk ec-machine">
+    <ul class="mk-chips" aria-label="The usual path of a paid order">
+      <li class="acc">awaiting_payment</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li class="acc">paid</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li>fulfilled</li>
+    </ul>
+    <div class="mk-scroll" data-scroll-x>
+      <table>
+        <caption class="sr-only">How the step function answers an event</caption>
+        <thead>
+          <tr>
+            <th scope="col">Event</th>
+            <th scope="col">From</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rules.map(([e, f, r, ok]) => (
+            <tr>
+              <th scope="row">
+                <code>{e}</code>
+              </th>
+              <td>{f}</td>
+              <td class:list={["ec-res", { bad: !ok }]}>{r}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The step function is pure: it takes the order and the event and returns the next state or a
+      rejection. A payment notice from a webhook and a cash-on-delivery fulfilment both go through
+      it, and adding a payment provider doesn't edit it.
+    </p>
+  </div>
+
+  <div slot="dive-boundary" class="mk">
+    <pre class="mk-code"><code><span class="c">// src/shop/boundaries.test.ts, paraphrased</span>
+<span class="k">for each</span> file under src/shop:
+  <span class="k">fail if</span> it imports "next", "react" or "@/app"</code></pre>
+    <p class="mk-label">still Next-shaped, on purpose (the swap points)</p>
+    <ul class="mk-chips">
+      <li>src/shop/auth/neon.ts</li>
+      <li>src/shop/payments/payos.ts</li>
+    </ul>
+  </div>
+
+  <div slot="dive-extend" class="mk mk-two">
+    <div>
+      <p class="mk-label">priceCart(cart, producers)</p>
+      <ul class="mk-chips" aria-label="Discount producers">
+        <li class="acc">sale-off</li>
+        <li>+ coupon (appended)</li>
+      </ul>
+    </div>
+    <div>
+      <p class="mk-label">PaymentPort</p>
+      <ul class="mk-chips" aria-label="What a provider implements">
+        <li class="acc">methods</li>
+        <li class="acc">charge</li>
+        <li class="acc">verify</li>
+        <li>lookupPaid?</li>
+      </ul>
+      <p class="mk-label">unchanged</p>
+      <ul class="mk-chips">
+        <li>placeOrder</li>
+        <li>orders/machine.ts</li>
+      </ul>
+    </div>
+  </div>
+
+  <pre
+    slot="dive-memory"
+    class="mk-code ec-demo"
+  ><code><span class="c">$ npm run shop -- demo  # in memory, sample product</span>
+card      Mug · unitPriceVnd 10000 · salePriceVnd <span class="k">8000</span> · percentOff 20 · stock 4
+cart      1 × Mug · discountVnd 2000 · totalVnd <span class="k">8000</span>
+order     totalVnd 8000 · status <span class="k">awaiting_payment</span>
+afterEnd  Mug · salePriceVnd 10000 · percentOff 0 · stock <span class="k">3</span></code></pre>
+
+  <div slot="extra" class="mk ec-routes">
+    <div>
+      <p class="mk-label">buyer · src/app/(store)</p>
+      <div class="mk-scroll">
+        <table>
+          <caption class="sr-only">Buyer routes</caption>
+          <tbody>
+            {buyer.map(([p, w]) => (
+              <tr>
+                <th scope="row">
+                  <code>{p}</code>
+                </th>
+                <td>{w}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <p class="mk-label">seller desk · src/app/(desk)/desk</p>
+      <div class="mk-scroll">
+        <table>
+          <caption class="sr-only">Seller desk routes</caption>
+          <tbody>
+            {desk.map(([p, w]) => (
+              <tr>
+                <th scope="row">
+                  <code>{p}</code>
+                </th>
+                <td>{w}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="ec-small">
+        <code>/admin</code> redirects to the desk. Buyers never see its layout.
+      </p>
+    </div>
+  </div>
+</CaseStudy>

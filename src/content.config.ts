@@ -33,6 +33,8 @@ const work = defineCollection({
     period: z.string().optional(),
     /** Order on the home page (1 = first). */
     order: z.number().int().positive(),
+    /** False for work shown only on the home page (no /work/<slug> case study). */
+    page: z.boolean().default(true),
     /** Section id on the home page, e.g. "work-ocr". */
     anchor: z.string().regex(/^[a-z0-9-]+$/),
     /** How-it-works steps. `[[term]]` marks a Vietnamese legal term. */

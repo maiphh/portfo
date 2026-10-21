@@ -1,16 +1,18 @@
 ---
-import { render, type CollectionEntry } from "astro:content";
-import Facts from "~/components/Facts.astro";
-import Icon from "~/components/Icon.astro";
-import OrgBadge from "~/components/OrgBadge.astro";
+/**
+ * Case studies: every work entry with a page renders on the shared template
+ * (components/case/CaseStudy.astro), registered in src/case-studies. Entries with `page: false`
+ * live only on the home page. Previous and next step through the case studies in home order.
+ */
+import type { CollectionEntry } from "astro:content";
 import { caseStudies, isCaseStudy } from "~/case-studies";
-import Steps from "~/components/Steps.astro";
-import Base from "~/layouts/Base.astro";
-import { site } from "~/lib/site";
 import { getWork } from "~/lib/work";
 
 export async function getStaticPaths() {
-  const work = await getWork();
+  const work = (await getWork()).filter((w) => w.data.page);
+  for (const w of work)
+    if (!isCaseStudy(w.id))
+      throw new Error(`Work entry "${w.id}" has a page but no case study in src/case-studies.`);
   return work.map((entry, i) => ({
     params: { slug: entry.id },
     props: { entry, prev: work[i - 1], next: work[i + 1] },
@@ -23,103 +25,10 @@ interface Props {
   next?: CollectionEntry<"work"> | undefined;
 }
 const { entry, prev, next } = Astro.props;
-const d = entry.data;
-const { Content } = await render(entry);
-const Case = isCaseStudy(entry.id) ? caseStudies[entry.id] : null;
+const Case = caseStudies[entry.id as keyof typeof caseStudies];
 ---
 
-{Case && <Case entry={entry} prev={prev} next={next} />}
-{!Case && (
-  <Base title={`${d.title} · ${site.name}`} description={d.summary}>
-    <article class="cs" aria-labelledby="cs-h" data-view-slug={entry.id}>
-      <div class="wrap">
-        <a class="back" href={`/#${d.anchor}`}>
-          <Icon name="arrow" />
-          Back to the work
-        </a>
-        <div class="cs-sheet">
-          <div class="sheet-head">
-            <span>case-study/{entry.id}.md</span>
-            <span>
-              {!d.org_badge && d.org}
-              {d.period && `${d.org_badge ? "" : " · "}${d.period}`}
-            </span>
-          </div>
-          <header class="cs-head">
-            <p class="meta-line">
-              {d.org_badge && <OrgBadge label={d.org_badge} />}
-              {d.meta.map((m) => (
-                <span>{m}</span>
-              ))}
-            </p>
-            <h1 id="cs-h">{d.headline}</h1>
-            <p class="lede">{d.summary}</p>
-            {d.facts.length > 0 && <Facts facts={d.facts} />}
-          </header>
-          <div class="cs-body">
-            <div class="prose">
-              <Content />
-            </div>
-            <aside class="cs-side" aria-label="Details">
-              {d.steps.length > 0 && (
-                <div>
-                  <h2>How it works, in four steps</h2>
-                  <Steps steps={d.steps} />
-                </div>
-              )}
-              {d.note && <p class="note">{d.note}</p>}
-              {d.confidential && (
-                <p class="note">
-                  Work for an employer: described from CV-level facts only. No internal code or
-                  screenshots.
-                </p>
-              )}
-              {d.links.length > 0 && (
-                <div>
-                  <h2>Links</h2>
-                  <ul>
-                    {d.links.map((l) => (
-                      <li>
-                        <a class="link" href={l.href}>
-                          {l.label}
-                          <Icon name="out" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {d.todo.length > 0 && (
-                <div>
-                  <h2>Still to add</h2>
-                  <ul class="todo">
-                    {d.todo.map((t) => (
-                      <li>{t}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </aside>
-          </div>
-        </div>
-        <nav class="cs-next" aria-label="More work">
-          {prev && (
-            <a href={`/work/${prev.id}`}>
-              <span>Previous</span>
-              <b>{prev.data.title}</b>
-            </a>
-          )}
-          {next && (
-            <a class="next" href={`/work/${next.id}`}>
-              <span>Next</span>
-              <b>{next.data.title}</b>
-            </a>
-          )}
-        </nav>
-      </div>
-    </article>
-  </Base>
-)}
+<Case entry={entry} prev={prev} next={next} />
 
 <script>
   import { trackPageView } from "~/scripts/analytics";

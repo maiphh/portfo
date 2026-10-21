@@ -6,6 +6,7 @@ org: Garena Free Fire
 meta: [Garena Free Fire · Craftland, Dec 2023 – Sep 2025]
 period: Dec 2023 – Sep 2025
 order: 4
+page: false
 anchor: work-craftland
 facts:
   - { value: "14", label: game modes, count: 14 }

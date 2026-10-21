@@ -2,7 +2,6 @@
 /** Free Fire Craftland: 14 isometric tiles, two featured. */
 import type { CollectionEntry } from "astro:content";
 import Facts from "./Facts.astro";
-import Icon from "./Icon.astro";
 import { buildIsland } from "~/lib/island";
 
 interface Props {
@@ -22,6 +21,7 @@ const island = buildIsland();
   aria-labelledby="craft-h"
   data-views={views}
   data-slug={entry.id}
+  data-href={entry.data.page ? undefined : `/#${entry.data.anchor}`}
   data-title={d.title}
 >
   <div class="wrap craft">
@@ -41,10 +41,6 @@ const island = buildIsland();
       </p>
       <p style="margin-top:var(--s5);color:var(--ink-2)">{d.summary}</p>
       <Facts facts={facts} />
-      <a class="link cs-link" href={`/work/${entry.id}`}>
-        Read the case study
-        <Icon name="arrow" />
-      </a>
     </div>
     <figure>
       <svg

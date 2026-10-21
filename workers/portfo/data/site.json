@@ -206,7 +206,7 @@
         "Dec 2023 – Sep 2025"
       ],
       "order": 4,
-      "href": "/work/craftland",
+      "href": "/#work-craftland",
       "homeHref": "/#work-craftland",
       "confidential": false,
       "approach": [],
@@ -232,12 +232,14 @@
       "slug": "openportfo",
       "title": "OpenPortfo",
       "headline": "Crypto and Vietnamese stocks, side by side.",
-      "oneLiner": "One place to track crypto and Vietnamese stocks side by side.",
-      "org": "Personal project",
+      "oneLiner": "One portfolio for crypto and Vietnamese stocks, on AWS. Quotes are pulled when someone opens or refreshes the book, and an AI agent can search, add and remove holdings for the signed-in user.",
+      "org": "OpenPortfo",
       "role": null,
       "period": null,
       "tags": [
-        "Personal project"
+        "Portfolio tracker",
+        "AWS",
+        "Public repo"
       ],
       "order": 5,
       "href": "/work/openportfo",
@@ -246,30 +248,35 @@
       "approach": [],
       "outcomes": [],
       "note": "The chart on the home page is sample data.",
-      "links": [],
-      "body": "OpenPortfo is one place to track crypto and Vietnamese stocks side by side.\n\nThe chart on the home page is an illustration with sample data, not a real portfolio."
+      "links": [
+        {
+          "label": "Repository",
+          "href": "https://github.com/maiphh/openportfo"
+        }
+      ],
+      "body": "OpenPortfo keeps crypto and Vietnamese stocks in one book: value, profit and loss, allocation, a watchlist and matched news. It is an on-demand tracker, not a trading app and not a live price socket.\n\nQuotes are pulled when someone opens or refreshes the book, and once a day by a scheduled job. The browser never calls CoinGecko or a Vietnamese broker. An AI agent in the app can search assets, add or remove holdings and explain the book, using tools scoped to the signed-in user.\n\nThe chart on the home page is an illustration with sample data, not a real portfolio."
     },
     {
-      "slug": "mirror-now",
-      "title": "Mirror Now",
-      "headline": "A storefront that became a template.",
-      "oneLiner": "I built the client's online store, then pulled it apart into a reusable e-commerce template.",
-      "org": "Client project",
+      "slug": "ecom",
+      "title": "Ecom shop template",
+      "headline": "One engine, many storefronts.",
+      "oneLiner": "A shop engine in TypeScript (catalog, cart, pricing, stock, payments and the order state machine) that a new storefront keeps as it is. Mirror Now is the first shop built on the template.",
+      "org": "E-commerce template",
       "role": null,
       "period": null,
       "tags": [
-        "Client project",
-        "E-commerce template"
+        "E-commerce template",
+        "TypeScript"
       ],
       "order": 6,
-      "href": "/work/mirror-now",
-      "homeHref": "/#work-mirror",
+      "href": "/work/ecom",
+      "homeHref": "/#work-ecom",
       "confidential": false,
       "approach": [],
       "outcomes": [],
       "note": null,
       "links": [],
-      "body": "I built Mirror Now's online store for the client, then pulled it apart into a reusable e-commerce template."
+      "body": "Ecom is a shop template: one TypeScript engine, `src/shop`, holds the catalog, the cart, pricing, discounts, stock, payments and the order state machine. A storefront is a thin host that calls it. A test fails the suite if any file in the engine imports Next.js or React.\n\nMirror Now is the first shop built on the template: a buyer storefront and a seller desk on top of the same engine. The next client shop is meant to be a sibling of Mirror Now, not a rewrite of the engine."
     },
     {
       "slug": "poet",

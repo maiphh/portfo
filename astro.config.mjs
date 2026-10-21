@@ -19,7 +19,11 @@ export default defineConfig({
   // `prerender = false` (the /api/* endpoints) run on demand as Vercel functions.
   output: "static",
   adapter: vercel(),
-  integrations: [mdx(), sitemap()],
+  integrations: [
+    mdx(),
+    // Retired case-study URLs (pages/work/craftland, mirror-now) only forward the browser.
+    sitemap({ filter: (page) => !/\/work\/(craftland|mirror-now)\/?$/.test(page) }),
+  ],
   trailingSlash: "ignore",
   prefetch: { prefetchAll: false, defaultStrategy: "hover" },
 });

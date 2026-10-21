@@ -13,6 +13,9 @@ const motions: Record<string, () => Promise<{ default: (root: HTMLElement) => vo
   ocr: () => import("./ocr"),
   rag: () => import("./rag"),
   dvp: () => import("./dvp"),
+  op: () => import("./op"),
+  ecom: () => import("./ecom"),
+  poet: () => import("./poet"),
 };
 
 if (page) {

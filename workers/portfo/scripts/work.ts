@@ -17,6 +17,9 @@ const out = fileURLToPath(new URL("../data/work.json", import.meta.url));
 interface Front {
   title: string;
   order: number;
+  anchor: string;
+  /** False: home page only, no case study (links go to the home section). */
+  page?: boolean;
 }
 
 function splitFrontmatter(src: string): Front {
@@ -35,7 +38,7 @@ async function main() {
     items.push({
       slug,
       title: front.title,
-      href: `/work/${slug}`,
+      href: front.page === false ? `/#${front.anchor}` : `/work/${slug}`,
       order: front.order,
     });
   }

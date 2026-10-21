@@ -261,6 +261,9 @@ const PANELS = [
   { page: "/work/document-ocr/", flow: "cs", node: "[data-flow=cs] [data-node]" },
   { page: "/work/legal-rag/", flow: "cs", node: "[data-flow=cs] [data-node]" },
   { page: "/work/data-validation/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+  { page: "/work/openportfo/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+  { page: "/work/ecom/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+  { page: "/work/poet/", flow: "cs", node: "[data-flow=cs] [data-node]" },
 ];
 
 for (const width of [1280, 1440])
