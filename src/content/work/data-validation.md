@@ -1,9 +1,10 @@
 ---
-title: Payroll data validation
+title: DVP · payroll data validation
 headline: Every client, its own rules — turned into code.
 summary: In HR outsourcing payroll, each client has distinct rules and data formats. AI converts client rules into code and reads varied formats dynamically, automating payroll generation and replacing the manual checker step to greatly reduce manual work.
 org: Talentnet
 org_badge: Enterprise · Talentnet
+accent: { line: "#ff9d8a", tint: "#3a2622" }
 meta: [Data validation, Payroll, In production]
 period: Sep 2025 – now
 order: 3

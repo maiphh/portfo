@@ -93,7 +93,7 @@ describe("golden Q&A", () => {
           const p = toolResult(inputs, "get_project") as { title: string } | null;
           expect(p).not.toBeNull();
           return {
-            text: "At Talentnet, Phu built three production tools on his own: a document OCR pipeline (over 98% accurate, saving more than 90% of processing time), a legal RAG payroll assistant that keeps the Điều › Khoản › Điểm path on every chunk, and a payroll data validation system that turns each client's rules into code.",
+            text: "At Talentnet, Phu works on three production tools: a document OCR pipeline where a vision-language model reads each page into a template, a legal RAG payroll assistant that keeps the Điều › Khoản › Điểm path on every chunk, and a payroll data validation system that turns each client's rules into code.",
           };
         },
       ]),
@@ -113,14 +113,14 @@ describe("golden Q&A", () => {
     ]);
     expect(r.text).toMatch(/document OCR/i);
     expect(r.text).toMatch(/legal RAG/i);
-    expect(r.text).toContain("98%");
+    expect(r.text).toContain("vision-language model");
     expect(words(r.text)).toBeLessThanOrEqual(WORDS_MAX);
     expect(r.text).not.toMatch(/https?:\/\//);
     expect(r.sources).toEqual(
       expect.arrayContaining([
         { title: "Document OCR pipeline", href: "/work/document-ocr" },
         { title: "Legal RAG assistant", href: "/work/legal-rag" },
-        { title: "Payroll data validation", href: "/work/data-validation" },
+        { title: "DVP · payroll data validation", href: "/work/data-validation" },
         { title: "Experience", href: "/#timeline" },
       ]),
     );

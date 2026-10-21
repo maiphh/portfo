@@ -8,10 +8,9 @@
  */
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { packet } from "./effects";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const NS = "http://www.w3.org/2000/svg";
 
 function proof(root: HTMLElement) {
   const sheet = root.querySelector<HTMLElement>("[data-proof]");
@@ -45,25 +44,6 @@ function proof(root: HTMLElement) {
     },
   );
   light(0);
-}
-
-function packet(svg: SVGSVGElement, path: SVGPathElement, reverse: boolean) {
-  const dot = document.createElementNS(NS, "circle");
-  dot.setAttribute("r", "4");
-  dot.setAttribute("class", "pk");
-  svg.append(dot);
-  const len = path.getTotalLength();
-  const t0 = performance.now();
-  const step = (t: number) => {
-    const k = Math.min(1, (t - t0) / 600);
-    const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    const p = path.getPointAtLength(len * (reverse ? 1 - e : e));
-    dot.setAttribute("cx", String(p.x));
-    dot.setAttribute("cy", String(p.y));
-    if (k < 1) requestAnimationFrame(step);
-    else dot.remove();
-  };
-  requestAnimationFrame(step);
 }
 
 function flowSelect(root: HTMLElement) {

@@ -1,0 +1,64 @@
+/* DVP: the rule compiler (signature) and dive artifacts. Static state = the final state;
+   scripts/case/dvp.ts animates only without reduced motion. */
+.dvp-sig {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  min-width: 0;
+}
+.dvp-rule {
+  display: grid;
+  gap: 6px;
+  max-width: none !important;
+}
+.dvp-rule q {
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.4;
+  color: var(--ink);
+  quotes: none;
+}
+.dvp-fn {
+  font-size: 13px;
+}
+.dvp-rows {
+  font-size: 14px !important;
+}
+.dvp-rows td span {
+  display: inline-block;
+}
+.dvp-rows em {
+  display: block;
+  font: 500 12px var(--code);
+  font-style: normal;
+  color: var(--acc);
+}
+.dvp-rows tr.flag td:last-child {
+  outline: 1.5px solid var(--acc);
+  outline-offset: -3px;
+  background: var(--acc-tint);
+}
+.dvp-rows tr {
+  transition: opacity 0.3s;
+}
+.dvp-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--acc);
+  border-radius: 3px;
+  color: var(--acc);
+  font: 500 13px var(--code);
+}
+/* Motion running: rows are checked one at a time; the flag appears when its row is reached. */
+.dvp-sig.is-anim [data-row]:not(.lit) {
+  opacity: 0.35;
+}
+.dvp-sig.is-anim tr.flag:not(.lit) td:last-child {
+  outline-color: transparent;
+  background: transparent;
+}
+.dvp-sig.is-anim tr.flag:not(.lit) em {
+  visibility: hidden;
+}

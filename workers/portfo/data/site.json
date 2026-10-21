@@ -20,7 +20,7 @@
       "detail": "AI Engineer Specialist · Sep 2025 – now",
       "start": "2025-09",
       "end": null,
-      "highlight": "At Talentnet, I built the document OCR pipeline (over 98% accurate, more than 90% of processing time saved), the legal RAG assistant and the payroll data validation system — all on my own."
+      "highlight": "At Talentnet, I build AI systems that run in production: the document OCR pipeline, the legal RAG assistant and DVP, the payroll data validation platform."
     },
     {
       "id": "garena",
@@ -155,7 +155,7 @@
     },
     {
       "slug": "data-validation",
-      "title": "Payroll data validation",
+      "title": "DVP · payroll data validation",
       "headline": "Every client, its own rules — turned into code.",
       "oneLiner": "In HR outsourcing payroll, each client has distinct rules and data formats. AI converts client rules into code and reads varied formats dynamically, automating payroll generation and replacing the manual checker step to greatly reduce manual work.",
       "org": "Talentnet",
