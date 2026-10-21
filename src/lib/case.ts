@@ -64,10 +64,14 @@ export interface CaseLimits {
   stackSource: string;
 }
 
+/** The project's promo cut. Renders only when the slug is in flags.CASE_VIDEOS (approved). */
 export interface CaseVideo {
+  /** A web encode in public/ (H.264, faststart, no audio track). */
   src: string;
-  poster?: string;
+  poster: string;
   caption: string;
+  /** Text description of what plays (the clip has no speech, so no captions track). */
+  description: string;
 }
 
 export interface CaseStudyData {

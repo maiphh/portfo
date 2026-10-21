@@ -22,7 +22,7 @@ export const mockReplies: MockReply[] = [
     keys: ["ocr", "accura", "document", "invoice", "pipeline"],
     steps: [{ tool: "get_project", label: "Reading the case study…" }],
     answer:
-      "The document OCR pipeline is template-driven: a vision-language model reads each page, a schema says which fields to find, and rules check the result before operators review and export Excel. It runs in production at Talentnet. I don't have accuracy figures to share yet.",
+      "The document OCR pipeline is template-driven: a vision-language model reads each page, a schema says which fields to find, and rules check the result before operators review and export Excel. Phu built it solo, and it runs in production at Talentnet. Two months after go-live: 8,000 pages processed, accuracy 99.6% and about 300 hours saved.",
     sources: [ocr, timeline],
   },
   {
