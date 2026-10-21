@@ -57,6 +57,33 @@ if (page) {
     });
   if (location.hash === "#stack" && stack) stack.open = true;
 
+  // The promo cut: muted, plays only while in view and only without reduced motion. With
+  // reduced motion it stays on its poster until someone presses play.
+  const video = page.querySelector<HTMLVideoElement>("[data-case-video]");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  if (video) {
+    // A pause we didn't cause (the visitor's) stops the in-view autoplay for good.
+    let touched = false;
+    let ours = false;
+    video.addEventListener("pause", () => {
+      if (ours) ours = false;
+      else touched = true;
+    });
+    new IntersectionObserver(
+      ([e]) => {
+        if (!e) return;
+        if (e.isIntersecting && !still.matches && !touched) {
+          video.loop = true;
+          void video.play().catch(() => {});
+        } else if (!e.isIntersecting && !video.paused) {
+          ours = true;
+          video.pause();
+        }
+      },
+      { threshold: 0.5 },
+    ).observe(video);
+  }
+
   const key = page.dataset.motion;
   const load = key ? motions[key] : undefined;
   if (load && !matchMedia("(prefers-reduced-motion: reduce)").matches)

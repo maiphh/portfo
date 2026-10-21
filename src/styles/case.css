@@ -530,4 +530,10 @@
   .mk-two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+.cs2-video video {
+  aspect-ratio: 16 / 9;
+}
+.cs2-vid-desc {
+  display: block;
+  margin-top: 6px;
 }

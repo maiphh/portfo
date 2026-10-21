@@ -20,22 +20,64 @@ for (const width of WIDTHS) {
 }
 
 test.describe("Document OCR case study", () => {
-  test("safe defaults: badge, no result figures, no solo claim, no video", async ({ page }) => {
+  test("Phu's answers: README results, solo, no old figures", async ({ page }) => {
     await page.goto(URL);
     const head = page.locator(".cs2-open");
     await expect(head.locator(".org-badge")).toHaveText(/Enterprise\s*,?\s*Talentnet/);
     await expect(head.locator(".meta-line > span:not(.org-badge)")).not.toContainText([
       "Talentnet",
     ]);
-    const text = (await page.locator("main").innerText()).toLowerCase();
-    for (const banned of ["98%", "90%", "99.6", "8,000", "300 h", "solo"])
-      expect(text, `"${banned}" on the page`).not.toContain(banned);
-    await expect(page.locator("main video")).toHaveCount(0);
-    // The outcome TODO and the open questions only show with ?dev.
-    await expect(page.locator("[data-dev-only]").first()).toBeHidden();
+    await expect(head.locator(".meta-line")).toContainText("Solo");
+    // Verbatim from projects/ocr/README.md "## Result".
+    await expect(page.locator("#overview")).toContainText(
+      "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
+    );
+    const text = await page.locator("main").innerText();
+    for (const old of ["98%", ">90%", "90% of"])
+      expect(text, `"${old}" on the page`).not.toContain(old);
+    // Nothing left to confirm: no TODO slot even with ?dev.
     await page.goto(`${URL}?dev`);
-    await expect(page.getByText("TODO (Phu):")).toBeVisible();
-    await expect(page.getByText("Still to confirm (shown with ?dev)")).toBeVisible();
+    await expect(page.getByText("TODO (Phu):")).toHaveCount(0);
+  });
+
+  test("the promo cut: muted, no preload, poster, described; plays in view", async ({ page }) => {
+    await page.goto(URL);
+    const v = page.locator("main video[data-case-video]");
+    await expect(v).toHaveCount(1);
+    expect(
+      await v.evaluate((el: HTMLVideoElement) => ({
+        muted: el.muted,
+        inline: el.playsInline,
+        preload: el.preload,
+        poster: el.getAttribute("poster"),
+        autoplay: el.autoplay,
+        desc: document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent,
+      })),
+    ).toMatchObject({
+      muted: true,
+      inline: true,
+      preload: "none",
+      poster: "/work/document-ocr/motion-poster.jpg",
+      autoplay: false,
+      desc: expect.stringContaining("What plays:"),
+    });
+    const res = await page.request.get("/work/document-ocr/motion.mp4");
+    expect(res.status()).toBe(200);
+    expect((await res.body()).length).toBeGreaterThan(500_000);
+    await v.scrollIntoViewIfNeeded();
+    await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+  });
+
+  test("reduced motion: the promo cut stays on its poster", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(URL);
+    const v = page.locator("main video[data-case-video]");
+    await v.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
+    expect(await v.evaluate((el: HTMLVideoElement) => [el.paused, el.readyState])).toEqual([
+      true,
+      0,
+    ]);
   });
 
   test("home cards carry the badge on the three Talentnet chapters", async ({ page }) => {

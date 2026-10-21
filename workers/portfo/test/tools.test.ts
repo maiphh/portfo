@@ -52,8 +52,12 @@ describe("get_project", () => {
     expect(r.data).toMatchObject({
       title: "Document OCR pipeline",
       confidential: true,
-      // No figures until Phu confirms them (see document-ocr.md todo).
-      outcomes: [],
+      // projects/ocr/README.md "## Result", confirmed by Phu.
+      outcomes: [
+        { value: "8,000", label: "pages processed" },
+        { value: "99.6%", label: "accuracy" },
+        { value: "About 300", label: "hours saved" },
+      ],
     });
     expect((r.data as { approach: unknown[] }).approach).toHaveLength(4);
     expect(r.sources).toEqual([{ title: "Document OCR pipeline", href: "/work/document-ocr" }]);
