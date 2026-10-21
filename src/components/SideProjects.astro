@@ -205,7 +205,10 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
     >
       <h3>{poet.data.title}</h3>
       <p>{poet.data.summary}</p>
-      <!-- TODO(content): Poet details + URL. -->
+      <a class="link cs-link" href={`/work/${poet.id}`}>
+        Read about Poet
+        <Icon name="arrow" />
+      </a>
     </div>
   </div>
 </section>
