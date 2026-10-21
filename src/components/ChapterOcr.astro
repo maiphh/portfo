@@ -3,6 +3,7 @@
 import type { CollectionEntry } from "astro:content";
 import Facts from "./Facts.astro";
 import Icon from "./Icon.astro";
+import OrgBadge from "./OrgBadge.astro";
 import Steps from "./Steps.astro";
 
 interface Props {
@@ -26,12 +27,13 @@ const d = entry.data;
     <div class="ch-text">
       <h2 id="ocr-h">{d.headline}</h2>
       <p class="meta-line">
+        {d.org_badge && <OrgBadge label={d.org_badge} />}
         {d.meta.map((m) => (
           <span>{m}</span>
         ))}
       </p>
       <Steps steps={d.steps} />
-      <Facts facts={d.facts} />
+      {d.facts.length > 0 && <Facts facts={d.facts} />}
       {d.note && <p class="note">{d.note}</p>}
       <a class="link cs-link" href={`/work/${entry.id}`}>
         Read the case study

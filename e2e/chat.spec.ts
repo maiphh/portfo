@@ -48,7 +48,9 @@ test("open, send, see status, tokens and sources, then Esc closes and focus retu
   const answer = dialog(page).locator(".chat-msg.bot").last();
   await expect(answer.locator(".chat-think")).toContainText("Reading the case study…");
   await expect(dialog(page).locator("[data-chat-status]")).toContainText("Reading the case study…");
-  await expect(answer.locator(".ans")).toContainText("over 98% accurate", { timeout: 10_000 });
+  await expect(answer.locator(".ans")).toContainText("vision-language model", {
+    timeout: 10_000,
+  });
   const chip = answer.getByRole("link", { name: "Document OCR pipeline" });
   await expect(chip).toHaveAttribute("href", "/work/document-ocr");
   await expect(answer.locator(".ans")).not.toHaveAttribute("aria-busy", "true");

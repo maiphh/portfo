@@ -3,7 +3,8 @@ title: Legal RAG assistant
 headline: Answers that keep the citation.
 summary: A legal RAG payroll assistant, built solo at Talentnet. Its Tag Chunker keeps the full Điều › Khoản › Điểm path on every chunk, so answers point to the correct document.
 org: Talentnet
-meta: [Legal RAG, Talentnet, Solo, In production]
+org_badge: Enterprise · Talentnet
+meta: [Legal RAG, Solo, In production]
 period: Sep 2025 – now
 order: 2
 anchor: work-rag

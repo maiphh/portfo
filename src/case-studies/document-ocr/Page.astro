@@ -1,0 +1,187 @@
+---
+/** Document OCR: the first page on the shared case-study template. */
+import type { CollectionEntry } from "astro:content";
+import CaseStudy from "~/components/case/CaseStudy.astro";
+import { ocr } from "./data";
+import "./ocr.css";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  prev?: CollectionEntry<"work"> | undefined;
+  next?: CollectionEntry<"work"> | undefined;
+}
+const { entry, prev, next } = Astro.props;
+
+// Generic, made-up fields (the pack says demo fields are illustrative, not a client list).
+const fields = [
+  { id: "doc_no", label: "doc_no", value: "DOC-0042", y: 18 },
+  { id: "date", label: "date", value: "2026-10-02", y: 30 },
+  { id: "party", label: "party", value: "Sample Co.", y: 46 },
+  { id: "total", label: "total", value: "1,250.00", y: 78 },
+];
+const caps = [
+  ["Ready-to-extract buffer", "2 × extract", "16"],
+  ["Units one pod may hold", "ready + extract", "24"],
+  ["Units one session may hold", "extract / 2, then a fair share", "4"],
+  ["VLM, OCR and LLM concurrency", "= extract", "8"],
+];
+// Two sessions sharing the extract lane: filled = session A, outlined = session B.
+const extract = [1, 1, 0, 1, 0, 1, 0, 1];
+---
+
+<CaseStudy entry={entry} prev={prev} next={next} data={ocr}>
+  <div slot="signature" class="ocr-proof" data-proof>
+    <div class="ocr-page" aria-hidden="true">
+      <i class="ocr-scan" data-scan></i>
+      {fields.map((f) => (
+        <span class="ocr-box" style={`top:${f.y}%`} data-box={f.id}>
+          <em>{f.label}</em>
+        </span>
+      ))}
+      <span class="ocr-lines">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+    </div>
+    <dl class="ocr-cells" aria-label="Workbook row (made-up values)">
+      {fields.map((f) => (
+        <div data-cell={f.id}>
+          <dt>{f.label}</dt>
+          <dd>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+
+  <div slot="highlight" class="ocr-tpl">
+    <ul class="ocr-tpl-parts">
+      <li>
+        <code>schema</code>
+        <span>fields, and where each one lands in the workbook</span>
+      </li>
+      <li>
+        <code>prompts</code>
+        <span>missing values stay null; the model is told not to guess</span>
+      </li>
+      <li>
+        <code>rules</code>
+        <span>copy_field · strip · pattern · python</span>
+      </li>
+      <li>
+        <code>workbook</code>
+        <span>the Excel layout the export fills</span>
+      </li>
+    </ul>
+    <p
+      class="ocr-tpl-run"
+      aria-label="A run freezes the template and a preprocess plan on the session"
+    >
+      <code>template</code>
+      <i aria-hidden="true"></i>
+      <code>frozen on the session</code>
+      <i aria-hidden="true"></i>
+      <code>+ preprocess plan</code>
+    </p>
+    <p class="ocr-tpl-note">
+      A later template edit cannot change a job already in flight. Preprocessing (split, DPI,
+      filters) is chosen when a run starts; it isn't inside the portable template file yet.
+    </p>
+  </div>
+
+  <div slot="dive-queue" class="ocr-queue">
+    <div
+      class="ocr-lanes"
+      role="img"
+      aria-label="Render lane with 4 slots, a ready buffer of 16, and an extract lane of 8 slots shared by two sessions"
+    >
+      <span>render · 4</span>
+      <p>
+        {[0, 1, 2, 3].map(() => (
+          <i class="on"></i>
+        ))}
+      </p>
+      <span>ready · 2×8</span>
+      <p>
+        {Array.from({ length: 16 }, (_, i) => (
+          <i class:list={["q", { on: i < 11 }]}></i>
+        ))}
+      </p>
+      <span>extract · 8</span>
+      <p>
+        {extract.map((a) => (
+          <i class:list={[a ? "on" : "b"]}></i>
+        ))}
+      </p>
+    </div>
+    <div class="ocr-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Cap</th>
+            <th scope="col">Formula</th>
+            <th scope="col">At extract 8</th>
+          </tr>
+        </thead>
+        <tbody>
+          {caps.map(([c, f, v]) => (
+            <tr>
+              <th scope="row">{c}</th>
+              <td>{f}</td>
+              <td class="num">{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div slot="dive-rules" class="ocr-rule">
+    <pre><code><span class="c"># one function per Python rule (illustration)</span>
+import re
+
+def transform(data, context):
+    value = data.get("doc_no")
+    if value is None:
+        return SKIP  <span class="c"># leave the field as it is</span>
+    return re.sub(r"\s+", "", value)</code></pre>
+    <ul class="ocr-rule-no" aria-label="Rejected in rules">
+      <li>
+        <code>eval</code>
+      </li>
+      <li>
+        <code>exec</code>
+      </li>
+      <li>
+        <code>open</code>
+      </li>
+      <li>
+        <code>__import__</code>
+      </li>
+      <li>
+        <code>__dunder__</code>
+      </li>
+    </ul>
+  </div>
+
+  <div slot="dive-api" class="ocr-api">
+    <div>
+      <code>POST /api/v1/ocr</code>
+      <p>
+        Files + <code>template_slug</code>, API key. Returns 202 with <code>session_id</code> and{" "}
+        <code>result_url</code>.
+      </p>
+    </div>
+    <div>
+      <code>same worker</code>
+      <p>
+        Same frozen template, same Postgres work-unit queue (<code>SKIP LOCKED</code>).
+      </p>
+    </div>
+    <div>
+      <code>GET /api/v1/ocr/{"{id}"}</code>
+      <p>200 with records and the filled workbook. A webhook sends only the id and status.</p>
+    </div>
+  </div>
+</CaseStudy>

@@ -1,0 +1,299 @@
+---
+/**
+ * The shared case-study page (portfo-design case-studies/moodboards/case-study-skeleton.md):
+ * opener → overview → the highlight → motion cut (flagged) → how it works (FlowDiagram) →
+ * deep dives → limits → next. Each project passes its data (lib/case.ts) and fills slots:
+ *   signature      the opener's signature object (right of the headline)
+ *   highlight      the one component that proves the claim
+ *   dive-<id>      the artifact for each deep dive
+ * The accent comes from the work entry; the badge from its `org_badge`.
+ */
+import type { CollectionEntry } from "astro:content";
+import FlowDiagram from "~/components/flow/FlowDiagram.astro";
+import Icon from "~/components/Icon.astro";
+import OrgBadge from "~/components/OrgBadge.astro";
+import Base from "~/layouts/Base.astro";
+import type { CaseStudyData } from "~/lib/case";
+import { CASE_VIDEO } from "~/lib/flags";
+import { richText } from "~/lib/flow/types";
+import { site } from "~/lib/site";
+import "~/styles/case.css";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  prev?: CollectionEntry<"work"> | undefined;
+  next?: CollectionEntry<"work"> | undefined;
+  data: CaseStudyData;
+}
+const { entry, prev, next, data } = Astro.props;
+const d = entry.data;
+const acc = d.accent ?? { line: "#d4f56b", tint: "#262b17" };
+const { overview: o, how, dives, limits } = data;
+
+const dive = await Promise.all(
+  dives.map(async (x) => ({ ...x, artifact: await Astro.slots.render(`dive-${x.id}`) })),
+);
+const showVideo = CASE_VIDEO && data.video;
+const rail = [
+  { href: "#overview", label: "Overview" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#deep-dives", label: "Deep dives" },
+  { href: "#limits", label: "Limits" },
+];
+const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."]), ...d.todo];
+---
+
+<Base title={`${d.title} · ${site.name}`} description={d.summary}>
+  <article
+    class="cs2"
+    aria-labelledby="cs-h"
+    data-view-slug={entry.id}
+    data-case
+    data-motion={data.motion}
+    style={`--acc:${acc.line};--acc-tint:${acc.tint}`}
+  >
+    <div class="wrap">
+      <nav class="cs2-crumbs" aria-label="Breadcrumb">
+        <a href="/#work">Work</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">{d.title}</span>
+      </nav>
+      <header class="cs2-open cs-head" id="overview-top">
+        <div class="cs2-open-text">
+          <p class="meta-line">
+            {d.org_badge && <OrgBadge label={d.org_badge} />}
+            {d.meta.map((m) => (
+              <span>{m}</span>
+            ))}
+            {d.period && <span>{d.period}</span>}
+          </p>
+          <h1 id="cs-h">{d.headline}</h1>
+          <p class="lede">{d.summary}</p>
+        </div>
+        <figure class="cs2-sig">
+          <slot name="signature" />
+          <figcaption>{data.signatureCaption}</figcaption>
+        </figure>
+      </header>
+    </div>
+
+    <nav class="cs2-rail" aria-label="On this page" data-rail data-sticky-top>
+      <div class="wrap">
+        <ul data-scroll-x>
+          {rail.map((r) => (
+            <li>
+              <a href={r.href}>{r.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+
+    <div class="wrap">
+      <section class="cs2-sec cs2-pso" id="overview" aria-labelledby="ov-h">
+        <h2 id="ov-h" class="sr-only">
+          Overview
+        </h2>
+        <div>
+          <h3>Problem</h3>
+          <p set:html={richText(o.problem)} />
+        </div>
+        <div>
+          <h3>Solution</h3>
+          <p set:html={richText(o.solution)} />
+        </div>
+        {o.outcome ? (
+          <div>
+            <h3>Outcome</h3>
+            <p set:html={richText(o.outcome)} />
+          </div>
+        ) : (
+          <div class="cs2-todo" data-dev-only hidden>
+            <h3>Outcome</h3>
+            <p>
+              <b>TODO (Phu):</b> Result: to be added. {o.outcomeTodo}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section class="cs2-sec cs2-hl" aria-labelledby="hl-h">
+        <h2 id="hl-h">{data.highlight.title}</h2>
+        <figure>
+          <slot name="highlight" />
+          <figcaption>{data.highlight.caption}</figcaption>
+        </figure>
+      </section>
+
+      {showVideo && data.video && (
+        <section class="cs2-sec cs2-video" aria-labelledby="vid-h">
+          <h2 id="vid-h">The short cut</h2>
+          <figure>
+            <video controls preload="none" playsinline poster={data.video.poster}>
+              <source src={data.video.src} type="video/mp4" />
+            </video>
+            <figcaption>{data.video.caption}</figcaption>
+          </figure>
+        </section>
+      )}
+
+      <section class="cs2-sec cs2-how" id="how-it-works" aria-labelledby="how-h">
+        <div class="cs2-how-head">
+          <div>
+            <h2 id="how-h">How it works</h2>
+            <p set:html={richText(how.summary)} />
+          </div>
+          <div>
+            <dl class="cs2-stack" aria-label="Stack">
+              {how.stack.map((s) => (
+                <div>
+                  <dt>{s.label}</dt>
+                  <dd>
+                    {s.value}
+                    {s.version && <code>{s.version}</code>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p class="cs2-full">
+              <a href="#stack" data-open-stack>
+                Full stack with versions
+              </a>
+            </p>
+          </div>
+        </div>
+        <FlowDiagram
+          id="cs"
+          cols={how.flow.cols}
+          nodes={how.flow.nodes}
+          edges={how.flow.edges}
+          groups={how.flow.groups}
+          label={how.flow.label}
+          keyLabel={how.flow.keyLabel}
+          hint="Select any part to see what it does, its tech and the decision behind it."
+          accent={acc}
+        />
+      </section>
+
+      <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h">
+        <h2 id="dd-h">Deep dives</h2>
+        {dive.map((x) => (
+          <details class="cs2-dive" id={`dive-${x.id}`} data-dive>
+            <summary>
+              <h3>{x.title}</h3>
+            </summary>
+            <div class="cs2-dive-in">
+              <div class="cs2-dive-text">
+                {x.paragraphs.map((p) => (
+                  <p set:html={richText(p)} />
+                ))}
+                <p class="cs2-shows">
+                  <b>What this shows:</b> <span set:html={richText(x.shows)} />
+                </p>
+              </div>
+              <figure>
+                <Fragment set:html={x.artifact} />
+                <figcaption>{x.caption}</figcaption>
+              </figure>
+            </div>
+          </details>
+        ))}
+      </section>
+
+      <section class="cs2-sec cs2-limits" id="limits" aria-labelledby="lim-h">
+        <h2 id="lim-h">Limits and what isn't shown</h2>
+        <div class="cs2-limits-grid">
+          <div>
+            <h3>Not shown</h3>
+            <ul>
+              {limits.notShown.map((t) => (
+                <li set:html={richText(t)} />
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3>Not the main path, or not built yet</h3>
+            <ul>
+              {[...limits.deprecated, ...limits.reserved].map((t) => (
+                <li set:html={richText(t)} />
+              ))}
+            </ul>
+          </div>
+        </div>
+        <details class="cs2-more">
+          <summary>Docs that lag the code (for developers)</summary>
+          <ul>
+            {limits.docsLag.map((t) => (
+              <li set:html={richText(t)} />
+            ))}
+          </ul>
+        </details>
+        <details class="cs2-more" id="stack">
+          <summary>Full stack with versions</summary>
+          <div class="cs2-tables">
+            {limits.stack.map((t) => (
+              <table>
+                <caption>{t.title}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Piece</th>
+                    <th scope="col">Choice</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.rows.map(([a, b]) => (
+                    <tr>
+                      <th scope="row">{a}</th>
+                      <td set:html={richText(b)} />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
+          </div>
+          <p class="cs2-note">{limits.stackSource}</p>
+        </details>
+      </section>
+
+      <nav class="cs-next cs2-next" aria-label="More work">
+        {prev && (
+          <a href={`/work/${prev.id}`}>
+            <span>Previous</span>
+            <b>{prev.data.title}</b>
+          </a>
+        )}
+        {next && (
+          <a class="next" href={`/work/${next.id}`}>
+            <span>Next</span>
+            <b>{next.data.title}</b>
+          </a>
+        )}
+      </nav>
+      <p class="cs2-out">
+        <a class="link" href="/#work">
+          <Icon name="arrow" />
+          Back to the work
+        </a>
+        <a class="link" href="/#contact">
+          Contact
+        </a>
+      </p>
+
+      {devTodos.length > 0 && (
+        <aside class="cs2-todo cs2-devlist" data-dev-only hidden aria-labelledby="todo-h">
+          <h2 id="todo-h">Still to confirm (shown with ?dev)</h2>
+          <ul>
+            {devTodos.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+  </article>
+</Base>
+
+<script>
+  // Page views are tracked by pages/work/[slug].astro.
+  import "~/scripts/case/page";
+</script>

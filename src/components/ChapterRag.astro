@@ -2,6 +2,7 @@
 /** Chapter 2: Legal RAG. Pinned and scroll-scrubbed on desktop. */
 import type { CollectionEntry } from "astro:content";
 import Icon from "./Icon.astro";
+import OrgBadge from "./OrgBadge.astro";
 import Steps from "./Steps.astro";
 
 interface Props {
@@ -25,6 +26,7 @@ const d = entry.data;
     <div class="ch-text">
       <h2 id="rag-h">{d.headline}</h2>
       <p class="meta-line">
+        {d.org_badge && <OrgBadge label={d.org_badge} />}
         {d.meta.map((m) => (
           <span>{m}</span>
         ))}

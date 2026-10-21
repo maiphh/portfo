@@ -64,14 +64,12 @@
       "slug": "document-ocr",
       "title": "Document OCR pipeline",
       "headline": "Paperwork in, clean data out.",
-      "oneLiner": "A schema- and rule-driven document OCR pipeline on a vision-language model, built solo at Talentnet. Over 98% accurate, and it saves more than 90% of processing time.",
+      "oneLiner": "A template-driven document OCR platform at Talentnet. Admins define what to extract; a vision-language model reads each page, rules check the fields, and operators review and export Excel.",
       "org": "Talentnet",
       "role": "AI Engineer Specialist",
       "period": "Sep 2025 – now",
       "tags": [
         "Document OCR",
-        "Talentnet",
-        "Solo",
         "In production"
       ],
       "order": 1,
@@ -96,19 +94,10 @@
           "body": "Structured output, ready for the next system."
         }
       ],
-      "outcomes": [
-        {
-          "value": ">98%",
-          "label": "accuracy"
-        },
-        {
-          "value": ">90%",
-          "label": "processing time saved"
-        }
-      ],
+      "outcomes": [],
       "note": "Illustrated with a made-up invoice. Talentnet's documents and code stay private.",
       "links": [],
-      "body": "I built this pipeline on my own at Talentnet, where I've worked as an AI Engineer Specialist since September 2025. It runs in production.\n\n## How it works\n\nA vision-language model reads each document as an image, so the layout is part of what it sees. A schema tells it which fields to look for, and every field it finds gets a box and a name.\n\nA model alone will let some mistakes through, like a total that doesn't add up. A rule layer checks the extracted fields before anything moves on, and what comes out is structured data, ready for the next system.\n\n## Results\n\n- **Over 98%** accuracy.\n- **More than 90%** of processing time saved.\n\n## What I can't show\n\nTalentnet's documents and code stay private. The illustration on the home page uses a made-up invoice, not a real document."
+      "body": "I work at Talentnet as an AI Engineer Specialist (since September 2025). This pipeline runs in production there.\n\n## How it works\n\nA vision-language model reads each document as an image, so the layout is part of what it sees. A schema tells it which fields to look for, and every field it finds gets a box and a name.\n\nA model alone will let some mistakes through, like a total that doesn't add up. A rule layer checks the extracted fields before anything moves on, and what comes out is structured data, ready for the next system.\n\n## What I can't show\n\nTalentnet's documents and code stay private. The illustration on the home page uses a made-up invoice, not a real document."
     },
     {
       "slug": "legal-rag",
@@ -120,7 +109,6 @@
       "period": "Sep 2025 – now",
       "tags": [
         "Legal RAG",
-        "Talentnet",
         "Solo",
         "In production"
       ],
@@ -162,7 +150,6 @@
       "tags": [
         "Data validation",
         "Payroll",
-        "Talentnet",
         "In production"
       ],
       "order": 3,

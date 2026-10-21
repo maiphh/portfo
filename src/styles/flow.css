@@ -318,7 +318,7 @@
   width: 100%;
   max-width: 100%;
   /* Leaves room above for the site header and the opened row on short screens. */
-  max-height: min(82vh, 720px, calc(100vh - 140px));
+  max-height: min(82vh, 720px, calc(100vh - var(--flow-sheet-room, 140px)));
   padding: 0;
   border: 0;
   border-top: 1px solid var(--rule-2);
@@ -426,4 +426,15 @@
 .flow-edges path.dotted {
   stroke-dasharray: 1.5 4;
   stroke-linecap: round;
+}
+
+/* Select-effect hook for page motion (e.g. the OCR scan line); added by page scripts only. */
+.flow-node .flow-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--acc);
+  pointer-events: none;
 }

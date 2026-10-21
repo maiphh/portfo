@@ -1,0 +1,19 @@
+---
+/**
+ * The neutral org badge ("Enterprise · Talentnet"): a static label, first in a meta row.
+ * Spec: portfo-design case-studies/moodboards/badge/badge.md. Screen readers hear
+ * "Enterprise, Talentnet". Never takes the project accent.
+ */
+interface Props {
+  /** "Kind · Org", from the work entry's `org_badge`. */
+  label: string;
+}
+const [kind = "", org = ""] = Astro.props.label.split(" · ");
+---
+
+<span class="org-badge">
+  <b>{kind}</b>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="sr-only">, </span>
+  {org}
+</span>

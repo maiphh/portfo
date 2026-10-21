@@ -98,7 +98,7 @@ describe("mockStream", () => {
     expect(types).toContain("status");
     expect(types.slice(-2)).toEqual(["sources", "done"]);
     const text = events.flatMap((e) => (e.type === "token" ? [e.text] : [])).join("");
-    expect(text).toContain("98%");
+    expect(text).toContain("vision-language model");
   });
 
   it("fails like the Worker for forced scenarios", async () => {

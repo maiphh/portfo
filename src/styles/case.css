@@ -1,0 +1,420 @@
+/* Shared case-study template (components/case/CaseStudy.astro).
+   Grid and rules: case-study-skeleton.md. --acc / --acc-tint come from the work entry. */
+
+.cs2 {
+  padding: var(--s5) 0 var(--s9);
+  /* Room above the flow's bottom sheet for the site header, the rail and the opened row. */
+  --flow-sheet-room: 190px;
+}
+.cs2-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 10px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.cs2-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.cs2-crumbs a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.cs2-crumbs [aria-current] {
+  color: var(--ink-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 1. opener ---------- */
+.cs2-open.cs-head {
+  display: grid;
+  gap: var(--s6);
+  padding: var(--s6) 0 var(--s7);
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .cs2-open.cs-head {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 64px;
+    padding: var(--s7) 0 var(--s8);
+  }
+}
+.cs2-open-text {
+  min-width: 0;
+}
+.cs2-open h1 {
+  font-variation-settings: "wdth" 112;
+  font-weight: 760;
+  letter-spacing: -0.03em;
+  max-width: 14ch;
+  overflow-wrap: break-word;
+}
+.cs2-open .lede {
+  max-width: 52ch;
+}
+.cs2-sig {
+  min-width: 0;
+  margin: 0;
+}
+.cs2 figcaption {
+  margin-top: 10px;
+  font: 500 12.5px/1.45 var(--code);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- depth rail ---------- */
+.cs2-rail {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 40;
+  background: rgba(20, 20, 20, 0.9);
+  backdrop-filter: blur(8px);
+  border-block: 1px solid var(--rule);
+}
+.cs2-rail ul {
+  display: flex;
+  gap: 4px clamp(14px, 3vw, 24px);
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cs2-rail ul::-webkit-scrollbar {
+  display: none;
+}
+.cs2-rail li {
+  flex: none;
+}
+.cs2-rail a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 44px;
+  color: var(--muted);
+  font-weight: 550;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.cs2-rail a:hover {
+  color: var(--ink);
+}
+.cs2-rail a[aria-current] {
+  color: var(--ink);
+  border-bottom-color: var(--acc);
+}
+.cs2-rail a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* ---------- sections ---------- */
+.cs2-sec {
+  padding: var(--s8) 0;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: calc(var(--nav-h) + 56px);
+  min-width: 0;
+}
+.cs2-sec:first-child {
+  border-top: 0;
+}
+.cs2-sec > h2,
+.cs2-how-head h2 {
+  font-size: clamp(1.9rem, 1.1rem + 2.4vw, 3.2rem);
+  font-variation-settings: "wdth" 108;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  max-width: 22ch;
+  margin-bottom: var(--s5);
+}
+.cs2-sec h3 {
+  font: 680 1.35rem/1.2 var(--display);
+  font-variation-settings: "wdth" 104;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.cs2-sec p,
+.cs2-sec li {
+  color: var(--ink-2);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  max-width: 68ch;
+  overflow-wrap: break-word;
+}
+.cs2-sec code {
+  font: 500 0.88em var(--code);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* 2. overview */
+.cs2-pso {
+  display: grid;
+  gap: var(--s6);
+}
+@media (min-width: 900px) {
+  .cs2-pso {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+  }
+}
+.cs2-pso h3 {
+  margin-bottom: var(--s3);
+}
+.cs2-todo {
+  border: 1px dashed var(--faint);
+  border-radius: 4px;
+  padding: 16px 18px;
+}
+.cs2-todo b {
+  color: var(--ink);
+}
+.cs2-devlist {
+  margin-top: var(--s7);
+}
+.cs2-devlist h2 {
+  font: 650 1.1rem var(--text);
+  margin-bottom: var(--s3);
+}
+.cs2-devlist ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 1.2em;
+  color: var(--ink-2);
+}
+
+/* 3. highlight, 4. video */
+.cs2-hl figure,
+.cs2-video figure,
+.cs2-dive figure {
+  margin: 0;
+  min-width: 0;
+}
+.cs2-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  background: var(--sheet);
+}
+
+/* 5. how it works */
+.cs2-how-head {
+  display: grid;
+  gap: var(--s5) 64px;
+}
+@media (min-width: 900px) {
+  .cs2-how-head {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: end;
+  }
+}
+.cs2-how-head h2 {
+  margin-bottom: var(--s3);
+}
+.cs2-stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  border-top: 1px solid var(--rule);
+}
+.cs2-stack div {
+  min-width: 0;
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.cs2-stack dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.cs2-stack dd {
+  color: var(--ink);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.cs2-stack dd code {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.cs2-full a,
+.cs2-out a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.cs2-full a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+
+/* 6. deep dives */
+.cs2-dive {
+  border-top: 1px solid var(--rule);
+}
+.cs2-dive summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 12px 0;
+  list-style: none;
+  cursor: pointer;
+}
+.cs2-dive summary::-webkit-details-marker {
+  display: none;
+}
+.cs2-dive summary::after {
+  content: "+";
+  flex: none;
+  font: 400 24px/1 var(--text);
+  color: var(--muted);
+}
+.cs2-dive[open] summary::after {
+  content: "–";
+}
+.cs2-dive summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.cs2-dive-in {
+  display: grid;
+  gap: var(--s5);
+  padding: 4px 0 var(--s6);
+}
+.cs2-dive-text {
+  display: grid;
+  gap: var(--s3);
+  align-content: start;
+  min-width: 0;
+}
+.cs2-shows b {
+  color: var(--acc);
+  font-weight: 650;
+}
+@media (min-width: 900px) {
+  .cs2-dive summary {
+    cursor: default;
+    pointer-events: none;
+    padding-top: var(--s6);
+  }
+  .cs2-dive summary::after {
+    display: none;
+  }
+  .cs2-dive-in {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+  }
+}
+
+/* 7. limits */
+.cs2-limits-grid {
+  display: grid;
+  gap: var(--s6);
+}
+@media (min-width: 900px) {
+  .cs2-limits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px;
+  }
+}
+.cs2-limits h3 {
+  margin-bottom: var(--s3);
+}
+.cs2-limits ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 1.1em;
+}
+.cs2-more {
+  margin-top: var(--s5);
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: calc(var(--nav-h) + 56px);
+}
+.cs2-more summary {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cs2-more summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.cs2-more > ul,
+.cs2-tables {
+  padding-bottom: var(--s4);
+}
+.cs2-tables {
+  display: grid;
+  gap: var(--s5);
+}
+@media (min-width: 1024px) {
+  .cs2-tables {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px;
+  }
+}
+.cs2-tables table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14.5px;
+}
+.cs2-tables caption {
+  text-align: left;
+  font-weight: 650;
+  color: var(--ink);
+  padding-bottom: 8px;
+}
+.cs2-tables th,
+.cs2-tables td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px 8px 0;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.cs2-tables thead th {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.cs2-tables tbody th {
+  width: 38%;
+  font-weight: 500;
+  color: var(--muted);
+}
+.cs2-note {
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  padding-bottom: var(--s4);
+}
+
+/* 8. next */
+.cs2-next {
+  margin-top: 0;
+}
+.cs2-out {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-top: var(--s5);
+}
+.cs2-out .icon {
+  transform: rotate(180deg);
+}

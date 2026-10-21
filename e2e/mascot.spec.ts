@@ -253,3 +253,74 @@ test("the animation loop pauses while the tab is hidden", async ({ page }) => {
     .poll(() => page.evaluate(() => window.__portfoMascot?.frames()))
     .toBeGreaterThan(f0 ?? 0);
 });
+
+/* ---------- an open FlowDiagram panel counts as content ---------- */
+
+const PANELS = [
+  { page: "/", flow: "how", node: '[data-node="worker"]' },
+  { page: "/work/document-ocr/", flow: "cs", node: "[data-flow=cs] [data-node]" },
+];
+
+for (const width of [1280, 1440])
+  for (const where of PANELS)
+    for (const corner of [null, "br"] as const)
+      test(`${corner ? "floated" : "docked"} mascot stays off the open details panel on ${where.page} at ${width}px`, async ({
+        page,
+        isMobile,
+      }) => {
+        test.skip(isMobile, "the details panel is the desktop layout");
+        if (corner)
+          await page.addInitScript(
+            (c) => sessionStorage.setItem("portfo-mascot:v1", JSON.stringify({ corner: c })),
+            corner,
+          );
+        await page.setViewportSize({ width, height: 900 });
+        await ready(page, where.page);
+        expect(await mode(page)).toBe(corner ? "float" : "docked");
+
+        const panel = page.locator(`#${where.flow}-detail`);
+        await page.locator(where.node).first().click();
+        await expect(panel).toHaveAttribute("data-state", "open");
+        // Bring the panel's empty top edge just under the bottom-right rest spot, above Close:
+        // where the mascot sat in the open-panel-1280 shot.
+        await page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          if (!el) throw new Error(`no ${sel}`);
+          const r = el.getBoundingClientRect();
+          scrollBy({ top: r.top - (innerHeight - 24 - 12), behavior: "instant" });
+        }, `#${where.flow}-detail`);
+        await page.waitForTimeout(1300);
+
+        for (let i = 0; i < 8; i++) {
+          const hit = await page.evaluate((sel) => {
+            const l = document.querySelector<HTMLElement>("[data-chat-launcher]");
+            const pe = document.querySelector(sel);
+            if (!l || !pe) throw new Error("missing launcher or panel");
+            if (Number(getComputedStyle(l).opacity) < 0.05) return null;
+            const boxes = [l, l.querySelector(".mascot-ink")].flatMap((el) =>
+              el ? [el.getBoundingClientRect()] : [],
+            );
+            const p = pe.getBoundingClientRect();
+            const b = boxes.find(
+              (m) => m.left < p.right && m.right > p.left && m.top < p.bottom && m.bottom > p.top,
+            );
+            return b ? { mascot: b.toJSON(), panel: p.toJSON() } : null;
+          }, `#${where.flow}-detail`);
+          expect(hit).toBeNull();
+          await page.waitForTimeout(125);
+        }
+
+        if (corner) {
+          // Closing frees the chosen corner again; the stored choice never changed.
+          await panel.getByRole("button", { name: "Close details" }).click();
+          await page.evaluate(() => scrollBy({ top: 2000, behavior: "instant" }));
+          await page.waitForTimeout(500);
+          const b = await launcher(page).boundingBox();
+          if (!b) throw new Error("no box");
+          expect(Math.abs(b.x + b.width - (width - 24))).toBeLessThanOrEqual(2);
+          expect(Math.abs(b.y + b.height - (900 - 24))).toBeLessThanOrEqual(2);
+          expect(await page.evaluate(() => sessionStorage.getItem("portfo-mascot:v1"))).toContain(
+            '"corner":"br"',
+          );
+        }
+      });

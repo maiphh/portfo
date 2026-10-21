@@ -1,52 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { overflowReport } from "./overflow";
 
 const WIDTHS = [320, 360, 390, 414, 768, 1024, 1280, 1440];
-
-/** Everything in #how that pokes out of the section or the viewport, or scrolls sideways. */
-function overflowReport() {
-  const sec = document.getElementById("how");
-  if (!sec) return ["no #how section"];
-  const S = sec.getBoundingClientRect();
-  const vw = document.documentElement.clientWidth;
-  const right = Math.min(S.right, vw) + 0.5;
-  const left = Math.max(S.left, 0) - 0.5;
-  const out: string[] = [];
-  const shown = (el: Element) =>
-    el.getClientRects().length > 0 &&
-    !el.closest("[hidden], .sr-only") &&
-    getComputedStyle(el).visibility !== "hidden";
-  const name = (el: Element) =>
-    `${el.tagName.toLowerCase()}${el.getAttribute("class") ? "." + el.getAttribute("class")?.replace(/\s+/g, ".") : ""} "${(el.textContent ?? "").trim().slice(0, 32)}"`;
-
-  if (sec.scrollWidth > sec.clientWidth)
-    out.push(`section scrollWidth ${sec.scrollWidth} > ${sec.clientWidth}`);
-  if (document.documentElement.scrollWidth > vw)
-    out.push(`page scrollWidth ${document.documentElement.scrollWidth} > ${vw}`);
-  for (const el of sec.querySelectorAll("*")) {
-    if (!shown(el)) continue;
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) continue;
-    if (r.right > right || r.left < left)
-      out.push(
-        `${name(el)} spans ${Math.round(r.left)}–${Math.round(r.right)}, section ${Math.round(left)}–${Math.round(right)}`,
-      );
-    if (el instanceof HTMLElement && el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1)
-      out.push(`${name(el)} scrollWidth ${el.scrollWidth} > clientWidth ${el.clientWidth}`);
-  }
-  // Labels clamp at two lines; authored labels must fit without being cut.
-  for (const el of sec.querySelectorAll(".flow-node .t, .flow-node .s")) {
-    if (shown(el) && el.scrollHeight > el.clientHeight + 1)
-      out.push(`${name(el)} is clamped (${el.scrollHeight} > ${el.clientHeight})`);
-  }
-  // Text stays at 12px or more.
-  for (const el of sec.querySelectorAll("*")) {
-    if (!shown(el) || !(el.firstChild?.nodeType === Node.TEXT_NODE)) continue;
-    if (!(el.textContent ?? "").trim()) continue;
-    const size = parseFloat(getComputedStyle(el).fontSize);
-    if (size < 12) out.push(`${name(el)} is ${size}px`);
-  }
-  return out;
-}
 
 for (const width of WIDTHS) {
   test(`"How this site works" has no overflow at ${width}px`, async ({ page }) => {
@@ -57,7 +12,7 @@ for (const width of WIDTHS) {
     // The grid with edges, or the list below 728px of container (flow spec).
     const flow = page.locator('[data-flow="how"]');
     await expect(flow).toHaveClass(width >= 800 ? /\bis-js\b(?!.*is-list)/ : /is-list/);
-    expect(await page.evaluate(overflowReport)).toEqual([]);
+    expect(await page.evaluate(overflowReport, "#how")).toEqual([]);
   });
 }
 
@@ -142,6 +97,15 @@ test.describe("flow on desktop", () => {
         )
         .toBeLessThan(1.5);
     }
+  });
+
+  test("the notes under the flow share one style: a bold lead-in with no colon", async ({
+    page,
+  }) => {
+    const leads = page.locator(".how-notes p > b:first-child");
+    await expect(leads).toHaveText(["The chat", "Your message", "Guardrails"]);
+    for (const t of await page.locator(".how-notes p").allInnerTexts())
+      expect(t).not.toMatch(/^[^.]{1,40}:/);
   });
 
   test("a node opens its details below the flow and closes back to the node", async ({ page }) => {
