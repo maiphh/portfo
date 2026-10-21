@@ -1,4 +1,4 @@
-/** Field rules shared by the client form and the portfo-api /contact validator. */
+/** Field rules shared by the client form and the portfo /contact validator. */
 export const CONTACT_LIMITS = { name: 100, email: 254, message: 2000 } as const;
 
 export const contactRules = {

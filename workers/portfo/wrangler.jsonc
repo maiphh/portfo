@@ -1,0 +1,94 @@
+// portfo: contact, views, GitHub activity, and the chat agent. Nothing here is a secret.
+// Top level is local/dev (localhost only). env.production is the launch config.
+// A deploy stops if any value is still a placeholder: see build.command.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+
+  "build": { "command": "node scripts/check-config.ts" },
+
+  // Workers AI: Llama 3.3 70B (chat + tool calling), Llama 3.1 8B (fallback).
+  "ai": { "binding": "AI" },
+
+  // wrangler d1 create portfo  →  put the real database_id below (both top level and production).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "portfo",
+      "database_id": "1f03b404-a8ff-46cb-b910-72fa10bd42fc",
+      "migrations_dir": "migrations",
+    },
+  ],
+
+  // Burst guard at the edge: 3 messages per 10 s per visitor. namespace_id is any integer
+  // unique in the account (chosen here, not a created resource). The binding only supports
+  // 10 s or 60 s periods, so the 10-per-10-minutes rule lives in the Quota Durable Object.
+  "ratelimits": [
+    {
+      "name": "CHAT_BURST_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 10 },
+    },
+  ],
+
+  // Exact counters: per-visitor 10-minute window and the daily message budget.
+  "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
+
+  // Same schedule as the old .github/workflows/github-sync.yml.
+  "triggers": { "crons": ["17 */6 * * *"] },
+
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:4321",
+    "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+    "DAILY_MESSAGE_CAP": "50",
+    "VISITOR_LIMIT": "10",
+    "MAX_TOOL_ROUNDS": "3",
+    "MAX_TOKENS": "400",
+  },
+
+  // Secrets (never in this file): SESSION_SIGNING_KEY, VISITOR_HASH_SALT,
+  // RESEND_API_KEY, NOTIFY_EMAIL, RESEND_FROM, GITHUB_TOKEN, GITHUB_LOGIN, CRON_SECRET.
+
+  "env": {
+    "production": {
+      "name": "portfo",
+      "build": { "command": "node scripts/check-config.ts --env production" },
+      "ai": { "binding": "AI" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "portfo",
+          "database_id": "1f03b404-a8ff-46cb-b910-72fa10bd42fc",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "ratelimits": [
+        {
+          "name": "CHAT_BURST_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 3, "period": 10 },
+        },
+      ],
+      "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
+      "triggers": { "crons": ["17 */6 * * *"] },
+      "vars": {
+        // TODO(launch): the production site origin, e.g. "https://maiphh.dev".
+        "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN",
+        "ENVIRONMENT": "production",
+        "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+        "DAILY_MESSAGE_CAP": "50",
+        "VISITOR_LIMIT": "10",
+        "MAX_TOOL_ROUNDS": "3",
+        "MAX_TOKENS": "400",
+      },
+    },
+  },
+}

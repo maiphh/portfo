@@ -1,6 +1,6 @@
 /**
- * Page-view beacons to the portfo-api Worker. Only with PUBLIC_USE_MOCKS=false and
- * PUBLIC_API_URL set; no cookies, no IDs. The Worker dedupes per visitor, page and day.
+ * Page-view beacons to the portfo Worker. Only with PUBLIC_USE_MOCKS=false and
+ * PUBLIC_WORKER_URL set; no cookies, no IDs. The Worker dedupes per visitor, page and day.
  * Skipped when the browser sends Do Not Track or Global Privacy Control.
  * Uses fetch + keepalive (not sendBeacon): cross-origin JSON beacons are unreliable.
  */

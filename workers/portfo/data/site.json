@@ -1,0 +1,295 @@
+{
+  "profile": {
+    "name": "Mai Gia Phu",
+    "role": "AI Engineer",
+    "city": "Ho Chi Minh City",
+    "summary": "Mai Gia Phu is an AI engineer in Ho Chi Minh City who ships production AI tools: document OCR, legal RAG and payroll data validation at Talentnet, 14 game modes at Garena Free Fire."
+  },
+  "contact": {
+    "email": "maiphh29@gmail.com",
+    "github": "https://github.com/maiphh",
+    "githubHandle": "maiphh",
+    "contactHref": "/#contact",
+    "howToReach": "Use the contact form on the site or email directly. GitHub is for code, not messages."
+  },
+  "experience": [
+    {
+      "id": "talentnet",
+      "kind": "work",
+      "title": "Talentnet",
+      "detail": "AI Engineer Specialist · Sep 2025 – now",
+      "start": "2025-09",
+      "end": null,
+      "highlight": "At Talentnet, I built the document OCR pipeline (over 98% accurate, more than 90% of processing time saved), the legal RAG assistant and the payroll data validation system — all on my own."
+    },
+    {
+      "id": "garena",
+      "kind": "work",
+      "title": "Garena Free Fire",
+      "detail": "Game Developer · Dec 2023 – Sep 2025",
+      "start": "2023-12",
+      "end": "2025-09",
+      "highlight": "At Garena, I shipped 14 Craftland game modes for Free Fire. Two were officially featured."
+    },
+    {
+      "id": "bit",
+      "kind": "study",
+      "title": "Bachelor of IT, RMIT University",
+      "detail": "2021 – 2024 · GPA 3.7",
+      "start": "2021-01",
+      "end": "2024-12",
+      "highlight": "In my Bachelor of IT at RMIT University, I made the Scholar's List (top 5%) and graduated in the top 10, with a 3.7 GPA. IELTS 7.0."
+    },
+    {
+      "id": "rmit-master",
+      "kind": "study",
+      "title": "Master of AI, RMIT",
+      "detail": "2025 – 2028",
+      "start": "2025-01",
+      "end": "2028-12",
+      "highlight": null
+    },
+    {
+      "id": "neo-league",
+      "kind": "award",
+      "title": "Neo League 2025",
+      "detail": "2nd runner-up of ~100 teams",
+      "start": "2025-01",
+      "end": null,
+      "highlight": null
+    }
+  ],
+  "projects": [
+    {
+      "slug": "document-ocr",
+      "title": "Document OCR pipeline",
+      "headline": "Paperwork in, clean data out.",
+      "oneLiner": "A schema- and rule-driven document OCR pipeline on a vision-language model, built solo at Talentnet. Over 98% accurate, and it saves more than 90% of processing time.",
+      "org": "Talentnet",
+      "role": "AI Engineer Specialist",
+      "period": "Sep 2025 – now",
+      "tags": [
+        "Document OCR",
+        "Talentnet",
+        "Solo",
+        "In production"
+      ],
+      "order": 1,
+      "href": "/work/document-ocr",
+      "homeHref": "/#work-ocr",
+      "confidential": true,
+      "approach": [
+        {
+          "title": "Read the page",
+          "body": "A vision-language model reads each document as an image, layout and all."
+        },
+        {
+          "title": "Find every field",
+          "body": "A schema says what to look for. Each field the model finds gets a box and a name."
+        },
+        {
+          "title": "Check it against the rules",
+          "body": "Rules catch what a model alone would let through, like a total that doesn't add up."
+        },
+        {
+          "title": "Hand over clean data",
+          "body": "Structured output, ready for the next system."
+        }
+      ],
+      "outcomes": [
+        {
+          "value": ">98%",
+          "label": "accuracy"
+        },
+        {
+          "value": ">90%",
+          "label": "processing time saved"
+        }
+      ],
+      "note": "Illustrated with a made-up invoice. Talentnet's documents and code stay private.",
+      "links": [],
+      "body": "I built this pipeline on my own at Talentnet, where I've worked as an AI Engineer Specialist since September 2025. It runs in production.\r\n\r\n## How it works\r\n\r\nA vision-language model reads each document as an image, so the layout is part of what it sees. A schema tells it which fields to look for, and every field it finds gets a box and a name.\r\n\r\nA model alone will let some mistakes through, like a total that doesn't add up. A rule layer checks the extracted fields before anything moves on, and what comes out is structured data, ready for the next system.\r\n\r\n## Results\r\n\r\n- **Over 98%** accuracy.\r\n- **More than 90%** of processing time saved.\r\n\r\n## What I can't show\r\n\r\nTalentnet's documents and code stay private. The illustration on the home page uses a made-up invoice, not a real document."
+    },
+    {
+      "slug": "legal-rag",
+      "title": "Legal RAG assistant",
+      "headline": "Answers that keep the citation.",
+      "oneLiner": "A legal RAG payroll assistant, built solo at Talentnet. Its Tag Chunker keeps the full Điều › Khoản › Điểm path on every chunk, so answers point to the correct document.",
+      "org": "Talentnet",
+      "role": "AI Engineer Specialist",
+      "period": "Sep 2025 – now",
+      "tags": [
+        "Legal RAG",
+        "Talentnet",
+        "Solo",
+        "In production"
+      ],
+      "order": 2,
+      "href": "/work/legal-rag",
+      "homeHref": "/#work-rag",
+      "confidential": true,
+      "approach": [
+        {
+          "title": "Keep the structure",
+          "body": "Vietnamese legal texts nest: a Điều holds Khoản, a Khoản holds Điểm."
+        },
+        {
+          "title": "Plain chunking drops it",
+          "body": "Cut the text into fixed-size pieces and a passage forgets where it came from."
+        },
+        {
+          "title": "The Tag Chunker carries it",
+          "body": "Every chunk keeps its full path, so nothing is cited from nowhere."
+        },
+        {
+          "title": "Answer with the exact reference",
+          "body": "Each answer points to the right document and to a reference a payroll team can cite."
+        }
+      ],
+      "outcomes": [],
+      "note": "Illustration with placeholder text, not real legal content.",
+      "links": [],
+      "body": "I built this payroll assistant on my own at Talentnet. It runs in production and answers questions from Vietnamese legal documents.\r\n\r\n## Why citations break\r\n\r\nVietnamese legal texts nest. A _Điều_ (article) holds _Khoản_ (clauses), and a _Khoản_ holds _Điểm_ (points). If you cut the text into fixed-size pieces, a passage forgets where it came from, and an answer built on it can't say which rule it is quoting.\r\n\r\n## The Tag Chunker\r\n\r\nMy Tag Chunker keeps the full path, _Điều › Khoản › Điểm_, on every chunk, so nothing is cited from nowhere. Each answer points to the correct document and to a reference a payroll team can cite.\r\n\r\n## What I can't show\r\n\r\nTalentnet's documents and code stay private. The illustration on the home page uses placeholder text, not real legal content."
+    },
+    {
+      "slug": "data-validation",
+      "title": "Payroll data validation",
+      "headline": "Every client, its own rules — turned into code.",
+      "oneLiner": "In HR outsourcing payroll, each client has distinct rules and data formats. AI converts client rules into code and reads varied formats dynamically, automating payroll generation and replacing the manual checker step to greatly reduce manual work.",
+      "org": "Talentnet",
+      "role": "AI Engineer Specialist",
+      "period": "Sep 2025 – now",
+      "tags": [
+        "Data validation",
+        "Payroll",
+        "Talentnet",
+        "In production"
+      ],
+      "order": 3,
+      "href": "/work/data-validation",
+      "homeHref": "/#work-validation",
+      "confidential": true,
+      "approach": [
+        {
+          "title": "Take the client's rules",
+          "body": "Each HR outsourcing client runs payroll by its own rules, in its own data formats."
+        },
+        {
+          "title": "Turn the rules into code",
+          "body": "AI converts each client's rules into code, so what a person once checked by hand now runs by itself."
+        },
+        {
+          "title": "Read the file, whatever it looks like",
+          "body": "The pipeline reads the input data dynamically instead of one fixed template."
+        },
+        {
+          "title": "Generate and check in one pass",
+          "body": "Payroll is generated and validated automatically — the manual checker step is replaced and manual work drops."
+        }
+      ],
+      "outcomes": [],
+      "note": null,
+      "links": [],
+      "body": "In HR outsourcing payroll, no two clients are alike: each one has distinct rules and a different data format. Keeping up means either hand-tailoring every client or leaving a person to check every run.\r\n\r\nThis project takes the other path. AI converts each client's rules into code, so the rules stop being tribal knowledge and start being executable. The pipeline reads the client's data formats dynamically instead of one fixed template, so a new client's files don't mean a rebuild.\r\n\r\nPayroll generation is automated, and validation runs inside that pass — the separate manual checker step is replaced, which greatly reduces the manual work in payroll.\r\n\r\n## What I can't show\r\n\r\nClient rules, file formats and payroll data stay private. The illustration on the home page uses made-up values."
+    },
+    {
+      "slug": "craftland",
+      "title": "Free Fire Craftland",
+      "headline": "Game modes, shipped to Free Fire players.",
+      "oneLiner": "I built 14 game modes on Craftland, Free Fire's creation platform. Two were officially featured, and together they drew about 6.2 million positive interactions from players.",
+      "org": "Garena Free Fire",
+      "role": "Game Developer",
+      "period": "Dec 2023 – Sep 2025",
+      "tags": [
+        "Garena Free Fire · Craftland",
+        "Dec 2023 – Sep 2025"
+      ],
+      "order": 4,
+      "href": "/work/craftland",
+      "homeHref": "/#work-craftland",
+      "confidential": false,
+      "approach": [],
+      "outcomes": [
+        {
+          "value": "14",
+          "label": "game modes"
+        },
+        {
+          "value": "2",
+          "label": "officially featured"
+        },
+        {
+          "value": "~6.2M",
+          "label": "positive interactions"
+        }
+      ],
+      "note": null,
+      "links": [],
+      "body": "From December 2023 to September 2025 I was a Game Developer at Garena Free Fire.\r\n\r\nI built 14 game modes on Craftland, Free Fire's creation platform. Two were officially featured, and together they drew about 6.2 million positive interactions from players."
+    },
+    {
+      "slug": "openportfo",
+      "title": "OpenPortfo",
+      "headline": "Crypto and Vietnamese stocks, side by side.",
+      "oneLiner": "One place to track crypto and Vietnamese stocks side by side.",
+      "org": "Personal project",
+      "role": null,
+      "period": null,
+      "tags": [
+        "Personal project"
+      ],
+      "order": 5,
+      "href": "/work/openportfo",
+      "homeHref": "/#work-openportfo",
+      "confidential": false,
+      "approach": [],
+      "outcomes": [],
+      "note": "The chart on the home page is sample data.",
+      "links": [],
+      "body": "OpenPortfo is one place to track crypto and Vietnamese stocks side by side.\r\n\r\nThe chart on the home page is an illustration with sample data, not a real portfolio."
+    },
+    {
+      "slug": "mirror-now",
+      "title": "Mirror Now",
+      "headline": "A storefront that became a template.",
+      "oneLiner": "I built the client's online store, then pulled it apart into a reusable e-commerce template.",
+      "org": "Client project",
+      "role": null,
+      "period": null,
+      "tags": [
+        "Client project",
+        "E-commerce template"
+      ],
+      "order": 6,
+      "href": "/work/mirror-now",
+      "homeHref": "/#work-mirror",
+      "confidential": false,
+      "approach": [],
+      "outcomes": [],
+      "note": null,
+      "links": [],
+      "body": "I built Mirror Now's online store for the client, then pulled it apart into a reusable e-commerce template."
+    },
+    {
+      "slug": "poet",
+      "title": "Poet",
+      "headline": "A website for a charity.",
+      "oneLiner": "A website for a charity.",
+      "org": "Charity project",
+      "role": null,
+      "period": null,
+      "tags": [
+        "Charity project"
+      ],
+      "order": 7,
+      "href": "/work/poet",
+      "homeHref": "/#work-poet",
+      "confidential": false,
+      "approach": [],
+      "outcomes": [],
+      "note": null,
+      "links": [],
+      "body": "A website for the Poet charity."
+    }
+  ]
+}

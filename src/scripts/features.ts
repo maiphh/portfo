@@ -3,7 +3,7 @@
  * OpenPortfo chart, OCR leader lines, dev panel. Motion lives in motion.ts.
  */
 import { candleSeries, pctChange, type Candle } from "~/lib/candles";
-import { API_MOCK, API_URL, apiUrl } from "~/lib/api";
+import { API_MOCK, WORKER_URL, apiUrl } from "~/lib/api";
 import { contactRules, type ContactField } from "~/lib/contact-rules";
 import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
@@ -34,7 +34,7 @@ export function initPopular() {
     status.hidden = false;
     status.textContent = msg;
   };
-  if (!API_URL) {
+  if (!WORKER_URL) {
     show("View counts appear here once analytics is connected.");
     return;
   }

@@ -81,9 +81,7 @@ describe("streamChat", () => {
   });
 
   it("builds the endpoint and maps status codes", () => {
-    expect(chatEndpoint("https://portfo-chat.x.workers.dev/")).toBe(
-      "https://portfo-chat.x.workers.dev/chat",
-    );
+    expect(chatEndpoint("https://portfo.x.workers.dev/")).toBe("https://portfo.x.workers.dev/chat");
     expect(errorCode("daily_limit", 429)).toBe("daily_limit");
     expect(errorCode(undefined, 429)).toBe("rate_limited");
     expect(errorCode("weird", 502)).toBe("upstream_error");

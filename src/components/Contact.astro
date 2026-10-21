@@ -1,7 +1,7 @@
 ---
-/** Contact band: words snap into boxes; the form posts to the portfo-api Worker. */
+/** Contact band: words snap into boxes; the form posts to the portfo Worker. */
 import { HONEYPOT_FIELD } from "~/lib/contact-rules";
-import { API_MOCK, API_URL, apiUrl } from "~/lib/api";
+import { API_MOCK, WORKER_URL, apiUrl } from "~/lib/api";
 import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
 import Icon from "./Icon.astro";
@@ -51,7 +51,7 @@ const live = !API_MOCK;
             </p>
           </noscript>
         )}
-        {!USE_MOCKS && !API_URL && (
+        {!USE_MOCKS && !WORKER_URL && (
           <p class="q-status">
             The form isn't connected yet. Email me at{" "}
             <a href={`mailto:${site.email}`}>{site.email}</a>.

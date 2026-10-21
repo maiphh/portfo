@@ -3,7 +3,7 @@ import { USE_MOCKS } from "~/lib/flags";
 
 /**
  * On-demand (Vercel function); proves the /api wiring still works.
- * Contact, views and GitHub live on the portfo-api Worker; chat on portfo-chat.
+ * Contact, views, GitHub and chat live on the portfo Cloudflare Worker.
  */
 export const prerender = false;
 

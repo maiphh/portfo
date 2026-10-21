@@ -78,15 +78,16 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  chat-worker:
-    name: Chat Worker (typecheck, corpus, tests)
+  worker:
+    name: Worker (typecheck, corpus, work.json, tests)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Runs in workerd via @cloudflare/vitest-plugin. Workers AI, Vectorize and the
-    # API Worker are mocked, so no Cloudflare account or secret is needed.
+    # Runs in workerd via @cloudflare/vitest-plugin against local D1, the Quota Durable
+    # Object and the rate-limit binding. Workers AI is mocked, so no Cloudflare account
+    # or secret is needed.
     defaults:
       run:
-        working-directory: workers/chat
+        working-directory: workers/portfo
     steps:
       - uses: actions/checkout@v7
 
@@ -96,7 +97,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: workers/chat/pnpm-lock.yaml
+          cache-dependency-path: workers/portfo/pnpm-lock.yaml
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -112,38 +113,6 @@ jobs:
           pnpm corpus
           git status --porcelain data
           test -z "$(git status --porcelain data)"
-
-      - name: Tests (vitest, workerd)
-        run: pnpm test
-
-  api-worker:
-    name: API Worker (typecheck, work.json, tests)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Runs in workerd via @cloudflare/vitest-plugin against local D1. Resend, Turnstile and
-    # GitHub are mocked, so no Cloudflare account or secret is needed.
-    defaults:
-      run:
-        working-directory: workers/api
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-          cache-dependency-path: workers/api/pnpm-lock.yaml
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Type check
-        run: pnpm typecheck && pnpm exec tsc --noEmit -p scripts
-
-      - name: Deploy guard (no REPLACE_ME in the top-level wrangler.jsonc config)
-        run: pnpm check:config
 
       - name: data/work.json matches the case studies
         run: |

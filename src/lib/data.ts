@@ -1,6 +1,6 @@
 /**
  * Data access for backend-fed sections, at build time. Returns labelled sample data
- * while USE_MOCKS is on and null otherwise (the browser then loads from portfo-api).
+ * while USE_MOCKS is on and null otherwise (the browser then loads from portfo).
  */
 import type { CollectionEntry } from "astro:content";
 import { USE_MOCKS } from "./flags";

@@ -1,5 +1,5 @@
 /**
- * Incremental parser for the portfo-chat Worker's text/event-stream, plus typed events.
+ * Incremental parser for the portfo Worker's text/event-stream, plus typed events.
  * Follows the EventSource rules that matter here: `event:`/`data:` fields, multi-line data,
  * comments, any of CRLF/LF/CR as line endings, and lines split across network chunks.
  */

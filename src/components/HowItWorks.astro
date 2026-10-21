@@ -9,8 +9,8 @@
         How this site works
       </h2>
       <p>
-        Static pages on Vercel, a small API Worker on Cloudflare with D1, and a separate chat
-        Worker. Nothing runs that doesn't need to.
+        Static pages on Vercel, one Cloudflare Worker for contact, views, GitHub and chat. Nothing
+        runs that doesn't need to.
       </p>
     </div>
     <div class="graph" data-graph>
@@ -18,7 +18,7 @@
         class="g-d"
         viewBox="0 0 1200 430"
         role="img"
-        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls the portfo-api Worker for contact, views and GitHub; the Worker uses D1 and Resend; a Cron Trigger syncs GitHub; chat is a separate portfo-chat Worker with Vectorize."
+        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls the portfo Worker for contact, views, GitHub and chat; the Worker uses D1, Resend and Workers AI; a Cron Trigger syncs GitHub."
       >
         <path class="e" id="e1" d="M190 210 C230 210 230 90 270 90"></path>
         <path class="e" id="e2" d="M190 220 C230 220 230 245 270 245"></path>
@@ -49,10 +49,10 @@
         <g class="nb key">
           <rect x="270" y="210" width="230" height="75" rx="4"></rect>
           <text x="290" y="240">
-            portfo-api Worker
+            portfo Worker
           </text>
           <text class="sub" x="290" y="262">
-            contact · views · GitHub
+            contact · views · GitHub · chat
           </text>
         </g>
         <g class="nb key">
@@ -79,10 +79,10 @@
         <g class="nb">
           <rect x="890" y="200" width="230" height="75" rx="4"></rect>
           <text x="910" y="230">
-            portfo-chat Worker
+            Workers AI
           </text>
           <text class="sub" x="910" y="252">
-            Workers AI · Vectorize
+            Llama 3.3 · tools
           </text>
         </g>
         <g class="nb">
@@ -114,12 +114,13 @@
       <ol class="graph-m">
         <li>
           <b>Vercel</b>
-          <span>Static pages only. The browser calls the Workers directly.</span>
+          <span>Static pages only. The browser calls the Worker directly.</span>
         </li>
         <li>
-          <b>portfo-api + D1</b>
+          <b>portfo + D1</b>
           <span>
-            Messages, views and GitHub data. Contact emails via Resend in the same request.
+            Messages, views and GitHub data. Contact emails via Resend in the same request. Chat
+            tools read bundled JSON and D1.
           </span>
         </li>
         <li>
@@ -127,11 +128,8 @@
           <span>Pulls public GitHub activity every 6 hours into D1.</span>
         </li>
         <li>
-          <b>portfo-chat</b>
-          <span>
-            A separate Worker answers with Llama 3.3 from a Vectorize index of my CV and case
-            studies.
-          </span>
+          <b>Workers AI</b>
+          <span>Llama 3.3 answers from read-only tools over the CV, case studies and D1.</span>
         </li>
         <li>
           <b>Resend</b>
@@ -141,8 +139,8 @@
     </div>
     <div class="how-notes">
       <p>
-        <b>The chat</b> runs as its own Cloudflare Worker. It finds the closest passages in
-        Vectorize, only answers from them, and lists its sources.
+        <b>The chat</b> runs on the same Cloudflare Worker as the data APIs. It only answers from
+        tool results (bundled site JSON and D1) and lists its sources.
       </p>
       <p>
         <b>Your message</b> is validated, stored in D1, and emailed to me in the same request. A
@@ -150,7 +148,7 @@
       </p>
       <p>
         <b>Guardrails:</b> a honeypot on the form; about 10 chat messages per visitor every 10
-        minutes and a daily AI budget on the chat Worker.
+        minutes and a daily AI budget on the Worker.
       </p>
     </div>
   </div>

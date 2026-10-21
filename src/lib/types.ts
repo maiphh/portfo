@@ -1,6 +1,6 @@
 /**
  * Data contracts for the backend features. The mock modules in `src/lib/mocks/`
- * implement these today; the portfo-api Worker returns the same shapes.
+ * implement these today; the portfo Worker returns the same shapes.
  */
 
 /** One row of the "Most read this week" list (GET /popular). */
@@ -33,7 +33,7 @@ export interface GithubRepoSummary {
   pushedAt: string | null;
 }
 
-/** Synced every 6 hours into D1 by the portfo-api Cron Trigger. */
+/** Synced every 6 hours into D1 by the portfo Cron Trigger. */
 export interface GithubSummary {
   publicRepos: number;
   commitsLastYear: number;

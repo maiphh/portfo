@@ -23,8 +23,6 @@ const TOOL_POSES: Record<string, ToolPose> = {
   get_contact: { gaze: "center", ripple: 0.7 },
   get_github_stats: { gaze: "right", ripple: 1.2 },
   get_popular_projects: { gaze: "left", ripple: 1.2 },
-  search_knowledge: { gaze: "sweep", ripple: 1.4 },
-  search_site: { gaze: "sweep", ripple: 1.4 },
 };
 
 const THINK: ToolPose = { gaze: "sweep", ripple: 1 };

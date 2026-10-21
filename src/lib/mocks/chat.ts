@@ -1,5 +1,5 @@
 /**
- * Sample replies for the chat window while PUBLIC_USE_MOCKS is on or PUBLIC_CHAT_URL is unset.
+ * Sample replies for the chat window while PUBLIC_USE_MOCKS is on or PUBLIC_WORKER_URL is unset.
  * CV facts only, phrased like the real assistant, and labelled as samples in the panel.
  */
 import type { Source } from "~/lib/chat/sse";

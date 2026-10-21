@@ -1,11 +1,19 @@
-/** Build-time API Worker settings (PUBLIC_* only). */
+/** Build-time Worker settings (PUBLIC_* only). */
 import { USE_MOCKS } from "~/lib/flags";
 
-/** Base URL of the portfo-api Worker, e.g. https://portfo-api.<account>.workers.dev (no trailing slash). */
-export const API_URL: string = (import.meta.env.PUBLIC_API_URL ?? "").trim().replace(/\/$/, "");
+/** Accepts `https://host` or a bare host. A bare host is treated as https. */
+export function workerOrigin(raw: string | undefined): string {
+  const v = (raw ?? "").trim().replace(/\/+$/, "");
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
+/** Base URL of the portfo Worker, e.g. https://portfo.<account>.workers.dev (no trailing slash). */
+export const WORKER_URL: string = workerOrigin(import.meta.env.PUBLIC_WORKER_URL);
 
 /** Sample data while mocks are on, or when no Worker URL is set. */
-export const API_MOCK: boolean = USE_MOCKS || API_URL === "";
+export const API_MOCK: boolean = USE_MOCKS || WORKER_URL === "";
 
 export const apiUrl = (path: string): string =>
-  `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  `${WORKER_URL}${path.startsWith("/") ? path : `/${path}`}`;

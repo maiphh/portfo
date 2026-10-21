@@ -1,4 +1,4 @@
-/** POST /chat on the portfo-chat Worker and turn the SSE response into ChatEvents. */
+/** POST /chat on the portfo Worker and turn the SSE response into ChatEvents. */
 import { errorCode, type ChatErrorCode } from "./errors";
 import { SseParser, toChatEvent, type ChatEvent } from "./sse";
 

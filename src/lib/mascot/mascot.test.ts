@@ -24,7 +24,7 @@ describe("mascot state mapping", () => {
     const t = v({ phase: "thinking", tool: "get_github_stats" });
     expect(t).toMatchObject({ mood: "think", tool: "get_github_stats", pose: { gaze: "right" } });
     expect(v({ phase: "thinking", tool: "get_project" }).pose.gaze).toBe("down");
-    expect(v({ phase: "thinking", tool: "search_knowledge" }).pose.gaze).toBe("sweep");
+    expect(v({ phase: "thinking", tool: "list_projects" }).pose.gaze).toBe("sweep");
     expect(v({ phase: "thinking", tool: "unknown_tool" }).pose).toEqual(toolPose(null));
   });
 
