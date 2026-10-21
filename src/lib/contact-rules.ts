@@ -1,4 +1,4 @@
-/** Field rules shared by the client form and the /api/contact validator. */
+/** Field rules shared by the client form and the portfo-api /contact validator. */
 export const CONTACT_LIMITS = { name: 100, email: 254, message: 2000 } as const;
 
 export const contactRules = {
@@ -28,5 +28,3 @@ export type ContactField = keyof typeof contactRules;
 
 /** Name of the hidden honeypot input. Real people never fill it in. */
 export const HONEYPOT_FIELD = "website";
-/** Name of the hidden input the Turnstile widget adds to the form. */
-export const TURNSTILE_FIELD = "cf-turnstile-response";

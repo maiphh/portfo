@@ -36,6 +36,9 @@ jobs:
       - name: Type check (astro check)
         run: pnpm check
 
+      - name: Unit tests (vitest, no database)
+        run: pnpm test
+
       - name: Build
         run: pnpm build
 
@@ -79,8 +82,8 @@ jobs:
     name: Chat Worker (typecheck, corpus, tests)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Runs in workerd via @cloudflare/vitest-plugin. Workers AI, Vectorize, Turnstile and the
-    # site APIs are mocked, so no Cloudflare account or secret is needed.
+    # Runs in workerd via @cloudflare/vitest-plugin. Workers AI, Vectorize and the
+    # API Worker are mocked, so no Cloudflare account or secret is needed.
     defaults:
       run:
         working-directory: workers/chat
@@ -113,28 +116,15 @@ jobs:
       - name: Tests (vitest, workerd)
         run: pnpm test
 
-  db:
-    name: Migrations + DB tests
+  api-worker:
+    name: API Worker (typecheck, work.json, tests)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Throwaway Postgres with pgvector inside the runner; no real DB secret needed.
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_USER: portfo
-          POSTGRES_PASSWORD: portfo
-          POSTGRES_DB: portfo
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U portfo"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      DATABASE_URL: postgresql://portfo:portfo@localhost:5432/portfo
-      TEST_DATABASE_URL: postgresql://portfo:portfo@localhost:5432/portfo_test
+    # Runs in workerd via @cloudflare/vitest-plugin against local D1. Resend, Turnstile and
+    # GitHub are mocked, so no Cloudflare account or secret is needed.
+    defaults:
+      run:
+        working-directory: workers/api
     steps:
       - uses: actions/checkout@v7
 
@@ -144,21 +134,22 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+          cache-dependency-path: workers/api/pnpm-lock.yaml
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Migrations match the schema
+      - name: Type check
+        run: pnpm typecheck && pnpm exec tsc --noEmit -p scripts
+
+      - name: Deploy guard (no REPLACE_ME in the top-level wrangler.jsonc config)
+        run: pnpm check:config
+
+      - name: data/work.json matches the case studies
         run: |
-          pnpm db:generate
-          git status --porcelain drizzle
-          test -z "$(git status --porcelain drizzle)"
+          pnpm work
+          git status --porcelain data
+          test -z "$(git status --porcelain data)"
 
-      - name: Apply migrations (pnpm db:migrate)
-        run: pnpm db:migrate
-
-      - name: Create the test database
-        run: psql "$DATABASE_URL" -c "CREATE DATABASE portfo_test"
-
-      - name: Unit tests (vitest)
+      - name: Tests (vitest, workerd + D1)
         run: pnpm test

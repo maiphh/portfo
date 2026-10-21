@@ -1,4 +1,4 @@
-/** SAMPLE DATA † — GitHub activity until the 6-hourly sync lands in Postgres. */
+/** SAMPLE DATA † — GitHub activity until the 6-hourly sync lands in D1. */
 import { seeded } from "../random";
 import type { GithubSummary, HeatLevel } from "../types";
 

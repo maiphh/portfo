@@ -22,7 +22,6 @@ export const todos: readonly string[] = [
   "LinkedIn URL, headshot, short bio.",
   "OpenPortfo, Mirror Now, Poet: live URLs, repos, any metrics.",
   "Chat: the window shows sample replies until the portfo-chat Worker is deployed, PUBLIC_CHAT_URL is set and mocks are off; the mascot lands next.",
-  "Cloudflare Turnstile widget on the contact form.",
   "Reply-time promise on the contact section (left out rather than invented).",
   "All numbers marked † (views, GitHub stats, sync time, the OpenPortfo chart) are sample data.",
 ];

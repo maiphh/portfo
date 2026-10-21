@@ -1,6 +1,6 @@
 /**
  * Browser tests against the built static site (`pnpm build` first). The chat runs on its mock
- * stream (PUBLIC_USE_MOCKS defaults on), so no Worker, Turnstile or network is needed.
+ * stream (PUBLIC_USE_MOCKS defaults on), so no Worker or network is needed.
  * Locally, PW_CHROME=/usr/bin/google-chrome uses an installed Chrome instead of the bundled one.
  */
 import { defineConfig, devices } from "@playwright/test";

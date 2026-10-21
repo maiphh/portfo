@@ -43,7 +43,7 @@ async function ask(
   if (!vi.isMockFunction(globalThis.fetch)) mockFetch();
   const ai = fakeAi(script);
   const { res, text } = await call(
-    chatRequest({ messages: [{ role: "user", content: question }], turnstileToken: "ok" }),
+    chatRequest({ messages: [{ role: "user", content: question }] }),
     testEnv({ AI: ai.ai, VECTORIZE: vectorize.index }),
   );
   const events = parseSse(text);
@@ -152,7 +152,7 @@ describe("golden Q&A", () => {
         },
       ]),
     );
-    expect(f.seen.map((s) => s.url)).toContain("https://site.test/api/popular?days=7");
+    expect(f.seen.map((s) => s.url)).toContain("https://api.test/popular?days=7");
     expect(r.tools).toEqual([{ name: "get_popular_projects", args: { days: 7 } }]);
     expect(r.text).toBe(
       "The most viewed project this week is the Legal RAG assistant, with 41 views.",
@@ -177,7 +177,7 @@ describe("golden Q&A", () => {
         },
       ]),
     );
-    expect(f.seen.map((s) => s.url)).toContain("https://site.test/api/activity");
+    expect(f.seen.map((s) => s.url)).toContain("https://api.test/activity");
     expect(r.tools).toEqual([{ name: "get_github_stats", args: {} }]);
     expect(r.text).toBe(
       "Mostly TypeScript and Python, going by the 3 most recently pushed public repos.",

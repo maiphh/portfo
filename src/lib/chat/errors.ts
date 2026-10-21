@@ -6,9 +6,6 @@ export type ChatErrorCode =
   | "daily_limit"
   | "network"
   | "interrupted"
-  | "turnstile_required"
-  | "turnstile_failed"
-  | "turnstile_unavailable"
   | "too_long"
   | "not_configured"
   | "forbidden_origin"
@@ -28,9 +25,6 @@ const KNOWN = new Set<string>([
   "daily_limit",
   "network",
   "interrupted",
-  "turnstile_required",
-  "turnstile_failed",
-  "turnstile_unavailable",
   "too_long",
   "not_configured",
   "forbidden_origin",
@@ -82,19 +76,6 @@ export function friendlyError(
       };
     case "interrupted":
       return { code, retry: true, message: "The answer got cut off. Try asking again." };
-    case "turnstile_required":
-    case "turnstile_failed":
-      return {
-        code,
-        retry: true,
-        message: "The quick bot check didn't go through. Try sending again.",
-      };
-    case "turnstile_unavailable":
-      return {
-        code,
-        retry: true,
-        message: `The bot check couldn't load (an ad blocker can stop it). Try again, or ${mail}.`,
-      };
     case "too_long":
       return { code, retry: false, message: "Questions are limited to 500 characters." };
     case "not_configured":

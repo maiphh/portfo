@@ -7,8 +7,6 @@ export type ErrorCode =
   | "bad_request"
   | "too_long"
   | "unauthorized"
-  | "turnstile_required"
-  | "turnstile_failed"
   | "rate_limited"
   | "daily_limit"
   | "not_configured"

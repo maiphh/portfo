@@ -38,7 +38,7 @@ describe("POST /chat happy path", () => {
   it("streams session, status, tokens, then sources and done over SSE", async () => {
     const f = mockFetch();
     const { env: e } = env();
-    const { res, text } = await call(chatRequest({ ...q(), turnstileToken: "tok" }), e);
+    const { res, text } = await call(chatRequest(q()), e);
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream; charset=utf-8");
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
@@ -70,12 +70,10 @@ describe("POST /chat happy path", () => {
 
     const session = events[0]?.data as { token: string; expiresAt: number };
     expect(await verifySession("test-session-key", session.token)).not.toBeNull();
-    const verify = f.seen.find((s) => s.url.includes("siteverify"));
-    expect(verify?.body).toContain("secret=test-turnstile-secret");
-    expect(verify?.body).toContain("response=tok");
+    expect(f.seen.some((s) => s.url.includes("siteverify"))).toBe(false);
   });
 
-  it("accepts a valid session token instead of Turnstile on later messages", async () => {
+  it("accepts a valid session token on later messages and does not issue another", async () => {
     const f = mockFetch();
     const { token } = await issueSession("test-session-key");
     const { res, text } = await call(chatRequest({ ...q(), sessionToken: token }), env().env);
@@ -91,7 +89,7 @@ describe("POST /chat happy path", () => {
       content: `turn ${i}`,
     }));
     const { ai, env: e } = env({}, [{ throws: "down" }, { throws: "down too" }]);
-    const { res, text } = await call(chatRequest({ messages: long, turnstileToken: "tok" }), e);
+    const { res, text } = await call(chatRequest({ messages: long }), e);
     expect(res.status).toBe(200);
     const sent = ai.chatCalls()[0]?.inputs.messages as { role: string }[];
     expect(sent).toHaveLength(1 + 6);
@@ -101,39 +99,16 @@ describe("POST /chat happy path", () => {
   });
 });
 
-describe("Turnstile", () => {
-  it("requires a token on the first message", async () => {
+describe("session", () => {
+  it("issues a new session when the token is missing or forged", async () => {
     mockFetch();
-    const { res, text } = await call(chatRequest(q()), env().env);
-    expect(res.status).toBe(401);
-    expect(JSON.parse(text).error).toBe("turnstile_required");
-  });
+    const first = await call(chatRequest(q()), env().env);
+    expect(first.res.status).toBe(200);
+    expect(parseSse(first.text).some((x) => x.event === "session")).toBe(true);
 
-  it("rejects a failed token, a wrong hostname, a network error and a forged session", async () => {
-    for (const turnstile of [
-      { success: false },
-      { success: true, hostname: "evil.test" },
-      "error",
-    ] as const) {
-      vi.restoreAllMocks();
-      mockFetch({ turnstile });
-      const { ai, env: e } = env();
-      const { res, text } = await call(chatRequest({ ...q(), turnstileToken: "bad" }), e);
-      expect(res.status).toBe(403);
-      expect(JSON.parse(text).error).toBe("turnstile_failed");
-      expect(ai.calls).toHaveLength(0);
-    }
-    const { res } = await call(chatRequest({ ...q(), sessionToken: "v1.e30.forged" }), env().env);
-    expect(res.status).toBe(401);
-  });
-
-  it("fails closed without TURNSTILE_SECRET_KEY", async () => {
-    mockFetch();
-    const { res } = await call(
-      chatRequest({ ...q(), turnstileToken: "tok" }),
-      env({ TURNSTILE_SECRET_KEY: undefined }).env,
-    );
-    expect(res.status).toBe(403);
+    const forged = await call(chatRequest({ ...q(), sessionToken: "v1.e30.forged" }), env().env);
+    expect(forged.res.status).toBe(200);
+    expect(parseSse(forged.text).some((x) => x.event === "session")).toBe(true);
   });
 });
 
@@ -142,13 +117,11 @@ describe("rate limits", () => {
     mockFetch();
     const ip = freshIp();
     const { env: e } = env({ VISITOR_LIMIT: "2" }, []);
-    // A cheap request that passes the limiters but stops at Turnstile (no AI call).
     const statuses = [];
     for (let i = 0; i < 3; i++) statuses.push((await call(chatRequest(q(), { ip }), e)).res.status);
-    expect(statuses).toEqual([401, 401, 429]);
-    const { res, text } = await call(chatRequest(q(), { ip: freshIp() }), e);
-    expect(res.status).toBe(401);
-    expect(text).toContain("turnstile_required");
+    expect(statuses).toEqual([200, 200, 429]);
+    const { res } = await call(chatRequest(q(), { ip: freshIp() }), e);
+    expect(res.status).toBe(200);
     const again = await call(chatRequest(q(), { ip }), e);
     expect(JSON.parse(again.text).error).toBe("rate_limited");
     expect(Number(again.res.headers.get("Retry-After"))).toBeGreaterThan(0);
@@ -161,7 +134,7 @@ describe("rate limits", () => {
     const { env: e } = env({ VISITOR_LIMIT: "100" }, []);
     const statuses = [];
     for (let i = 0; i < 4; i++) statuses.push((await call(chatRequest(q(), { ip }), e)).res.status);
-    expect(statuses).toEqual([401, 401, 401, 429]);
+    expect(statuses).toEqual([200, 200, 200, 429]);
   });
 });
 
@@ -170,7 +143,7 @@ describe("input cap", () => {
     const f = mockFetch();
     const { ai, env: e } = env();
     const { res, text } = await call(
-      chatRequest({ ...q("x".repeat(501)), turnstileToken: "tok" }),
+      chatRequest(q("x".repeat(501))),
       e,
     );
     expect(res.status).toBe(413);
@@ -178,7 +151,7 @@ describe("input cap", () => {
     expect(ai.calls).toHaveLength(0);
     expect(f.seen).toHaveLength(0);
     expect(
-      (await call(chatRequest({ ...q("x".repeat(500)), turnstileToken: "tok" }), env().env)).res
+      (await call(chatRequest(q("x".repeat(500))), env().env)).res
         .status,
     ).toBe(200);
   });
@@ -203,9 +176,9 @@ describe("daily cap", () => {
     const stub = base.QUOTA.get(base.QUOTA.idFromName(`daily:${saigonDay()}`));
     await runInDurableObject(stub, (_obj, state) => state.storage.deleteAll());
     const { ai, env: e } = env({ DAILY_MESSAGE_CAP: "1" }, [...happyScript(), ...happyScript()]);
-    const first = await call(chatRequest({ ...q(), turnstileToken: "tok" }), e);
+    const first = await call(chatRequest({ ...q() }), e);
     expect(first.res.status).toBe(200);
-    const second = await call(chatRequest({ ...q(), turnstileToken: "tok" }), e);
+    const second = await call(chatRequest({ ...q() }), e);
     expect(second.res.status).toBe(429);
     expect(JSON.parse(second.text)).toEqual({ error: "daily_limit", message: DAILY_LIMIT_MESSAGE });
     expect(ai.chatCalls()).toHaveLength(2);
@@ -234,7 +207,7 @@ describe("CORS", () => {
     mockFetch();
     for (const origin of ["https://evil.test", "https://site.test.evil.test", null]) {
       const { res } = await call(
-        chatRequest({ ...q(), turnstileToken: "tok" }, { origin }),
+        chatRequest({ ...q() }, { origin }),
         env().env,
       );
       expect(res.status).toBe(403);
@@ -244,8 +217,8 @@ describe("CORS", () => {
 
   it("puts CORS headers on errors for allowed origins", async () => {
     mockFetch();
-    const { res } = await call(chatRequest(q()), env().env);
-    expect(res.status).toBe(401);
+    const { res } = await call(chatRequest({ messages: [] }), env().env);
+    expect(res.status).toBe(400);
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
   });
 });
@@ -272,7 +245,7 @@ describe("GET /health and routing", () => {
         perVisitorPer10Min: 10,
         dailyMessages: 50,
       },
-      configured: { turnstile: true, session: true, ingest: true, siteUrl: true },
+      configured: { session: true, ingest: true, apiUrl: true },
     });
     expect(body.tools).toHaveLength(7);
     expect(text).not.toContain("test-ingest-secret");

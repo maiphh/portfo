@@ -1829,78 +1829,6 @@ sup.fn {
   font-size: 0.9rem;
   max-width: 36ch;
 }
-.queue {
-  position: relative;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding-top: 22px;
-  border-top: 1px solid var(--rule);
-}
-.queue .track {
-  position: absolute;
-  left: 11px;
-  right: 11px;
-  top: 33px;
-  height: 2px;
-  background: var(--rule-2);
-}
-.queue .pkt {
-  position: absolute;
-  left: 5px;
-  top: 28px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--lime);
-  opacity: 0;
-  box-shadow: 0 0 12px rgba(212, 245, 107, 0.6);
-}
-.qs {
-  position: relative;
-  display: grid;
-  gap: 6px;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-.qs .ring {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid var(--rule-2);
-  background: var(--ground);
-  display: grid;
-  place-items: center;
-}
-.qs .ring .icon {
-  width: 14px;
-  height: 14px;
-  stroke: var(--lime-ink);
-  stroke-width: 2.6;
-  opacity: 0;
-}
-.qs b {
-  font-weight: 600;
-  color: var(--ink-2);
-}
-.qs small {
-  font: 400 0.76rem var(--code);
-  color: var(--muted);
-}
-.qs.active .ring {
-  border-color: var(--lime);
-}
-.qs.done .ring {
-  background: var(--lime);
-  border-color: var(--lime);
-}
-.qs.done .ring .icon {
-  opacity: 1;
-}
-.qs.done b {
-  color: var(--ink);
-}
 .q-status {
   font-size: 0.95rem;
   color: var(--ink-2);
@@ -2504,16 +2432,13 @@ footer {
   max-width: 520px;
 }
 
-/* Contact: honeypot (off-screen, never focusable) and the Turnstile widget slot. */
+/* Contact: honeypot (off-screen, never focusable). */
 .form .hp {
   position: absolute;
   left: -10000px;
   width: 1px;
   height: 1px;
   overflow: hidden;
-}
-.form .turnstile {
-  min-height: 65px;
 }
 
 /* Room for the detection box (inset -10px) so it never overlaps "at" in the roles list. */

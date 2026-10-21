@@ -1,5 +1,5 @@
 /**
- * POST /chat: { messages: [{ role, content }], turnstileToken?, sessionToken? }
+ * POST /chat: { messages: [{ role, content }], sessionToken? }
  * → text/event-stream with events:
  *   session  { token, expiresAt }       only when a new session was issued
  *   status   { tool, label, round }     one per tool call (the mascot's thinking state)
@@ -9,7 +9,7 @@
  *   error    { error, message }         if something failed mid-stream
  *
  * Guards, cheapest first: origin, size and shape, input cap, burst limit (binding),
- * visitor window (10 per 10 minutes), Turnstile or session token, daily budget.
+ * visitor window (10 per 10 minutes), session token (issued when missing), daily budget.
  */
 import { z } from "zod";
 import { runAgent, type AgentEvent } from "./agent";
@@ -26,14 +26,12 @@ import type { Env } from "./env";
 import { error, sha256Hex } from "./http";
 import { DAILY_LIMIT_MESSAGE } from "./prompt";
 import { issueSession, verifySession } from "./session";
-import { verifyTurnstile } from "./turnstile";
 
 const bodySchema = z.object({
   messages: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() }))
     .min(1)
     .max(20),
-  turnstileToken: z.string().max(2048).optional(),
   sessionToken: z.string().max(512).optional(),
 });
 
@@ -94,15 +92,6 @@ export async function handleChat(
   let newSession: { token: string; expiresAt: number } | null = null;
   const session = await verifySession(env.SESSION_SIGNING_KEY, body.data.sessionToken);
   if (!session) {
-    if (!body.data.turnstileToken)
-      return fail(401, "turnstile_required", "Complete the check to start chatting.");
-    const ts = await verifyTurnstile({
-      secret: env.TURNSTILE_SECRET_KEY,
-      token: body.data.turnstileToken,
-      ip: ip === "unknown" ? null : ip,
-      hostnames: cfg.origins.map((o) => new URL(o).hostname),
-    });
-    if (!ts.ok) return fail(403, "turnstile_failed", "The bot check failed. Reload and try again.");
     const issued = await issueSession(env.SESSION_SIGNING_KEY);
     newSession = { token: issued.token, expiresAt: issued.session.exp };
   }

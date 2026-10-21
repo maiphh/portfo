@@ -63,8 +63,8 @@ export function checkConfig(config: WranglerConfig, env?: string): string[] {
 
   if (env === "production") {
     const vars = (eff.vars ?? {}) as Record<string, Json>;
-    const site = typeof vars.SITE_URL === "string" ? vars.SITE_URL : "";
-    if (!/^https:\/\/[^/\s]+/.test(site)) problems.push("vars.SITE_URL must be an https:// URL");
+    const api = typeof vars.API_URL === "string" ? vars.API_URL : "";
+    if (!/^https:\/\/[^/\s]+/.test(api)) problems.push("vars.API_URL must be an https:// URL");
     const origins = typeof vars.ALLOWED_ORIGINS === "string" ? vars.ALLOWED_ORIGINS : "";
     if (!origins.split(",").some((o) => /^https:\/\//.test(o.trim())))
       problems.push("vars.ALLOWED_ORIGINS must include the https:// production origin");

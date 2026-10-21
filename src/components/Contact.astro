@@ -1,20 +1,13 @@
 ---
-/** Contact band: words snap into boxes; the form shows the job moving through the queue. */
+/** Contact band: words snap into boxes; the form posts to the portfo-api Worker. */
 import { HONEYPOT_FIELD } from "~/lib/contact-rules";
-import { TURNSTILE_SITE_KEY, USE_MOCKS } from "~/lib/flags";
+import { API_MOCK, API_URL, apiUrl } from "~/lib/api";
+import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
 import Icon from "./Icon.astro";
 
-// Real mode posts to /api/contact; without JS that's a plain form POST that returns a result page.
-const live = !USE_MOCKS;
-const turnstile = live && TURNSTILE_SITE_KEY !== "";
-
-const steps = [
-  { id: "queued", label: "Queued" },
-  { id: "claimed", label: "Picked up" },
-  { id: "sorted", label: "Sorted" },
-  { id: "sent", label: "Sent to Phu" },
-];
+// Real mode posts to the Worker; without JS that's a plain form POST that returns a result page.
+const live = !API_MOCK;
 ---
 
 <section class="sec" id="contact" aria-labelledby="ct-h" style="padding-top:var(--s6)">
@@ -46,7 +39,7 @@ const steps = [
         id="contact-form"
         aria-labelledby="form-h"
         data-mock={USE_MOCKS ? "true" : "false"}
-        action={live ? "/api/contact" : undefined}
+        action={live ? apiUrl("/contact") : undefined}
         method={live ? "post" : undefined}
       >
         <h3 id="form-h">Send a message</h3>
@@ -57,6 +50,12 @@ const steps = [
               <a href={`mailto:${site.email}`}>{site.email}</a>.
             </p>
           </noscript>
+        )}
+        {!USE_MOCKS && !API_URL && (
+          <p class="q-status">
+            The form isn't connected yet. Email me at{" "}
+            <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </p>
         )}
         <div class="two">
           <div class="fld">
@@ -117,56 +116,28 @@ const steps = [
           <label for="f-website">Leave this field empty</label>
           <input id="f-website" name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" />
         </div>
-        {turnstile && (
-          <>
-            <div
-              class="cf-turnstile turnstile"
-              data-sitekey={TURNSTILE_SITE_KEY}
-              data-theme="dark"
-              data-size="flexible"
-            />
-            <script
-              is:inline
-              src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-              async
-              defer
-            />
-          </>
-        )}
         <div class="send-row">
-          <button class="btn btn-lime" type="submit">
+          <button class="btn btn-lime" type="submit" disabled={!live && !USE_MOCKS}>
             Send message
             <Icon name="arrow" />
           </button>
           <small>
-            Up to 3 messages a day.
-            {USE_MOCKS ? " You'll see it move through the queue below." : ""}
-            {USE_MOCKS && (
+            {USE_MOCKS ? (
               <>
+                Sample form: nothing is sent.
                 <sup class="fn" aria-hidden="true">
                   †
                 </sup>
                 <span class="sr-only"> (sample: nothing is sent yet)</span>
               </>
+            ) : (
+              "I read every message myself."
             )}
           </small>
         </div>
-        <ol class="queue" aria-label="Message status">
-          <span class="track" aria-hidden="true"></span>
-          <span class="pkt" aria-hidden="true" data-pkt></span>
-          {steps.map((s) => (
-            <li class="qs" data-step={s.id}>
-              <span class="ring">
-                <Icon name="check" />
-              </span>
-              <b>{s.label}</b>
-              <small>waiting</small>
-            </li>
-          ))}
-        </ol>
         <p class="q-status" id="q-status" role="status" aria-live="polite">
           {USE_MOCKS
-            ? "Nothing sent yet. This is a sample queue: messages aren't delivered."
+            ? "Nothing sent yet. This is a sample: messages aren't delivered."
             : "Nothing sent yet."}
         </p>
       </form>

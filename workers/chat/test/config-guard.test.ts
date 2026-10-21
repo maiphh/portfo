@@ -18,7 +18,7 @@ describe("deploy guard (scripts/check-config.ts)", () => {
     expect(checkConfig(wrangler)).toEqual([]);
     const vars = effectiveConfig(wrangler).vars as Record<string, string>;
     expect(vars.ALLOWED_ORIGINS).toBe("http://localhost:4321");
-    expect(vars.SITE_URL).toBe("");
+    expect(vars.API_URL).toBe("");
     expect(wrangler.build).toEqual({ command: "node scripts/check-config.ts" });
   });
 
@@ -39,14 +39,14 @@ describe("deploy guard (scripts/check-config.ts)", () => {
   });
 
   it("fails on any REPLACE_ME value, top level or env", () => {
-    expect(checkConfig(fixture({ SITE_URL: "https://REPLACE_ME_SITE_DOMAIN" }))).toEqual([
-      'vars.SITE_URL is still a placeholder ("https://REPLACE_ME_SITE_DOMAIN")',
+    expect(checkConfig(fixture({ API_URL: "https://REPLACE_ME_API_ORIGIN" }))).toEqual([
+      'vars.API_URL is still a placeholder ("https://REPLACE_ME_API_ORIGIN")',
     ]);
     expect(checkConfig(fixture({ X: "replace-me" }))).toHaveLength(1);
     const prod = fixture(
-      { SITE_URL: "" },
+      { API_URL: "" },
       {
-        SITE_URL: "https://maiphh.dev",
+        API_URL: "https://api.example",
         ALLOWED_ORIGINS: "https://REPLACE_ME,http://localhost:4321",
       },
     );
@@ -56,19 +56,19 @@ describe("deploy guard (scripts/check-config.ts)", () => {
     ]);
   });
 
-  it("production also needs an https SITE_URL and an https origin", () => {
+  it("production also needs an https API_URL and an https origin", () => {
     expect(
       checkConfig(
-        fixture({}, { SITE_URL: "", ALLOWED_ORIGINS: "http://localhost:4321" }),
+        fixture({}, { API_URL: "", ALLOWED_ORIGINS: "http://localhost:4321" }),
         "production",
       ),
     ).toEqual([
-      "vars.SITE_URL must be an https:// URL",
+      "vars.API_URL must be an https:// URL",
       "vars.ALLOWED_ORIGINS must include the https:// production origin",
     ]);
     expect(
       checkConfig(
-        fixture({}, { SITE_URL: "https://maiphh.dev", ALLOWED_ORIGINS: "https://maiphh.dev" }),
+        fixture({}, { API_URL: "https://api.example", ALLOWED_ORIGINS: "https://maiphh.dev" }),
         "production",
       ),
     ).toEqual([]);

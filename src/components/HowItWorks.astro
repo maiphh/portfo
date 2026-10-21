@@ -9,8 +9,8 @@
         How this site works
       </h2>
       <p>
-        Static pages, one Postgres database, a small job queue and a chat Worker on Cloudflare.
-        Nothing runs that doesn't need to.
+        Static pages on Vercel, a small API Worker on Cloudflare with D1, and a separate chat
+        Worker. Nothing runs that doesn't need to.
       </p>
     </div>
     <div class="graph" data-graph>
@@ -18,7 +18,7 @@
         class="g-d"
         viewBox="0 0 1200 430"
         role="img"
-        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls on-demand API routes; the routes use Neon Postgres with pgvector and a jobs table; a worker claims jobs, asks Cloudflare Workers AI to sort messages and emails Phu; GitHub Actions syncs activity every 6 hours."
+        aria-label="Architecture: the visitor's browser loads static pages from Vercel and calls the portfo-api Worker for contact, views and GitHub; the Worker uses D1 and Resend; a Cron Trigger syncs GitHub; chat is a separate portfo-chat Worker with Vectorize."
       >
         <path class="e" id="e1" d="M190 210 C230 210 230 90 270 90"></path>
         <path class="e" id="e2" d="M190 220 C230 220 230 245 270 245"></path>
@@ -49,7 +49,7 @@
         <g class="nb key">
           <rect x="270" y="210" width="230" height="75" rx="4"></rect>
           <text x="290" y="240">
-            On-demand API routes
+            portfo-api Worker
           </text>
           <text class="sub" x="290" y="262">
             contact · views · GitHub
@@ -58,31 +58,31 @@
         <g class="nb key">
           <rect x="580" y="205" width="230" height="85" rx="4"></rect>
           <text x="600" y="236">
-            Neon Postgres
+            Cloudflare D1
           </text>
           <text class="sub" x="600" y="258">
-            messages · jobs table
+            messages · views
           </text>
           <text class="sub" x="600" y="276">
-            views · GitHub
+            GitHub snapshot
           </text>
         </g>
         <g class="nb">
           <rect x="890" y="55" width="230" height="75" rx="4"></rect>
           <text x="910" y="85">
-            Worker
+            Resend
           </text>
           <text class="sub" x="910" y="107">
-            SKIP LOCKED · retries
+            one email per message
           </text>
         </g>
         <g class="nb">
           <rect x="890" y="200" width="230" height="75" rx="4"></rect>
           <text x="910" y="230">
-            Workers AI
+            portfo-chat Worker
           </text>
           <text class="sub" x="910" y="252">
-            Cloudflare · chat + sorting
+            Workers AI · Vectorize
           </text>
         </g>
         <g class="nb">
@@ -91,16 +91,16 @@
             Email to Phu
           </text>
           <text class="sub" x="910" y="393">
-            spam stored, not sent
+            reply-to is the sender
           </text>
         </g>
         <g class="nb">
           <rect x="580" y="340" width="230" height="60" rx="4"></rect>
           <text x="600" y="368">
-            GitHub Actions
+            Cron Trigger
           </text>
           <text class="sub" x="600" y="388">
-            sync every 6 hours
+            GitHub sync every 6 h
           </text>
         </g>
         <circle class="pk" r="4.5" data-pk="e2"></circle>
@@ -114,41 +114,43 @@
       <ol class="graph-m">
         <li>
           <b>Vercel</b>
-          <span>Static pages; only the /api routes run on demand.</span>
+          <span>Static pages only. The browser calls the Workers directly.</span>
         </li>
         <li>
-          <b>Neon Postgres</b>
-          <span>Messages, views and GitHub data, in one database.</span>
-        </li>
-        <li>
-          <b>Jobs table + worker</b>
-          <span>Workers claim jobs with FOR UPDATE SKIP LOCKED and retry with backoff.</span>
-        </li>
-        <li>
-          <b>Cloudflare Workers AI</b>
+          <b>portfo-api + D1</b>
           <span>
-            A small Llama model sorts messages. The chat will answer with Llama 3.3 from a Vectorize
-            index of my CV and case studies.
+            Messages, views and GitHub data. Contact emails via Resend in the same request.
           </span>
         </li>
         <li>
-          <b>GitHub Actions</b>
-          <span>Pulls public activity every 6 hours.</span>
+          <b>Cron Trigger</b>
+          <span>Pulls public GitHub activity every 6 hours into D1.</span>
+        </li>
+        <li>
+          <b>portfo-chat</b>
+          <span>
+            A separate Worker answers with Llama 3.3 from a Vectorize index of my CV and case
+            studies.
+          </span>
+        </li>
+        <li>
+          <b>Resend</b>
+          <span>One email per contact submit; you wait for it, then get a confirmation.</span>
         </li>
       </ol>
     </div>
     <div class="how-notes">
       <p>
-        <b>The chat</b> (coming soon) runs as its own Cloudflare Worker. It finds the closest
-        passages in Vectorize, only answers from them, and lists its sources.
+        <b>The chat</b> runs as its own Cloudflare Worker. It finds the closest passages in
+        Vectorize, only answers from them, and lists its sources.
       </p>
       <p>
-        <b>Your message</b> is saved with a job in one transaction; a worker sorts it and emails me.
-        Failed jobs retry.
+        <b>Your message</b> is validated, stored in D1, and emailed to me in the same request. A
+        honeypot field catches simple bots. No captcha, no job queue and no LLM sorting.
       </p>
       <p>
-        <b>Guardrails:</b> Cloudflare Turnstile, about 10 chat messages per visitor every 10
-        minutes, 3 contact messages per day, and a daily AI budget.
+        <b>Guardrails:</b> a honeypot on the form; about 10 chat messages per visitor every 10
+        minutes and a daily AI budget on the chat Worker.
       </p>
     </div>
   </div>

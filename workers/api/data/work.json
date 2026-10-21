@@ -1,0 +1,37 @@
+[
+  {
+    "slug": "document-ocr",
+    "title": "Document OCR pipeline",
+    "href": "/work/document-ocr"
+  },
+  {
+    "slug": "legal-rag",
+    "title": "Legal RAG assistant",
+    "href": "/work/legal-rag"
+  },
+  {
+    "slug": "data-validation",
+    "title": "Payroll data validation",
+    "href": "/work/data-validation"
+  },
+  {
+    "slug": "craftland",
+    "title": "Free Fire Craftland",
+    "href": "/work/craftland"
+  },
+  {
+    "slug": "openportfo",
+    "title": "OpenPortfo",
+    "href": "/work/openportfo"
+  },
+  {
+    "slug": "mirror-now",
+    "title": "Mirror Now",
+    "href": "/work/mirror-now"
+  },
+  {
+    "slug": "poet",
+    "title": "Poet",
+    "href": "/work/poet"
+  }
+]

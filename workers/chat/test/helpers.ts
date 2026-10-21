@@ -187,9 +187,9 @@ export function mockFetch(routes: FetchRoutes = {}) {
       return Response.json(routes.turnstile ?? { success: true, hostname: "site.test" });
     }
     const status = routes.status ?? 200;
-    if (url.startsWith("https://site.test/api/activity"))
+    if (url.startsWith("https://api.test/activity"))
       return Response.json(routes.activity ?? activityOk, { status });
-    if (url.startsWith("https://site.test/api/popular"))
+    if (url.startsWith("https://api.test/popular"))
       return Response.json(routes.popular ?? popularOk, { status });
     return new Response("unexpected fetch in test", { status: 599 });
   });

@@ -1,7 +1,9 @@
 /**
- * Live GitHub activity (PUBLIC_USE_MOCKS=false): fills the Activity section from
- * /api/activity. Shows an honest status line when nothing is synced or the API is down.
+ * Live GitHub activity (PUBLIC_USE_MOCKS=false + PUBLIC_API_URL): fills the Activity
+ * section from the portfo-api Worker. Shows an honest status line when nothing is synced
+ * or the API is down / unset.
  */
+import { API_URL, apiUrl } from "~/lib/api";
 import type { GithubSummary } from "~/lib/types";
 import { $, esc, fmt } from "./dom";
 
@@ -61,9 +63,13 @@ export async function initActivity(): Promise<void> {
   const root = $("[data-gh-live]");
   const status = $("[data-gh-status]");
   if (!root || !status) return;
+  if (!API_URL) {
+    status.textContent = "Recent activity appears here once the GitHub sync is connected.";
+    return;
+  }
   status.textContent = "Loading recent activity…";
   try {
-    const res = await fetch("/api/activity", { headers: { Accept: "application/json" } });
+    const res = await fetch(apiUrl("/activity"), { headers: { Accept: "application/json" } });
     const data = (await res.json().catch(() => null)) as
       { status: "ok"; summary: GithubSummary } | { status: "empty" | "unavailable" } | null;
     if (res.ok && data?.status === "ok") return render(root, data.summary);

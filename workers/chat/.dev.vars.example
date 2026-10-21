@@ -1,9 +1,8 @@
-# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars. Production values are
-# Wrangler secrets: `wrangler secret put <NAME>`.
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+# Production: `wrangler secret put <NAME>` (same two names). Do not put these in
+# the Astro site's .env. Both are Worker-only.
+# Non-secret Worker settings (ALLOWED_ORIGINS, API_URL, models) are vars in wrangler.jsonc.
 
-# Turnstile secret. For local dev use Cloudflare's always-pass test secret:
-# 1x0000000000000000000000000000000AA (and site key 1x00000000000000000000AA on the page).
-TURNSTILE_SECRET_KEY=
 # Bearer token for POST /ingest (same value as the CHAT_INGEST_SECRET GitHub Actions secret).
 # Generate with: openssl rand -base64 32
 INGEST_SECRET=

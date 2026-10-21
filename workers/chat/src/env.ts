@@ -32,15 +32,14 @@ export interface Env {
   QUOTA: DurableObjectNamespace<Quota>;
 
   // Secrets (wrangler secret put …)
-  TURNSTILE_SECRET_KEY?: string;
   INGEST_SECRET?: string;
   SESSION_SIGNING_KEY?: string;
 
   // Vars (wrangler.jsonc "vars")
   /** Comma-separated origins allowed to call /chat, e.g. "https://maiphh.dev,http://localhost:4321". */
   ALLOWED_ORIGINS?: string;
-  /** The Astro site, for /api/activity and /api/popular, e.g. "https://maiphh.dev". */
-  SITE_URL?: string;
+  /** Origin of portfo-api (no trailing slash), for /activity and /popular. */
+  API_URL?: string;
   /** Workers AI model for chat + tool calling (an @cf/ id). */
   CHAT_MODEL?: string;
   /** Model tried when a CHAT_MODEL call fails (an @cf/ id). */

@@ -1,13 +1,13 @@
 /**
  * Data contracts for the backend features. The mock modules in `src/lib/mocks/`
- * implement these today; the real /api routes will return the same shapes.
+ * implement these today; the portfo-api Worker returns the same shapes.
  */
 
-/** One row of the "Most read this week" list (GET /api/popular). */
+/** One row of the "Most read this week" list (GET /popular). */
 export interface ViewCount {
   slug: string;
   title: string;
-  /** In-page anchor on the home page, e.g. "#work-ocr". */
+  /** Case-study page, e.g. "/work/document-ocr". */
   href: string;
   views: number;
 }
@@ -21,7 +21,7 @@ export interface GithubFeedItem {
   when: string;
 }
 
-/** A repository as returned by /api/activity (public, non-fork, non-archived). */
+/** A repository as returned by /activity (public, non-fork, non-archived). */
 export interface GithubRepoSummary {
   name: string;
   url: string;
@@ -33,7 +33,7 @@ export interface GithubRepoSummary {
   pushedAt: string | null;
 }
 
-/** Synced every 6 hours into Postgres by GitHub Actions. */
+/** Synced every 6 hours into D1 by the portfo-api Cron Trigger. */
 export interface GithubSummary {
   publicRepos: number;
   commitsLastYear: number;
@@ -46,19 +46,10 @@ export interface GithubSummary {
 }
 
 export type ContactRole = "recruiter" | "client" | "other";
-export type ContactCategory = ContactRole | "spam";
 
 export interface ContactInput {
   name: string;
   email: string;
   role?: ContactRole;
   message: string;
-}
-
-/** The four states a contact job moves through. */
-export type QueueStep = "queued" | "claimed" | "sorted" | "sent";
-
-export interface ContactReceipt {
-  jobId: string;
-  category: ContactCategory;
 }

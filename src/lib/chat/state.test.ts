@@ -24,7 +24,7 @@ describe("chat turn state machine", () => {
     expect(s).toMatchObject({ phase: "done", text: "He ships.", error: null });
   });
 
-  it("verifies Turnstile before the first answer", () => {
+  it("verify moves a send into verifying, then a session or token continues", () => {
     const s = run([{ type: "send" }, { type: "verify" }]);
     expect(s.phase).toBe("verifying");
     expect(reduce(s, ev({ type: "session", token: "t", expiresAt: 1 })).phase).toBe("thinking");

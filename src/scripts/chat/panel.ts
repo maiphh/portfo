@@ -1,8 +1,8 @@
 /**
  * The chat panel: open/close (focus trap, Esc, focus return), the conversation, streaming,
- * Turnstile and the session token. Model text only ever goes in through textContent.
+ * and the session token. Model text only ever goes in through textContent.
  */
-import { CHAT_ENDPOINT, CHAT_MOCK, TURNSTILE_SITE_KEY } from "~/lib/chat/config";
+import { CHAT_ENDPOINT, CHAT_MOCK } from "~/lib/chat/config";
 import { ChatHttpError, MAX_INPUT_CHARS, streamChat } from "~/lib/chat/client";
 import { friendlyError } from "~/lib/chat/errors";
 import { emit } from "~/lib/chat/events";
@@ -20,7 +20,6 @@ import { MOCK_SCENARIOS, mockStream, type MockScenario } from "~/lib/chat/mock";
 import type { ChatEvent, Source } from "~/lib/chat/sse";
 import { initialTurn, isBusy, reduce, type Action, type TurnState } from "~/lib/chat/state";
 import { tidy } from "~/lib/chat/text";
-import { turnstileToken } from "./turnstile";
 
 const SHEET = window.matchMedia("(max-width: 1279.98px)");
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -46,7 +45,6 @@ const used = $<HTMLElement>("[data-chat-used]", root);
 const statusLine = $<HTMLElement>("[data-chat-status]", root);
 const live = $<HTMLElement>("[data-chat-live]", root);
 const sugg = $<HTMLElement>("[data-chat-sugg]", root);
-const tsBox = $<HTMLElement>("[data-chat-turnstile]", root);
 
 let chat: StoredChat = loadChat();
 let turn: TurnState = initialTurn;
@@ -91,13 +89,11 @@ function announce(text: string): void {
 function renderStatusLine(): void {
   statusLine.replaceChildren();
   const label =
-    turn.phase === "verifying"
-      ? "Checking you're human…"
-      : turn.phase === "thinking"
-        ? (turn.status?.label ?? "Thinking…")
-        : turn.phase === "answering"
-          ? "Answering…"
-          : null;
+    turn.phase === "thinking"
+      ? (turn.status?.label ?? "Thinking…")
+      : turn.phase === "answering"
+        ? "Answering…"
+        : null;
   if (label) {
     const b = document.createElement("b");
     b.textContent = label;
@@ -222,36 +218,12 @@ async function* events(question: string, history: StoredMessage[], signal: Abort
     return;
   }
   const messages = wireMessages(history, question);
-  let sessionToken = liveSession(chat.session);
-  for (let attempt = 0; ; attempt++) {
-    let turnstile: string | undefined;
-    if (!sessionToken) {
-      dispatch({ type: "verify" });
-      turnstile = await turnstileToken(tsBox, TURNSTILE_SITE_KEY);
-    }
-    try {
-      yield* streamChat(
-        CHAT_ENDPOINT,
-        { messages, ...(sessionToken ? { sessionToken } : { turnstileToken: turnstile }) },
-        { signal, origin: location.origin },
-      );
-      return;
-    } catch (e) {
-      // The Worker no longer accepts the session (expired or rotated key): verify once more.
-      if (
-        e instanceof ChatHttpError &&
-        e.code === "turnstile_required" &&
-        sessionToken &&
-        !attempt
-      ) {
-        chat.session = null;
-        persist();
-        sessionToken = undefined;
-        continue;
-      }
-      throw e;
-    }
-  }
+  const sessionToken = liveSession(chat.session);
+  yield* streamChat(
+    CHAT_ENDPOINT,
+    { messages, ...(sessionToken ? { sessionToken } : {}) },
+    { signal, origin: location.origin },
+  );
 }
 
 async function ask(raw: string, opts: { retry?: boolean } = {}): Promise<void> {
@@ -290,8 +262,7 @@ async function ask(raw: string, opts: { retry?: boolean } = {}): Promise<void> {
     }
     dispatch({ type: "event", event: ev });
     if (turn.status) view.thinkLabel.textContent = turn.status.label;
-    view.think.hidden = turn.phase !== "thinking" && turn.phase !== "verifying";
-    if (turn.phase === "verifying") view.thinkLabel.textContent = "Checking you're human…";
+    view.think.hidden = turn.phase !== "thinking";
     if (turn.text) view.ans.textContent = tidy(turn.text);
     renderSources(view.srcs, turn.sources);
     scrollLog();

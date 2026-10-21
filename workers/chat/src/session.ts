@@ -1,7 +1,6 @@
 /**
- * Short-lived signed session token, issued after Turnstile passes on a session's first
- * message: `v1.<payload base64url>.<HMAC-SHA256 base64url>`. Later messages send it
- * instead of a new Turnstile token until it expires.
+ * Short-lived signed session token, issued on a session's first message:
+ * `v1.<payload base64url>.<HMAC-SHA256 base64url>`. Later messages send it until it expires.
  */
 import { SESSION_TTL_MS } from "./config";
 

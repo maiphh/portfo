@@ -1,9 +1,10 @@
 interface ImportMetaEnv {
   /** "false" turns off the labelled sample data for backend features. Defaults to "true". */
   readonly PUBLIC_USE_MOCKS?: string;
-  readonly PUBLIC_TURNSTILE_SITE_KEY?: string;
   /** Base URL of the portfo-chat Worker. Unset means the chat window uses sample replies. */
   readonly PUBLIC_CHAT_URL?: string;
+  /** Base URL of the portfo-api Worker (contact, views, GitHub). No trailing slash. */
+  readonly PUBLIC_API_URL?: string;
 }
 
 interface ImportMeta {

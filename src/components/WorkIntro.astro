@@ -3,7 +3,7 @@ import type { ViewCount } from "~/lib/types";
 import MockNote from "./MockNote.astro";
 
 interface Props {
-  /** Sample data with mocks on; null with mocks off (the list then loads from /api/popular). */
+  /** Sample data with mocks on; null with mocks off (the list then loads from the API Worker). */
   mostRead: ViewCount[] | null;
 }
 const { mostRead } = Astro.props;
@@ -50,7 +50,7 @@ const fmt = (n: number) => n.toLocaleString("en-US");
         </>
       ) : (
         <>
-          {/* Live mode: filled from /api/popular by features.ts; this text is the no-JS state. */}
+          {/* Live mode: filled from Worker /popular by features.ts; this text is the no-JS state. */}
           <ol data-most data-max="4" data-live hidden />
           <p class="empty" data-most-status role="status">
             View counts appear here once analytics is connected.

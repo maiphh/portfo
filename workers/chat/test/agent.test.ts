@@ -97,13 +97,13 @@ describe("agent loop", () => {
     ).toBe(NO_ANSWER);
   });
 
-  it('SITE_URL empty (the deployed state): GitHub and popular tools are tool errors, answer is "I don\'t know"', async () => {
+  it('API_URL empty (the deployed state): GitHub and popular tools are tool errors, answer is "I don\'t know"', async () => {
     const f = mockFetch();
     const ai = fakeAi([
       { calls: [{ name: "get_github_stats" }, { name: "get_popular_projects" }] },
       { text: "He made 999 commits and Legal RAG is the most viewed." },
     ]);
-    const env = testEnv({ AI: ai.ai, VECTORIZE: fakeVectorize([]).index, SITE_URL: "" });
+    const env = testEnv({ AI: ai.ai, VECTORIZE: fakeVectorize([]).index, API_URL: "" });
     const cfg = config(env);
     const result = await runAgent({
       ai: ai.ai,

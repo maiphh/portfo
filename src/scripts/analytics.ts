@@ -1,9 +1,10 @@
 /**
- * Page-view beacons to /api/view. Only with PUBLIC_USE_MOCKS=false; no cookies, no IDs.
- * The server dedupes per visitor, page and day, so repeat beacons are harmless.
+ * Page-view beacons to the portfo-api Worker. Only with PUBLIC_USE_MOCKS=false and
+ * PUBLIC_API_URL set; no cookies, no IDs. The Worker dedupes per visitor, page and day.
  * Skipped when the browser sends Do Not Track or Global Privacy Control.
+ * Uses fetch + keepalive (not sendBeacon): cross-origin JSON beacons are unreliable.
  */
-import { USE_MOCKS } from "~/lib/flags";
+import { API_MOCK, apiUrl } from "~/lib/api";
 
 function optedOut(): boolean {
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
@@ -22,13 +23,11 @@ function referrerHost(): string | undefined {
 const sent = new Set<string>();
 
 export function sendView(slug: string): void {
-  if (USE_MOCKS || optedOut() || sent.has(slug)) return;
+  if (API_MOCK || optedOut() || sent.has(slug)) return;
   sent.add(slug);
   const ref = referrerHost();
   const body = JSON.stringify(ref ? { slug, referrer_host: ref } : { slug });
-  const blob = new Blob([body], { type: "application/json" });
-  if (navigator.sendBeacon?.("/api/view", blob)) return;
-  void fetch("/api/view", {
+  void fetch(apiUrl("/view"), {
     method: "POST",
     body,
     headers: { "Content-Type": "application/json" },
@@ -47,7 +46,7 @@ export function trackPageView(): void {
  * 40% and 60% of the viewport), which also works for sections taller than the screen.
  */
 export function trackSections(): void {
-  if (USE_MOCKS || !("IntersectionObserver" in window)) return;
+  if (API_MOCK || !("IntersectionObserver" in window)) return;
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {

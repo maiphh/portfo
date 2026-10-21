@@ -50,10 +50,9 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
             },
             tools: tools.map((t) => t.name),
             configured: {
-              turnstile: Boolean(env.TURNSTILE_SECRET_KEY),
               session: Boolean(env.SESSION_SIGNING_KEY),
               ingest: Boolean(env.INGEST_SECRET),
-              siteUrl: Boolean(cfg.siteUrl),
+              apiUrl: Boolean(cfg.apiUrl),
             },
           },
           { headers: { "Cache-Control": "no-store" } },

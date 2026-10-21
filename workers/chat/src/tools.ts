@@ -54,18 +54,18 @@ const projectSource = (p: { title: string; href: string }): Source => ({
   href: p.href,
 });
 
-async function siteJson(ctx: ToolContext, path: string): Promise<unknown> {
-  if (!ctx.cfg.siteUrl) throw new ToolError("The site URL is not configured.");
+async function apiJson(ctx: ToolContext, path: string): Promise<unknown> {
+  if (!ctx.cfg.apiUrl) throw new ToolError("The API URL is not configured.");
   let res: Response;
   try {
-    res = await fetch(`${ctx.cfg.siteUrl}${path}`, {
+    res = await fetch(`${ctx.cfg.apiUrl}${path}`, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(SITE_FETCH_TIMEOUT_MS),
     });
   } catch {
-    throw new ToolError("The site did not answer.");
+    throw new ToolError("The API did not answer.");
   }
-  if (!res.ok) throw new ToolError(`The site answered HTTP ${res.status}.`);
+  if (!res.ok) throw new ToolError(`The API answered HTTP ${res.status}.`);
   return res.json();
 }
 
@@ -183,7 +183,7 @@ const getContact = tool({
   },
 });
 
-/* ---------- live site APIs ---------- */
+/* ---------- live portfo-api ---------- */
 
 const activitySchema = z.object({
   status: z.string(),
@@ -215,12 +215,12 @@ const activitySchema = z.object({
 const getGithubStats = tool({
   name: "get_github_stats",
   description:
-    'Get Phu\'s public GitHub activity from the site: repo count, commits in the last year, streak, languages of recently pushed repos, and recent activity. range "year" (default) gives totals; "recent" gives the last 14 days.',
+    'Get Phu\'s public GitHub activity: repo count, commits in the last year, streak, languages of recently pushed repos, and recent activity. range "year" (default) gives totals; "recent" gives the last 14 days.',
   label: "Checking GitHub activity…",
   schema: z.object({ range: z.enum(["year", "recent"]).optional() }).strict(),
   async run({ range = "year" }, ctx) {
-    const parsed = activitySchema.safeParse(await siteJson(ctx, "/api/activity"));
-    if (!parsed.success) throw new ToolError("The site returned activity in an unexpected shape.");
+    const parsed = activitySchema.safeParse(await apiJson(ctx, "/activity"));
+    if (!parsed.success) throw new ToolError("The API returned activity in an unexpected shape.");
     const a = parsed.data;
     const sources: Source[] = [{ title: "GitHub activity", href: "/#activity" }];
     if (a.status !== "ok" || !a.summary)
@@ -279,9 +279,9 @@ const getPopularProjects = tool({
   label: "Checking what's popular…",
   schema: z.object({ days: z.number().int().min(1).max(30).optional() }).strict(),
   async run({ days = 7 }, ctx) {
-    const parsed = popularSchema.safeParse(await siteJson(ctx, `/api/popular?days=${days}`));
+    const parsed = popularSchema.safeParse(await apiJson(ctx, `/popular?days=${days}`));
     if (!parsed.success)
-      throw new ToolError("The site returned popular projects in an unexpected shape.");
+      throw new ToolError("The API returned popular projects in an unexpected shape.");
     const pages = new Map((ctx.data ?? siteData).projects.map((p) => [p.slug, p]));
     const items = parsed.data.items.map((i) => ({
       slug: i.slug,

@@ -1,8 +1,9 @@
 # portfo-chat
 
 The chat agent for Mai Gia Phu's portfolio, as its own Cloudflare Worker. The Astro site
-stays on Vercel; the chat window (next PR) and the ink-dot mascot (the one after) call
-this Worker. Deployed at `https://portfo-chat.poet-ung-ho.workers.dev` with the top-level
+stays on Vercel. Its chat window and ink-dot mascot call this Worker when
+`PUBLIC_CHAT_URL` is set and `PUBLIC_USE_MOCKS` is off. Deployed at
+`https://portfo-chat.poet-ung-ho.workers.dev` with the top-level
 (localhost-only) config; see [Environments and the deploy guard](#environments-and-the-deploy-guard).
 
 ## Endpoints
@@ -15,9 +16,9 @@ this Worker. Deployed at `https://portfo-chat.poet-ung-ho.workers.dev` with the 
 
 ### `POST /chat`
 
-Request: `{ messages: [{ role: "user" | "assistant", content }], turnstileToken?, sessionToken? }`.
-The first message of a session needs a Turnstile token; the reply's `session` event carries
-a signed token (30 minutes) to send as `sessionToken` afterwards.
+Request: `{ messages: [{ role: "user" | "assistant", content }], sessionToken? }`.
+A missing or expired session gets a new one in the `session` event (30 minutes). Send it
+back as `sessionToken` on later messages.
 
 Response (`text/event-stream`):
 
@@ -31,8 +32,8 @@ Response (`text/event-stream`):
 | `error`   | `{ error, message }` if the model failed mid-stream (then `sources: []`) |
 
 Errors before the stream are JSON `{ error, message }`: `400 bad_request`,
-`413 too_long` (over 500 characters), `401 turnstile_required`, `403 turnstile_failed`,
-`403 forbidden_origin`, `429 rate_limited` (with `Retry-After`), `429 daily_limit`
+`413 too_long` (over 500 characters), `403 forbidden_origin`, `429 rate_limited`
+(with `Retry-After`), `429 daily_limit`
 (the "back tomorrow" message), `503 not_configured`.
 
 ## The agent
@@ -44,15 +45,15 @@ Errors before the stream are JSON `{ error, message }`: `400 bad_request`,
   [runtime knobs](#runtime-knobs).
 - Tools (all read-only, zod-validated; bad arguments go back to the model as a tool error):
 
-| Tool                          | Source                                                           |
-| ----------------------------- | ---------------------------------------------------------------- |
-| `list_projects()`             | `data/site.json` (generated from `src/content/work`)             |
-| `get_project(slug)`           | `data/site.json`                                                 |
-| `get_experience()`            | `data/site.json` (from `src/data/experience.json`)               |
-| `get_contact()`               | `data/site.json` (from `src/lib/site.ts`); never availability    |
-| `get_github_stats(range?)`    | `SITE_URL/api/activity`; `range` is `year` (default) or `recent` |
-| `get_popular_projects(days?)` | `SITE_URL/api/popular?days=` (1 to 30, default 7)                |
-| `search_knowledge(query)`     | bge-m3 embedding, Vectorize top 5, score ≥ `MIN_SCORE`           |
+| Tool                          | Source                                                        |
+| ----------------------------- | ------------------------------------------------------------- |
+| `list_projects()`             | `data/site.json` (generated from `src/content/work`)          |
+| `get_project(slug)`           | `data/site.json`                                              |
+| `get_experience()`            | `data/site.json` (from `src/data/experience.json`)            |
+| `get_contact()`               | `data/site.json` (from `src/lib/site.ts`); never availability |
+| `get_github_stats(range?)`    | `API_URL/activity`; `range` is `year` (default) or `recent`   |
+| `get_popular_projects(days?)` | `API_URL/popular?days=` (1 to 30, default 7)                  |
+| `search_knowledge(query)`     | bge-m3 embedding, Vectorize top 5, score ≥ `MIN_SCORE`        |
 
 - Enforced in code, not only in the prompt: sources are the links tools returned (never
   URLs the model writes); when no tool returned data the answer is a fixed "I don't know"
@@ -131,40 +132,36 @@ delete-vectors portfo-chat --ids <doc>:0 …`.
 
 ```sh
 pnpm install
-pnpm test        # vitest in workerd (Miniflare); AI, Vectorize, Turnstile and site APIs mocked
+pnpm test        # vitest in workerd (Miniflare); AI, Vectorize and the API Worker mocked
 pnpm typecheck
 cp .dev.vars.example .dev.vars && pnpm dev   # wrangler dev: AI and Vectorize need a Cloudflare login
 ```
 
 ## Environments and the deploy guard
 
-| Config                       | Deploy with                        | `ALLOWED_ORIGINS`                   | `SITE_URL`           |
-| ---------------------------- | ---------------------------------- | ----------------------------------- | -------------------- |
-| top level (deployed today)   | `wrangler deploy --env=""`         | `http://localhost:4321`             | `""` (empty)         |
-| `env.production` (at launch) | `wrangler deploy --env production` | TODO: `https://<production domain>` | TODO: same, no slash |
+| Config                       | Deploy with                        | `ALLOWED_ORIGINS`                   | `API_URL`                         |
+| ---------------------------- | ---------------------------------- | ----------------------------------- | --------------------------------- |
+| top level (deployed today)   | `wrangler deploy --env=""`         | `http://localhost:4321`             | `""` (empty)                      |
+| `env.production` (at launch) | `wrangler deploy --env production` | TODO: `https://<production domain>` | TODO: portfo-api origin, no slash |
 
 - The **top level** is exactly what is deployed now. Change it only together with the
   dashboard, so the file and the live Worker don't drift again.
 - **`env.production`** deploys to the same Worker (`"name": "portfo-chat"`), so the URL and
   the secrets stay. wrangler does not inherit `vars` or bindings into an environment, so
-  `env.production` repeats them all; a test checks they match the top level. Its two
-  `REPLACE_ME_SITE_DOMAIN` values are the launch TODOs.
-- With `SITE_URL` empty, `get_github_stats` and `get_popular_projects` return a tool error
-  ("The site URL is not configured.") without any request, and the agent answers with the
+  `env.production` repeats them all; a test checks they match the top level. Its
+  `REPLACE_ME_SITE_DOMAIN` / `REPLACE_ME_API_ORIGIN` values are the launch TODOs.
+- With `API_URL` empty, `get_github_stats` and `get_popular_projects` return a tool error
+  ("The API URL is not configured.") without any request, and the agent answers with the
   fixed "I don't know" reply. Tests cover both tools and the agent.
 
 **Deploy guard.** `build.command` runs `node scripts/check-config.ts` (with `--env production`
 for that environment) before every `wrangler deploy` and `wrangler versions upload`. It fails
 the deploy if any value in the effective config matches `REPLACE_ME`, and for production also
-if `SITE_URL` is not `https://…` or `ALLOWED_ORIGINS` has no `https://` origin. Under
+if `API_URL` is not `https://…` or `ALLOWED_ORIGINS` has no `https://` origin. Under
 `wrangler dev` it only prints. Run it by hand with `pnpm check:config` or
 `pnpm check:config --env production`, **including before any upload that doesn't go through
 wrangler** (API or dashboard), since the guard can't run there. CI runs `pnpm check:config`,
 and `test/config-guard.test.ts` tests the checker and the committed file.
-
-**Turnstile** is localhost-only today. Before launch, add the production hostname (and any
-preview hostnames) to the Turnstile widget, or the first message from the real site fails
-with `403 turnstile_failed`.
 
 ## Before the first deploy
 
@@ -179,12 +176,9 @@ Done for the current deployment (kept for a fresh account). Then fill in `env.pr
 4. **Rate Limiting binding** `CHAT_BURST_LIMITER`: `namespace_id` `1001`, 3 per 10 s.
    Created by the deploy (the namespace id is chosen, not provisioned).
 5. **Workers AI** binding `AI`: on by default for the account.
-6. **Turnstile widget** (Managed) with `localhost` and, before launch, the site's production
-   hostname and any preview hostnames. Gives `PUBLIC_TURNSTILE_SITE_KEY` (Vercel) and
-   `TURNSTILE_SECRET_KEY` (Worker). The contact form can share it.
-7. **Worker secrets**: `wrangler secret put TURNSTILE_SECRET_KEY`, `INGEST_SECRET`,
-   `SESSION_SIGNING_KEY` (`openssl rand -base64 32` for the last two).
-8. **Worker vars** in `wrangler.jsonc`: for launch, fill `ALLOWED_ORIGINS` (production
-   origin, plus preview origins if wanted) and `SITE_URL` (the production site) in
+6. **Worker secrets**: `wrangler secret put INGEST_SECRET`, `SESSION_SIGNING_KEY`
+   (`openssl rand -base64 32` for both).
+7. **Worker vars** in `wrangler.jsonc`: for launch, fill `ALLOWED_ORIGINS` (production
+   origin, plus preview origins if wanted) and `API_URL` (the portfo-api origin) in
    `env.production`. The runtime knobs already have their defaults in both blocks.
-9. AI Gateway: not used.
+8. AI Gateway: not used.

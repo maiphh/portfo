@@ -109,10 +109,10 @@ describe("get_contact", () => {
 });
 
 describe("get_github_stats", () => {
-  it("fetches SITE_URL/api/activity and derives languages", async () => {
+  it("fetches API_URL/activity and derives languages", async () => {
     const f = mockFetch();
     const r = await okResult("get_github_stats", {});
-    expect(f.seen[0]?.url).toBe("https://site.test/api/activity");
+    expect(f.seen[0]?.url).toBe("https://api.test/activity");
     expect(r.data).toMatchObject({
       publicRepos: 12,
       commitsLastYear: 340,
@@ -132,7 +132,7 @@ describe("get_github_stats", () => {
     expect(d.repos.map((x) => x.name)).toEqual(["portfo"]);
   });
 
-  it("is empty before the first sync, and a tool error when the site is down or SITE_URL is unset", async () => {
+  it("is empty before the first sync, and a tool error when the API is down or API_URL is unset", async () => {
     mockFetch({ activity: { status: "empty", summary: null, repos: [] } });
     expect((await okResult("get_github_stats", {})).empty).toBe(true);
     vi.restoreAllMocks();
@@ -141,7 +141,7 @@ describe("get_github_stats", () => {
       ok: false,
       error: expect.stringContaining("503"),
     });
-    expect(await runTool("get_github_stats", {}, toolCtx({ SITE_URL: "" }))).toMatchObject({
+    expect(await runTool("get_github_stats", {}, toolCtx({ API_URL: "" }))).toMatchObject({
       ok: false,
       error: expect.stringContaining("not configured"),
     });
@@ -152,10 +152,10 @@ describe("get_github_stats", () => {
 });
 
 describe("get_popular_projects", () => {
-  it("fetches /api/popular with days and links to the case-study pages", async () => {
+  it("fetches /popular with days and links to the case-study pages", async () => {
     const f = mockFetch();
     const r = await okResult("get_popular_projects", { days: 14 });
-    expect(f.seen[0]?.url).toBe("https://site.test/api/popular?days=14");
+    expect(f.seen[0]?.url).toBe("https://api.test/popular?days=14");
     expect((r.data as { items: unknown[] }).items[0]).toEqual({
       slug: "legal-rag",
       title: "Legal RAG assistant",
@@ -176,9 +176,9 @@ describe("get_popular_projects", () => {
     expect((await okResult("get_popular_projects", {})).empty).toBe(true);
   });
 
-  it("is a tool error, with no fetch, when SITE_URL is empty", async () => {
+  it("is a tool error, with no fetch, when API_URL is empty", async () => {
     const f = mockFetch();
-    expect(await runTool("get_popular_projects", {}, toolCtx({ SITE_URL: "" }))).toMatchObject({
+    expect(await runTool("get_popular_projects", {}, toolCtx({ API_URL: "" }))).toMatchObject({
       ok: false,
       error: expect.stringContaining("not configured"),
     });

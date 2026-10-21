@@ -13,7 +13,6 @@ export interface WireMessage {
 
 export interface ChatRequest {
   messages: WireMessage[];
-  turnstileToken?: string;
   sessionToken?: string;
 }
 

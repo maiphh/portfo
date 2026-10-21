@@ -37,11 +37,11 @@
 
   // The values deployed today. Keep this block in sync with the dashboard.
   "vars": {
-    // Origins allowed to call /chat. Their hostnames must also be on the Turnstile widget.
+    // Origins allowed to call /chat.
     "ALLOWED_ORIGINS": "http://localhost:4321",
-    // The Astro site, for get_github_stats (/api/activity) and get_popular_projects (/api/popular).
+    // Origin of portfo-api (no trailing slash), for get_github_stats and get_popular_projects.
     // Empty: those two tools return a tool error and the agent answers "I don't know".
-    "SITE_URL": "",
+    "API_URL": "",
     // Runtime knobs (README "Runtime knobs"). Invalid values fall back to these defaults;
     // numbers are clamped to their range; models must be @cf/ ids.
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
@@ -53,7 +53,7 @@
     "MIN_SCORE": "0.35",
   },
 
-  // Secrets (never in this file): wrangler secret put TURNSTILE_SECRET_KEY / INGEST_SECRET / SESSION_SIGNING_KEY
+  // Secrets (never in this file): wrangler secret put INGEST_SECRET / SESSION_SIGNING_KEY
 
   "env": {
     // `wrangler deploy --env production`. Same Worker (name), so the workers.dev URL and the
@@ -74,11 +74,10 @@
       "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
       "vars": {
         // TODO(launch): the production site origin, e.g. "https://maiphh.dev". Keep
-        // localhost only if local dev should still reach the production Worker. The hostname
-        // must also be added to the Turnstile widget.
+        // localhost only if local dev should still reach the production Worker.
         "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN",
-        // TODO(launch): the production site, e.g. "https://maiphh.dev" (no trailing slash).
-        "SITE_URL": "https://REPLACE_ME_SITE_DOMAIN",
+        // TODO(launch): the production portfo-api origin (no trailing slash).
+        "API_URL": "https://REPLACE_ME_API_ORIGIN",
         "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
         "DAILY_MESSAGE_CAP": "50",

@@ -62,7 +62,7 @@ export interface Config {
   maxTokens: number;
   minScore: number;
   origins: string[];
-  siteUrl: string | null;
+  apiUrl: string | null;
 }
 
 export function config(env: Env): Config {
@@ -79,7 +79,7 @@ export function config(env: Env): Config {
       .split(",")
       .map((o) => o.trim().replace(/\/$/, ""))
       .filter(Boolean),
-    siteUrl: env.SITE_URL ? env.SITE_URL.replace(/\/$/, "") : null,
+    apiUrl: env.API_URL ? env.API_URL.replace(/\/$/, "") : null,
   };
 }
 

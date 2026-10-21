@@ -423,13 +423,6 @@ html.chat-is-sheet-open .chat-launcher {
   opacity: 0.5;
   cursor: default;
 }
-.chat-turnstile {
-  padding: 4px 14px 0;
-}
-.chat-turnstile[hidden] {
-  display: none;
-}
-
 .chat-form {
   position: relative;
   display: flex;

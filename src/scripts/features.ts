@@ -1,16 +1,14 @@
 /**
- * Home page features that work without motion: most-read, heatmap, contact queue,
+ * Home page features that work without motion: most-read, heatmap, contact form,
  * OpenPortfo chart, OCR leader lines, dev panel. Motion lives in motion.ts.
  */
-import { gsap } from "gsap";
 import { candleSeries, pctChange, type Candle } from "~/lib/candles";
+import { API_MOCK, API_URL, apiUrl } from "~/lib/api";
 import { contactRules, type ContactField } from "~/lib/contact-rules";
 import { USE_MOCKS } from "~/lib/flags";
-import { mockSubmitContact } from "~/lib/mocks/contact";
 import { site } from "~/lib/site";
 import { TL_MONTHS, nowIndex } from "~/lib/timeline";
-import type { ContactRole, QueueStep } from "~/lib/types";
-import { $, $$, clock, esc, fmt, reduce, relRect } from "./dom";
+import { $, $$, esc, fmt, reduce, relRect } from "./dom";
 
 /* ---------- dev panel (?dev) ---------- */
 export function initDevPanel() {
@@ -20,7 +18,7 @@ export function initDevPanel() {
   $("[data-dev-close]")?.addEventListener("click", () => (dev.hidden = true));
 }
 
-/* ---------- 1a. most read, live: /api/popular, refreshed every 30 s while visible ---------- */
+/* ---------- 1a. most read, live: Worker /popular, refreshed every 30 s while visible ---------- */
 interface PopularItem {
   title: string;
   href: string;
@@ -36,9 +34,13 @@ export function initPopular() {
     status.hidden = false;
     status.textContent = msg;
   };
+  if (!API_URL) {
+    show("View counts appear here once analytics is connected.");
+    return;
+  }
   const load = async () => {
     try {
-      const res = await fetch("/api/popular", { headers: { Accept: "application/json" } });
+      const res = await fetch(apiUrl("/popular"), { headers: { Accept: "application/json" } });
       if (!res.ok) throw new Error(String(res.status));
       const data = (await res.json()) as { items?: PopularItem[] };
       const items = (data.items ?? []).filter((it) => it.views > 0).slice(0, max);
@@ -101,20 +103,18 @@ export function initMostRead() {
 
 /* ---------- 2. heatmap (fits its container now; timeline "now" tracks the real date) ---------- */
 
-/* ---------- 4. contact form + queue (SAMPLE with mocks on; POST /api/contact with mocks off) ---------- */
+/* ---------- 4. contact form (SAMPLE with mocks on; POST Worker /contact with mocks off) ---------- */
 export function initContact() {
   const cf = $<HTMLFormElement>("#contact-form");
   const status = $("#q-status");
   if (!cf || !status) return;
-  const steps = $$(".qs", cf);
   const sendBtn = $<HTMLButtonElement>("button[type=submit]", cf);
-  const pkt = $("[data-pkt]", cf);
   const fields = Object.keys(contactRules) as ContactField[];
   const field = (k: ContactField) =>
     cf.elements.namedItem(k) as HTMLInputElement | HTMLTextAreaElement;
   const errEl = (f: HTMLElement) =>
     document.getElementById(f.getAttribute("aria-describedby") ?? "");
-  // JS validates inline with readable messages; without JS the browser and server do.
+  // JS validates inline with readable messages; without JS the browser and Worker do.
   cf.noValidate = true;
 
   const validate = () => {
@@ -140,12 +140,6 @@ export function initContact() {
     });
   }
 
-  const resetSteps = () =>
-    steps.forEach((s) => {
-      s.classList.remove("active", "done");
-      const sm = $("small", s);
-      if (sm) sm.textContent = "waiting";
-    });
   const showFieldErrors = (errors: Partial<Record<string, string>>) => {
     let first: HTMLElement | null = null;
     for (const k of fields) {
@@ -159,11 +153,13 @@ export function initContact() {
     return first;
   };
 
-  /** Real submission: POST /api/contact, then show where the message is. */
   const sendLive = async () => {
+    if (!cf.action) {
+      status.textContent = `The form isn't connected yet. Please email ${site.email} instead.`;
+      return;
+    }
     if (sendBtn) sendBtn.disabled = true;
     cf.setAttribute("aria-busy", "true");
-    resetSteps();
     status.textContent = "Sending…";
     const fallback = `Please email ${site.email} instead.`;
     try {
@@ -177,14 +173,8 @@ export function initContact() {
         fieldErrors?: Partial<Record<string, string>>;
       };
       if (res.ok) {
-        const queued = steps[0];
-        if (queued) {
-          queued.classList.add("done");
-          const sm = $("small", queued);
-          if (sm) sm.textContent = clock();
-        }
         const name = field("name").value.trim().split(/\s+/)[0] ?? "";
-        status.textContent = `Sent. Thanks, ${name}: your message is in the queue, and I'll read it myself.`;
+        status.textContent = `Sent. Thanks, ${name}. I'll read it myself.`;
         cf.reset();
         fields.forEach((k) => field(k).removeAttribute("aria-invalid"));
         return;
@@ -195,19 +185,12 @@ export function initContact() {
         bad?.focus();
         return;
       }
-      status.textContent =
-        res.status === 429
-          ? `That's 3 messages today, the daily limit. ${fallback}`
-          : res.status === 403
-            ? "The anti-spam check didn't pass. Please try again."
-            : `Sorry, the message couldn't be sent. ${fallback}`;
+      status.textContent = `Sorry, the message couldn't be sent. ${fallback}`;
     } catch {
       status.textContent = `Sorry, the message couldn't be sent (network error). ${fallback}`;
     } finally {
       if (sendBtn) sendBtn.disabled = false;
       cf.removeAttribute("aria-busy");
-      // Turnstile tokens are single-use.
-      (window as { turnstile?: { reset: () => void } }).turnstile?.reset();
     }
   };
 
@@ -220,81 +203,14 @@ export function initContact() {
       bad.focus();
       return;
     }
-    if (!USE_MOCKS) {
+    if (!API_MOCK) {
       void sendLive();
       return;
     }
     const name = field("name").value.trim().split(/\s+/)[0] ?? "";
-    const role = (cf.querySelector<HTMLInputElement>("input[name=role]:checked")?.value ||
-      undefined) as ContactRole | undefined;
-    const { jobId, category } = mockSubmitContact({
-      name: field("name").value,
-      email: field("email").value,
-      message: field("message").value,
-      ...(role ? { role } : {}),
-    });
-    if (sendBtn) sendBtn.disabled = true;
-    steps.forEach((s) => {
-      s.classList.remove("active", "done");
-      const sm = $("small", s);
-      if (sm) sm.textContent = "waiting";
-    });
-    const labels: Record<QueueStep, string> = {
-      queued: `Saved as ${jobId} in the jobs table`,
-      claimed: `A worker claimed ${jobId}`,
-      sorted: `The LLM sorted it as ${category}${category === "spam" ? ", so it's stored, not emailed" : ""}`,
-      sent: category === "spam" ? "Stored without emailing Phu" : "Phu has it in his inbox",
-    };
-    const gap = reduce() ? 0.35 : 0.8;
-    const tl = gsap.timeline();
-    if (!reduce() && pkt) tl.set(pkt, { opacity: 1, x: 0 }, 0);
-    steps.forEach((s, i) => {
-      const at = i * gap;
-      const step = (s.dataset.step ?? "queued") as QueueStep;
-      tl.call(
-        () => {
-          s.classList.add("active");
-          status.textContent = `${labels[step]}… (sample)`;
-        },
-        undefined,
-        at,
-      );
-      if (!reduce() && pkt)
-        tl.to(
-          pkt,
-          { x: () => s.offsetLeft + 6 - 5, duration: gap * 0.75, ease: "power2.inOut" },
-          at,
-        );
-      tl.call(
-        () => {
-          s.classList.remove("active");
-          s.classList.add("done");
-          const sm = $("small", s);
-          if (sm) sm.textContent = clock();
-        },
-        undefined,
-        at + gap * 0.8,
-      );
-      const ring = $(".ring", s);
-      if (!reduce() && ring)
-        tl.fromTo(
-          ring,
-          { scale: 0.6 },
-          { scale: 1, duration: 0.5, ease: "expo.out" },
-          at + gap * 0.8,
-        );
-    });
-    tl.call(
-      () => {
-        status.textContent = `${labels.sent}. Thanks, ${name}. This is a sample: nothing was actually sent. Email ${site.email} to reach me.`;
-        if (sendBtn) sendBtn.disabled = false;
-        cf.reset();
-        fields.forEach((k) => field(k).removeAttribute("aria-invalid"));
-      },
-      undefined,
-      steps.length * gap,
-    );
-    if (!reduce() && pkt) tl.to(pkt, { opacity: 0, duration: 0.3 }, steps.length * gap - 0.1);
+    status.textContent = `Thanks, ${name}. This is a sample: nothing was sent. Email ${site.email} to reach me.`;
+    cf.reset();
+    fields.forEach((k) => field(k).removeAttribute("aria-invalid"));
   });
 }
 

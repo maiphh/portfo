@@ -1,4 +1,4 @@
-/** SAMPLE DATA † — view counts for "Most read this week" until /api/popular exists. */
+/** SAMPLE DATA † — view counts for "Most read this week" until the API Worker is live. */
 export const mockViews: Readonly<Record<string, number>> = {
   craftland: 1517,
   "document-ocr": 1284,
