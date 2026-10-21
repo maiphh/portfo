@@ -182,7 +182,7 @@ export const dvp: CaseStudyData = {
         {
           id: "preflight",
           title: "Preflight",
-          sub: "validate-input, in the app",
+          sub: "validate-input",
           at: [3, 1],
           details: {
             does: "A quick synchronous check of the month's files before process starts.",
