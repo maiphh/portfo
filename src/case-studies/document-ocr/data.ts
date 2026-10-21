@@ -1,7 +1,7 @@
 /**
  * Document OCR case study. Sources: projects/ocr/{README,architecture,highlights}.md (portfo
  * main) and the OCR moodboard (portfo-design case-studies/moodboards/ocr.md, flow-example/).
- * Safe defaults until Phu confirms: no result figures, no "solo", no video.
+ * Phu confirmed (2026-10-21): the README's result figures, "solo", and the promo video.
  */
 import type { CaseStudyData } from "~/lib/case";
 
@@ -14,8 +14,9 @@ export const ocr: CaseStudyData = {
       "Operators turn batches of PDFs and images into spreadsheet records by hand: read each page, type values into a workbook, check them again. Throughput is limited by page count and review time, and mistakes show up late.",
     solution:
       "A template-driven platform. An admin binds a workbook, a field schema, prompts and rules; a vision-language model reads each page into that schema, rules clean the fields, and operators correct them beside the source page and export Excel.",
-    outcomeTodo:
-      "The pack's go-live figures differ from the site's earlier '>98% / >90%'. Confirm which figures, if any, the page shows.",
+    // Verbatim from projects/ocr/README.md, "## Result".
+    outcome:
+      "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
   },
   highlight: {
     title: "A new document is configuration, not a new pipeline",
@@ -24,7 +25,11 @@ export const ocr: CaseStudyData = {
   },
   video: {
     src: "/work/document-ocr/motion.mp4",
-    caption: "Promo render. The figures on screen are illustration and appear only in this video.",
+    poster: "/work/document-ocr/motion-poster.jpg",
+    caption:
+      "The platform's 15-second promo cut, no sound. The dashboard numbers on screen are motion demo values; the measured results are in the Outcome above.",
+    description:
+      "Title words PDF, pages, pixels, data. The upload screen with a template selected and staged PDFs, then the review screen: a scan line crosses a sample page, field boxes light up and values fill beside it. The pipeline: upload, preprocess, OCR or VLM, LLM map, export. A dashboard with demo stat cards, field accuracy and session logs, then the end card, OCR Platform.",
   },
   how: {
     summary:
@@ -282,7 +287,6 @@ export const ocr: CaseStudyData = {
     notShown: [
       "Client documents, client field lists and extracted data.",
       "Source code, internal identifiers and secrets.",
-      "Result figures, until they're confirmed for publication.",
     ],
     deprecated: [
       "Legacy SSE routes (`POST /extract/pdf`, `POST /extract/pdfs`) still run the older job path for compatible clients. They aren't the browser's start path.",
