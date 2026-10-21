@@ -1,1 +1,4 @@
 *.mp4 filter=lfs diff=lfs merge=lfs -text
+
+# Web encodes served by the site are small and must deploy without LFS.
+public/**/*.mp4 -filter -diff -merge binary

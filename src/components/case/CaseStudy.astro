@@ -14,7 +14,7 @@ import Icon from "~/components/Icon.astro";
 import OrgBadge from "~/components/OrgBadge.astro";
 import Base from "~/layouts/Base.astro";
 import type { CaseStudyData } from "~/lib/case";
-import { CASE_VIDEO } from "~/lib/flags";
+import { CASE_VIDEOS } from "~/lib/flags";
 import { richText } from "~/lib/flow/types";
 import { site } from "~/lib/site";
 import "~/styles/case.css";
@@ -33,7 +33,7 @@ const { overview: o, how, dives, limits } = data;
 const dive = await Promise.all(
   dives.map(async (x) => ({ ...x, artifact: await Astro.slots.render(`dive-${x.id}`) })),
 );
-const showVideo = CASE_VIDEO && data.video;
+const showVideo = CASE_VIDEOS.has(entry.id) ? data.video : undefined;
 const rail = [
   { href: "#overview", label: "Overview" },
   { href: "#how-it-works", label: "How it works" },
@@ -125,14 +125,29 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         </figure>
       </section>
 
-      {showVideo && data.video && (
+      {showVideo && (
         <section class="cs2-sec cs2-video" aria-labelledby="vid-h">
           <h2 id="vid-h">The short cut</h2>
           <figure>
-            <video controls preload="none" playsinline poster={data.video.poster}>
-              <source src={data.video.src} type="video/mp4" />
+            {/* Muted, no preload. Without reduced motion it plays while in view (scripts/case/
+                page.ts); with reduced motion it stays on the poster until someone presses play. */}
+            <video
+              controls
+              muted
+              playsinline
+              preload="none"
+              poster={showVideo.poster}
+              aria-describedby="vid-desc"
+              data-case-video
+            >
+              <source src={showVideo.src} type="video/mp4" />
             </video>
-            <figcaption>{data.video.caption}</figcaption>
+            <figcaption>
+              {showVideo.caption}
+              <span id="vid-desc" class="cs2-vid-desc">
+                What plays: {showVideo.description}
+              </span>
+            </figcaption>
           </figure>
         </section>
       )}

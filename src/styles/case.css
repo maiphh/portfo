@@ -418,3 +418,10 @@
 .cs2-out .icon {
   transform: rotate(180deg);
 }
+.cs2-video video {
+  aspect-ratio: 16 / 9;
+}
+.cs2-vid-desc {
+  display: block;
+  margin-top: 6px;
+}
