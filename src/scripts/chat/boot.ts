@@ -134,6 +134,8 @@ function initTuck(root: HTMLElement, launcher: HTMLButtonElement): void {
     idle = window.setTimeout(place, 180);
   });
   launcher.addEventListener("blur", () => setTimeout(place, 0));
+  // A FlowDiagram details panel or sheet opening or closing changes what the slot covers.
+  for (const type of ["flow:select", "flow:close"]) document.addEventListener(type, settle);
   // After the hero intro and fonts settle.
   setTimeout(place, 400);
   setTimeout(place, 2600);

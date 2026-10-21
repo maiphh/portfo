@@ -183,6 +183,8 @@ function init(block: HTMLElement) {
       region.replaceChildren(hint, all);
       render(nid, sheetBody, `${id}-sheet-h`);
       for (const n of nodes) n.setAttribute("aria-controls", sheet.id);
+      region.removeAttribute("data-mascot-avoid");
+      sheet.setAttribute("data-mascot-avoid", "");
       if (!sheet.open) sheet.showModal();
       sheet.scrollTop = 0;
       must(sheet.querySelector<HTMLElement>("[data-flow-close]"), "[data-flow-close]").focus();
@@ -205,8 +207,11 @@ function init(block: HTMLElement) {
       });
     } else {
       if (sheet.open) sheet.close();
+      sheet.removeAttribute("data-mascot-avoid");
       for (const n of nodes) n.setAttribute("aria-controls", region.id);
       region.dataset.state = "open";
+      // The open panel counts as content for the mascot's rest spot (chat/content.ts).
+      region.setAttribute("data-mascot-avoid", "");
       hint.hidden = true;
       render(nid, region, `${id}-detail-h`);
       region.append(all);
@@ -217,7 +222,10 @@ function init(block: HTMLElement) {
     mark();
     const on = [...svg.querySelectorAll<SVGPathElement>("path.on")];
     block.dispatchEvent(
-      new CustomEvent("flow:select", { detail: { id: nid, node: btn, edges: on } }),
+      new CustomEvent("flow:select", {
+        bubbles: true,
+        detail: { id: nid, node: btn, edges: on },
+      }),
     );
   }
 
@@ -226,6 +234,8 @@ function init(block: HTMLElement) {
     const btn = node(current);
     current = null;
     if (sheet.open) sheet.close();
+    sheet.removeAttribute("data-mascot-avoid");
+    region.removeAttribute("data-mascot-avoid");
     sheetBody.replaceChildren();
     region.dataset.state = "empty";
     region.removeAttribute("aria-labelledby");
@@ -233,7 +243,9 @@ function init(block: HTMLElement) {
     region.replaceChildren(hint, all);
     mark();
     btn.focus();
-    block.dispatchEvent(new CustomEvent("flow:close", { detail: { id: btn.dataset.node } }));
+    block.dispatchEvent(
+      new CustomEvent("flow:close", { bubbles: true, detail: { id: btn.dataset.node } }),
+    );
   }
 
   flow.addEventListener("click", (e) => {

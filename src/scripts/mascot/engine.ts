@@ -8,12 +8,16 @@
  * - Reduced motion: one static frame per state change, no loop. Drop snaps instantly.
  * - One rAF loop, stopped while the tab is hidden, the docked launcher is tucked off-screen,
  *   or nothing needs drawing.
+ * - An open FlowDiagram panel or sheet (data-mascot-avoid) counts as content: a floated mascot
+ *   whose corner the panel now covers rests at the nearest free corner until it closes. The
+ *   stored corner is not changed.
  * - Moods follow the chat's portfo-chat:state / :status events (see lib/mascot/state).
  */
 import type { Phase } from "~/lib/chat/state";
 import { cornerSpots, nearestCorner, type CornerId, type Spot } from "~/lib/mascot/corners";
 import { createInk, INK_PAD, type Ink } from "~/lib/mascot/ink";
 import { loadCorner, saveCorner } from "~/lib/mascot/persist";
+import { hitsPanel } from "../chat/content";
 import { gazeVector, mascotView, onPhase, type MascotView } from "~/lib/mascot/state";
 
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -299,7 +303,7 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     const w = r.width || DOCK_SIZE;
     const h = r.height || DOCK_SIZE;
     if (corner) {
-      const s = spotsFor(w, h)[corner];
+      const s = restSpot(spotsFor(w, h), corner, w, h);
       spot.x = s.x;
       spot.y = s.y;
     } else {
@@ -309,6 +313,22 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
       spot.y = clamp(spot.y, EDGE, Math.max(EDGE, vh - h - EDGE));
     }
     applySpot();
+  }
+
+  /** The chosen corner, or the nearest one an open panel leaves free. */
+  function restSpot(all: Record<CornerId, Spot>, id: CornerId, w: number, h: number): Spot {
+    const free = (c: Spot) => !hitsPanel({ left: c.x, top: c.y, right: c.x + w, bottom: c.y + h });
+    if (free(all[id])) return all[id];
+    const want = all[id];
+    const others = (["tl", "tr", "bl", "br"] as const)
+      .filter((c) => c !== id)
+      .sort(
+        (a, b) =>
+          Math.hypot(all[a].x - want.x, all[a].y - want.y) -
+          Math.hypot(all[b].x - want.x, all[b].y - want.y),
+      );
+    const alt = others.find((c) => free(all[c]));
+    return alt ? all[alt] : want;
   }
 
   function goFloat(): void {
@@ -564,6 +584,19 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
       refresh();
     }, 150);
   });
+  // Re-check the rest spot when a FlowDiagram panel opens or closes, and after scrolling
+  // (the panel moves with the page; the mascot is fixed).
+  let rest = 0;
+  const recheck = () => {
+    clearTimeout(rest);
+    rest = window.setTimeout(() => {
+      if (!floating() || dragging() || snapping) return;
+      place();
+      refresh();
+    }, 120);
+  };
+  for (const type of ["flow:select", "flow:close"]) document.addEventListener(type, recheck);
+  addEventListener("scroll", recheck, { passive: true });
   REDUCE.addEventListener("change", refresh);
 
   /* ---------- boot ---------- */
