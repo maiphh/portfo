@@ -99,6 +99,15 @@ test.describe("flow on desktop", () => {
     }
   });
 
+  test("the notes under the flow share one style: a bold lead-in with no colon", async ({
+    page,
+  }) => {
+    const leads = page.locator(".how-notes p > b:first-child");
+    await expect(leads).toHaveText(["The chat", "Your message", "Guardrails"]);
+    for (const t of await page.locator(".how-notes p").allInnerTexts())
+      expect(t).not.toMatch(/^[^.]{1,40}:/);
+  });
+
   test("a node opens its details below the flow and closes back to the node", async ({ page }) => {
     const worker = page.locator('[data-node="worker"]');
     const region = page.locator("#how-detail");
