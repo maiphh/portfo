@@ -65,15 +65,6 @@ export function initMotion(redrawOcrLeaders: () => void) {
     onUpdate: (s) => setBar(s.progress),
   });
 
-  // Packets start on the path midpoint (the reduced-motion final state).
-  const pks = $$<SVGCircleElement>("[data-pk]");
-  pks.forEach((c) => {
-    const p = document.getElementById(c.dataset.pk ?? "") as SVGPathElement | null;
-    if (!p) return;
-    const pt = p.getPointAtLength(p.getTotalLength() * 0.5);
-    gsap.set(c, { x: pt.x, y: pt.y, visibility: "visible" });
-  });
-
   const mm = gsap.matchMedia();
   mm.add(
     {
@@ -517,42 +508,6 @@ export function initMotion(redrawOcrLeaders: () => void) {
           onEnter: () => countUp(el),
         }),
       );
-
-      /* ----- How it works: edges draw, packets flow (paused offscreen) ----- */
-      const graph = $("[data-graph]");
-      if (graph) {
-        const edges = $$<SVGPathElement>(".e", graph);
-        const flows = gsap.timeline({ paused: true });
-        pks.forEach((pk, i) => {
-          const id = "#" + (pk.dataset.pk ?? "");
-          flows.to(
-            pk,
-            {
-              motionPath: { path: id, align: id, alignOrigin: [0.5, 0.5] },
-              duration: 2.2,
-              ease: "power1.inOut",
-              repeat: -1,
-              repeatDelay: 0.6 + (i % 3) * 0.4,
-            },
-            i * 0.35,
-          );
-        });
-        gsap
-          .timeline({ scrollTrigger: { trigger: graph, start: "top 75%", once: true } })
-          .to(dash(edges), {
-            strokeDashoffset: 0,
-            duration: 1,
-            stagger: 0.07,
-            ease: "power2.inOut",
-          })
-          .from($$(".nb", graph), { opacity: 0, duration: 0.5, stagger: 0.06 }, 0);
-        ScrollTrigger.create({
-          trigger: graph,
-          start: "top bottom",
-          end: "bottom top",
-          onToggle: (s) => (s.isActive ? flows.play() : flows.pause()),
-        });
-      }
 
       /* ----- Contact: band opens like a page being turned up, words snap into boxes ----- */
       const band = $("[data-band]");

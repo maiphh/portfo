@@ -1575,71 +1575,6 @@ sup.fn {
 }
 
 /* ---------- How it works ---------- */
-.graph {
-  position: relative;
-  margin-top: var(--s4);
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: clamp(12px, 2vw, 24px);
-}
-.graph svg {
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-.graph .e {
-  fill: none;
-  stroke: var(--rule-2);
-  stroke-width: 1.5;
-}
-.graph .nb rect {
-  fill: var(--sheet-2);
-  stroke: var(--rule-2);
-}
-.graph .nb.key rect {
-  stroke: var(--lime-line);
-}
-.graph .nb text {
-  fill: var(--ink);
-  font: 600 15px var(--text);
-}
-.graph .nb text.sub {
-  fill: var(--muted);
-  font: 400 11.5px var(--code);
-}
-.graph .pk {
-  fill: var(--lime);
-}
-.graph .pk.v {
-  fill: var(--violet);
-}
-.graph-m {
-  display: none;
-}
-@media (max-width: 899px) {
-  .graph svg.g-d {
-    display: none;
-  }
-  .graph-m {
-    display: grid;
-    gap: 10px;
-    list-style: none;
-  }
-}
-.graph-m li {
-  background: var(--sheet-2);
-  border: 1px solid var(--rule-2);
-  border-radius: 3px;
-  padding: 12px 14px;
-}
-.graph-m b {
-  display: block;
-}
-.graph-m span {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
 .how-notes {
   display: grid;
   gap: var(--s5);
@@ -1651,8 +1586,14 @@ sup.fn {
   }
 }
 .how-notes p {
+  min-width: 0;
+  overflow-wrap: break-word;
   color: var(--ink-2);
   font-size: 1rem;
+}
+/* Ids, paths and stack names have no spaces: let them break anywhere rather than overflow. */
+.how-notes code {
+  overflow-wrap: anywhere;
 }
 .how-notes b {
   color: var(--ink);
@@ -1943,9 +1884,6 @@ footer {
   display: block;
   white-space: pre-wrap;
 }
-.graph .pk {
-  visibility: hidden;
-}
 .tree .edge,
 .tree .nd rect,
 .tree .nd text {
@@ -2058,9 +1996,6 @@ footer {
 }
 .roles .tag {
   color: var(--lime-ink);
-}
-.graph .nb text.sub {
-  font-size: 13px;
 }
 .doc h1 {
   font-size: clamp(2.5rem, 1rem + 3.9vw, 4.4rem);
