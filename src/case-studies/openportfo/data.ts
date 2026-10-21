@@ -3,7 +3,7 @@
  * main), the public repo github.com/maiphh/openportfo @786196b (backend/app/services/llm,
  * ports/chat_idempotency.py, frontend/package.json), and the OpenPortfo moodboard
  * (portfo-design case-studies/moodboards/openportfo.md, flow-example/others/openportfo-flow.html).
- * Framing stays neutral (see the entry's todo). Screens are local renders of the public repo with
+ * A personal project (Phu, 2026-10-22). Screens are local renders of the public repo with
  * in-memory fakes and sample holdings.
  */
 import type { CaseStudyData } from "~/lib/case";
@@ -285,7 +285,7 @@ export const openportfo: CaseStudyData = {
       "`frontend-temp/` is a small Vite viewer used while the API was the thing under test; `frontend/` is the app.",
     ],
     reserved: [
-      "The design puts the UI on S3 and CloudFront. CloudFront was blocked in the lab, so the static export was served from Elastic Beanstalk.",
+      "The design puts the UI on S3 and CloudFront. CloudFront wasn't available in the AWS account it ran on, so the static export was served from Elastic Beanstalk.",
       "Exchange rates are an admin, on-demand call in the design, not a per-row fetch.",
     ],
     docsLag: [

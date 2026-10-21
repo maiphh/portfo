@@ -1,7 +1,7 @@
 ---
 title: Ecom shop template
 headline: One engine, many storefronts.
-summary: A shop engine in TypeScript (catalog, cart, pricing, stock, payments and the order state machine) that a new storefront keeps as it is. Mirror Now is the first shop built on the template.
+summary: A shop engine in TypeScript (catalog, cart, pricing, stock, payments and the order state machine) that a new storefront keeps as it is. The template came first; Mirror Now is the first shop built on it.
 org: E-commerce template
 meta: [E-commerce template, TypeScript]
 order: 6
@@ -9,7 +9,6 @@ anchor: work-ecom
 accent: { line: "#8cc8ff", tint: "#1d2a36" }
 todo:
   - "Mirror Now: a public shop URL, if there is one, and any figures you want shown."
-  - "Story: the pack says Mirror Now is the first shop built on the engine; the old home card said the store came first and was pulled apart into a template. The page follows the pack. Confirm."
   - "An approved Mirror Now storefront screenshot (both repos are private, so the page uses labelled illustrations)."
 ---
 

@@ -233,11 +233,11 @@
       "title": "OpenPortfo",
       "headline": "Crypto and Vietnamese stocks, side by side.",
       "oneLiner": "One portfolio for crypto and Vietnamese stocks, on AWS. Quotes are pulled when someone opens or refreshes the book, and an AI agent can search, add and remove holdings for the signed-in user.",
-      "org": "OpenPortfo",
+      "org": "Personal project",
       "role": null,
       "period": null,
       "tags": [
-        "Portfolio tracker",
+        "Personal project",
         "AWS",
         "Public repo"
       ],
@@ -254,13 +254,13 @@
           "href": "https://github.com/maiphh/openportfo"
         }
       ],
-      "body": "OpenPortfo keeps crypto and Vietnamese stocks in one book: value, profit and loss, allocation, a watchlist and matched news. It is an on-demand tracker, not a trading app and not a live price socket.\n\nQuotes are pulled when someone opens or refreshes the book, and once a day by a scheduled job. The browser never calls CoinGecko or a Vietnamese broker. An AI agent in the app can search assets, add or remove holdings and explain the book, using tools scoped to the signed-in user.\n\nThe chart on the home page is an illustration with sample data, not a real portfolio."
+      "body": "OpenPortfo is a personal project that keeps crypto and Vietnamese stocks in one book: value, profit and loss, allocation, a watchlist and matched news. It is an on-demand tracker, not a trading app and not a live price socket.\n\nQuotes are pulled when someone opens or refreshes the book, and once a day by a scheduled job. The browser never calls CoinGecko or a Vietnamese broker. An AI agent in the app can search assets, add or remove holdings and explain the book, using tools scoped to the signed-in user.\n\nThe chart on the home page is an illustration with sample data, not a real portfolio."
     },
     {
       "slug": "ecom",
       "title": "Ecom shop template",
       "headline": "One engine, many storefronts.",
-      "oneLiner": "A shop engine in TypeScript (catalog, cart, pricing, stock, payments and the order state machine) that a new storefront keeps as it is. Mirror Now is the first shop built on the template.",
+      "oneLiner": "A shop engine in TypeScript (catalog, cart, pricing, stock, payments and the order state machine) that a new storefront keeps as it is. The template came first; Mirror Now is the first shop built on it.",
       "org": "E-commerce template",
       "role": null,
       "period": null,

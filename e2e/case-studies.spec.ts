@@ -214,8 +214,10 @@ test.describe("public projects: links, credit and real screenshots", () => {
     await expect(
       credit.locator('a[href="https://github.com/Open-Dev-Society/OpenStock"]'),
     ).toBeVisible();
-    // Neutral framing until Phu says which it is.
-    expect(await page.locator("main").innerText()).not.toMatch(/personal project|assessment|RMIT/i);
+    // A personal project (Phu, 2026-10-22), not presented as coursework.
+    const text = await page.locator("main").innerText();
+    expect(text).toMatch(/personal project/i);
+    expect(text).not.toMatch(/assessment|RMIT|coursework/i);
   });
 
   test("Ecom: illustrations only (private repos), Mirror Now as the first shop", async ({

@@ -468,15 +468,15 @@ export function initMotion(redrawOcrLeaders: () => void) {
         }),
       );
 
-      /* ----- Mirror Now: storefront becomes its template (scrubbed) ----- */
+      /* ----- Ecom: the template first, then a storefront (Mirror Now) built on it (scrubbed) ----- */
       const store = $("[data-store]");
       if (store) {
         gsap
           .timeline({
             scrollTrigger: { trigger: store, start: "top 80%", end: "center 40%", scrub: 0.6 },
           })
-          .fromTo($("[data-tmpl]", store), { opacity: 0 }, { opacity: 1, ease: "none" })
-          .to($("[data-real]", store), { opacity: 0.22, ease: "none" }, "<0.3");
+          .fromTo($("[data-real]", store), { opacity: 0 }, { opacity: 1, ease: "none" })
+          .to($("[data-tmpl]", store), { opacity: 0.35, ease: "none" }, "<0.3");
       }
 
       /* ----- Timeline bars grow along time ----- */
