@@ -232,3 +232,137 @@ test.describe("flow on mobile", () => {
     await expect(sheet).toBeHidden();
   });
 });
+
+// The idle tour (FlowDiagram `autoplay`, home only): steps in DOM order, highlight only.
+const ORDER = [
+  "browser",
+  "pages",
+  "worker",
+  "d1",
+  "quota",
+  "ai",
+  "resend",
+  "email",
+  "cron",
+  "github",
+];
+
+test.describe("autoplay: the flow tours itself while idle", () => {
+  const flow = '[data-flow="how"]';
+  const lit = `${flow} .flow-node.is-auto`;
+  const activeId = (page: import("@playwright/test").Page) =>
+    page.locator(lit).evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.node));
+
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+    await page.locator("#how").scrollIntoViewIfNeeded();
+    // Keep the mouse off the diagram.
+    await page.mouse.move(1, 1);
+  });
+
+  test("steps in path order with the edge into each node; no panel, sheet, focus or scroll", async ({
+    page,
+    isMobile,
+  }) => {
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "running");
+    await expect(page.locator(lit)).toHaveCount(1, { timeout: 4000 });
+    const y = await page.evaluate(() => scrollY);
+    const seen: string[] = [];
+    const t0 = Date.now();
+    while (seen.length < 3 && Date.now() - t0 < 12_000) {
+      const [id] = await activeId(page);
+      if (id && seen.at(-1) !== id) {
+        seen.push(id);
+        if (!isMobile && id !== "browser") {
+          // The edge into it is lit and animated.
+          const into = await page
+            .locator(`${flow} path.auto`)
+            .evaluateAll((ps) =>
+              ps.map((p) => [(p as SVGPathElement).dataset.b, getComputedStyle(p).animationName]),
+            );
+          expect(into.length).toBeGreaterThan(0);
+          expect(into.every(([, anim]) => anim === "flow-run")).toBe(true);
+          expect(into.some(([b]) => b === id) || id === "cron").toBe(true);
+        }
+      }
+      await page.waitForTimeout(150);
+    }
+    expect(seen.length).toBe(3);
+    const i = ORDER.indexOf(seen[0] ?? "");
+    expect(seen).toEqual([0, 1, 2].map((k) => ORDER[(i + k) % ORDER.length]));
+    // Highlight only.
+    await expect(page.locator(`${flow} [aria-expanded="true"]`)).toHaveCount(0);
+    await expect(page.locator("#how-detail")).toHaveAttribute("data-state", "empty");
+    await expect(page.locator("dialog#how-sheet")).toBeHidden();
+    expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+    expect(await page.evaluate(() => scrollY)).toBe(y);
+    if (isMobile) await expect(page.locator(`${flow} li.is-auto`)).toHaveCount(1);
+  });
+
+  test("a selection stops it; it comes back about 6s after closing", async ({ page, isMobile }) => {
+    await expect(page.locator(lit)).toHaveCount(1, { timeout: 4000 });
+    const node = page.locator(`${flow} [data-node="d1"]`);
+    if (isMobile) await node.tap();
+    else await node.click();
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    await expect(page.locator(lit)).toHaveCount(0);
+    if (isMobile) await page.getByRole("button", { name: "Close details" }).tap();
+    else {
+      await page.locator(`${flow} [data-node="d1"]`).click();
+      await page.mouse.move(1, 1);
+    }
+    await expect(page.locator(`${flow} [aria-expanded="true"]`)).toHaveCount(0);
+    await page.waitForTimeout(3500);
+    await expect(page.locator(lit)).toHaveCount(0);
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "running", { timeout: 6000 });
+    await expect(page.locator(lit)).toHaveCount(1, { timeout: 6000 });
+  });
+
+  test("hover and keyboard focus pause it", async ({ page, isMobile }) => {
+    test.skip(isMobile, "hover and Tab are desktop input");
+    await expect(page.locator(lit)).toHaveCount(1, { timeout: 4000 });
+    await page.locator(`${flow} [data-node="pages"]`).hover();
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    await expect(page.locator(lit)).toHaveCount(0);
+    await page.mouse.move(1, 1);
+    await page.locator(`${flow} [data-node="browser"]`).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator(`${flow} [data-node="pages"]`)).toBeFocused();
+    await page.waitForTimeout(6500);
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    await expect(page.locator(lit)).toHaveCount(0);
+  });
+
+  test("off screen and in a hidden tab it pauses", async ({ page }) => {
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "running");
+    await page.evaluate(() => scrollTo(0, 0));
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    await page.locator("#how").scrollIntoViewIfNeeded();
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "running");
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    const before = await activeId(page);
+    await page.waitForTimeout(3500);
+    expect(await activeId(page)).toEqual(before);
+  });
+
+  test("reduced motion: static, no tour", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.reload();
+    await page.locator("#how").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(3500);
+    await expect(page.locator(flow)).toHaveAttribute("data-auto", "paused");
+    await expect(page.locator(lit)).toHaveCount(0);
+    await expect(page.locator(`${flow} path.auto`)).toHaveCount(0);
+  });
+
+  test("only the home flow tours", async ({ page }) => {
+    await page.goto("/work/document-ocr/");
+    await expect(page.locator("[data-flow][data-autoplay]")).toHaveCount(0);
+    await expect(page.locator("[data-flow][data-auto]")).toHaveCount(0);
+  });
+});
