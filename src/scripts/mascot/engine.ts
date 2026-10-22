@@ -163,7 +163,8 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
   function want(): boolean {
     if (document.hidden || reduced()) return false;
     if (open) return !!avatar && !!dialog && !dialog.hidden;
-    return !(!floating() && tucked());
+    if (floating()) return !launcher.classList.contains("is-yield");
+    return !tucked();
   }
   function start(): void {
     if (running || !want()) return;
@@ -295,6 +296,8 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     launcher.style.right = "auto";
     launcher.style.bottom = "auto";
     launcher.classList.toggle("is-right", spot.x + r.width / 2 > vw / 2);
+    // Top half: the tooltip opens below the mascot instead of above, off the top edge.
+    launcher.classList.toggle("is-top", spot.y + r.height / 2 < window.innerHeight / 2);
   }
 
   function place(): void {
@@ -303,10 +306,12 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     const w = r.width || DOCK_SIZE;
     const h = r.height || DOCK_SIZE;
     if (corner) {
-      const s = restSpot(spotsFor(w, h), corner, w, h);
+      const { s, free } = restSpot(spotsFor(w, h), corner, w, h);
       spot.x = s.x;
       spot.y = s.y;
+      yieldTo(!free);
     } else {
+      yieldTo(false);
       const vw = document.documentElement.clientWidth;
       const vh = window.innerHeight;
       spot.x = clamp(spot.x, EDGE, Math.max(EDGE, vw - w - EDGE));
@@ -315,10 +320,27 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     applySpot();
   }
 
-  /** The chosen corner, or the nearest one an open panel leaves free. */
-  function restSpot(all: Record<CornerId, Spot>, id: CornerId, w: number, h: number): Spot {
+  /**
+   * A floated mascot with no free corner (a phone flow card fills the window) slides off its
+   * side like the docked launcher's tuck, rather than sit on the diagram. Still focusable:
+   * keyboard focus brings it back (chat.css). Comes back on the next scroll that frees a corner.
+   */
+  function yieldTo(on: boolean): void {
+    if (on && (dragging() || launcher === document.activeElement)) on = false;
+    const was = launcher.classList.contains("is-yield");
+    launcher.classList.toggle("is-yield", on);
+    if (was && !on) start();
+  }
+
+  /** The chosen corner, or the nearest one an open panel leaves free (`free` false: none). */
+  function restSpot(
+    all: Record<CornerId, Spot>,
+    id: CornerId,
+    w: number,
+    h: number,
+  ): { s: Spot; free: boolean } {
     const free = (c: Spot) => !hitsPanel({ left: c.x, top: c.y, right: c.x + w, bottom: c.y + h });
-    if (free(all[id])) return all[id];
+    if (free(all[id])) return { s: all[id], free: true };
     const want = all[id];
     const others = (["tl", "tr", "bl", "br"] as const)
       .filter((c) => c !== id)
@@ -327,8 +349,13 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
           Math.hypot(all[a].x - want.x, all[a].y - want.y) -
           Math.hypot(all[b].x - want.x, all[b].y - want.y),
       );
-    const alt = others.find((c) => free(all[c]));
-    return alt ? all[alt] : want;
+    // A corner the mascot moves to on its own must also clear the site header (its Menu
+    // button); the visitor's own choice is kept as is.
+    const nav = document.querySelector("header.nav")?.getBoundingClientRect();
+    const clearOfNav = (c: Spot) =>
+      !nav || nav.height === 0 || c.y >= nav.bottom || c.y + h <= nav.top;
+    const alt = others.find((c) => free(all[c]) && clearOfNav(all[c]));
+    return alt ? { s: all[alt], free: true } : { s: want, free: false };
   }
 
   function goFloat(): void {
@@ -370,7 +397,8 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     const all = spotsFor(w, h);
     corner = nearestCorner(spot.x, spot.y, all);
     saveCorner(corner);
-    const target = all[corner];
+    // Land on the chosen corner, or the nearest one the diagram card or a panel leaves free.
+    const target = restSpot(all, corner, w, h).s;
     const from = { x: spot.x, y: spot.y };
 
     if (reduced()) {
@@ -380,6 +408,7 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
       S.y = S.py = spot.y;
       applySpot();
       moving = false;
+      place();
       refresh();
       return;
     }
@@ -428,6 +457,7 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
         spot.x = target.x;
         spot.y = target.y;
         applySpot();
+        place();
         refresh();
         return;
       }
@@ -452,6 +482,7 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
     if (drag || (e.pointerType === "mouse" && e.button !== 0)) return;
     cancelSnap();
     moving = false;
+    launcher.classList.remove("is-yield");
     drag = {
       pointerId: e.pointerId,
       moved: false,

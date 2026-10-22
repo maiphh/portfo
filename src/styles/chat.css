@@ -610,7 +610,8 @@ html.chat-kb-open .chat-foot {
   right: 0;
   bottom: calc(100% + 10px);
   width: max-content;
-  max-width: 220px;
+  /* Never wider than the window minus the launcher's edge gaps, so it can't be clipped. */
+  max-width: min(220px, calc(100vw - 2 * var(--chat-edge, 16px)));
   padding: 6px 8px;
   border-radius: 4px;
   background: var(--sheet-2);
@@ -622,10 +623,30 @@ html.chat-kb-open .chat-foot {
   pointer-events: none;
   transition: opacity 0.15s var(--ease-out);
 }
-/* Flipped when the mascot floats on the left half, so the tip stays on-screen. */
-.chat-launcher.is-float.is-right .mascot-tip {
+/* Anchored to the mascot's outer side, so the tip opens towards the middle of the window and
+   stays on-screen: right-aligned on the right half (is-right), left-aligned on the left half;
+   below the mascot on the top half. */
+.chat-launcher.is-float:not(.is-right) .mascot-tip {
   right: auto;
   left: 0;
+}
+.chat-launcher.is-float.is-top .mascot-tip {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+/* Yielded: a floated mascot with no corner clear of the diagram card slides off its side. */
+.chat-launcher.is-float.is-yield {
+  transform: translateX(calc(100% + var(--chat-edge, 16px) + 4px));
+  opacity: 0;
+  pointer-events: none;
+}
+.chat-launcher.is-float.is-yield:not(.is-right) {
+  transform: translateX(calc(-100% - var(--chat-edge, 16px) - 4px));
+}
+.chat-launcher.is-float.is-yield:focus-visible {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 .chat-launcher.has-mascot:hover .mascot-tip,
 .chat-launcher.has-mascot:focus-visible .mascot-tip {
