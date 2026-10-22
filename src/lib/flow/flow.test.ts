@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { edgeGeom, edgeGeomV, LANES3_MIN, listBelow, onBorder, type Box } from "./geometry";
+import {
+  crossedBoxes,
+  edgeGeom,
+  edgeGeomV,
+  edgeGeomY,
+  LANES3_MIN,
+  listBelow,
+  onBorder,
+  pathPoints,
+  type Box,
+} from "./geometry";
 import { flowProblems, laneCounts, richText, type FlowNode } from "./types";
 
 const box = (left: number, top: number, w = 150, h = 64): Box => ({
@@ -31,9 +41,19 @@ describe("edgeGeom", () => {
     const a = box(0, 100);
     const b = box(300, 0);
     const g = edgeGeom(a, b);
-    expect(g.from).toEqual([150, 132]);
-    expect(g.to).toEqual([300, 32]);
-    expect(g.d).toBe("M150 132 C225 132 225 32 300 32");
+    // Off-level: each end moves 12px (PORT_Y) from the side's middle towards the other box.
+    expect(g.from).toEqual([150, 120]);
+    expect(g.to).toEqual([300, 44]);
+    expect(g.d).toBe("M150 120 C225 120 225 44 300 44");
+    expect(onBorder(g.from, a) && onBorder(g.to, b)).toBe(true);
+  });
+
+  it("gives a level edge and an off-level one into the same side separate ports", () => {
+    const hub = box(300, 100);
+    const level = edgeGeom(box(0, 100), hub);
+    const below = edgeGeom(box(0, 300), hub);
+    expect(level.to).toEqual([300, 132]);
+    expect(below.to).toEqual([300, 144]);
   });
 
   it("keeps from/to in argument order when the source is on the right", () => {
@@ -119,17 +139,22 @@ describe("edgeGeomV (phone lanes)", () => {
     const a = cell(2, 0);
     const b = cell(1, 1);
     const g = edgeGeomV(a, b);
-    expect(g.from).toEqual([210, 56]);
-    expect(g.to).toEqual([74, 84]);
-    expect(g.d).toBe("M210 56 C210 70 74 70 74 84");
+    // A diagonal's ports sit 20px (PORT) off-centre towards the other box, so it doesn't merge
+    // with a straight edge into the same top (home: Cron Trigger and the browser → Worker).
+    expect(g.from).toEqual([190, 56]);
+    expect(g.to).toEqual([94, 84]);
+    expect(g.d).toBe("M190 56 C190 70 94 70 94 84");
+    expect(onBorder(g.from, a) && onBorder(g.to, b)).toBe(true);
+    const straight = edgeGeomV(cell(1, 0), b);
+    expect(straight.to).toEqual([74, 84]);
   });
 
   it("points up when the target is above, and keeps argument order", () => {
     const a = cell(1, 2);
     const b = cell(2, 1);
     const g = edgeGeomV(a, b);
-    expect(g.from).toEqual([74, 168]);
-    expect(g.to).toEqual([210, 140]);
+    expect(g.from).toEqual([94, 168]);
+    expect(g.to).toEqual([190, 140]);
     expect(onBorder(g.from, a) && onBorder(g.to, b)).toBe(true);
   });
 
@@ -172,8 +197,51 @@ describe("edgeGeomV (phone lanes)", () => {
     }
   });
 
-  it("3 lanes start at a 390px phone's flow width", () => {
-    expect(LANES3_MIN).toBe(348);
+  it("3 lanes start at a 480px viewport's flow width (phones get 2)", () => {
+    expect(LANES3_MIN).toBe(438);
+  });
+});
+
+describe("edgeGeomY (along a row gutter)", () => {
+  const cell = (lane: number, row: number) => box(14 + (lane - 1) * 136, row * 84, 120, 56);
+
+  it("leaves the bottom, runs along the gutter with rounded corners, enters the top", () => {
+    const a = cell(1, 0);
+    const b = cell(2, 2);
+    const g = edgeGeomY(a, b, 70);
+    expect(g.d).toBe("M94 56 V64 Q94 70 100 70 H184 Q190 70 190 76 V168");
+    expect(onBorder(g.from, a) && onBorder(g.to, b)).toBe(true);
+  });
+
+  it("uses the tops of both boxes when the gutter is above them", () => {
+    const a = cell(1, 2);
+    const b = cell(2, 2);
+    const g = edgeGeomY(a, b, 154);
+    expect(g.from[1]).toBe(168);
+    expect(g.to[1]).toBe(168);
+    expect(onBorder(g.from, a) && onBorder(g.to, b)).toBe(true);
+  });
+});
+
+describe("pathPoints / crossedBoxes", () => {
+  it("samples lines and curves", () => {
+    expect(pathPoints("M0 0 H9")).toEqual([
+      [0, 0],
+      [3, 0],
+      [6, 0],
+      [9, 0],
+    ]);
+    const q = pathPoints("M0 0 Q10 0 10 10");
+    expect(q.at(-1)).toEqual([10, 10]);
+    const c = pathPoints("M0 0 C0 5 10 5 10 10");
+    expect(c.at(-1)).toEqual([10, 10]);
+  });
+
+  it("finds the boxes a path passes through, not ones it only touches", () => {
+    const boxes = [box(100, 0, 50, 100), box(100, 200), box(300, 50, 50, 50)];
+    expect(crossedBoxes("M0 50 H300", boxes)).toEqual([0]);
+    // Running along a box's border is not a crossing.
+    expect(crossedBoxes("M0 200 H400", boxes)).toEqual([]);
   });
 });
 

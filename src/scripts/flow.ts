@@ -12,7 +12,16 @@
  *   scrolling or aria change. Paused on hover, keyboard focus, touch, a selection, off screen
  *   or in a hidden tab; resumes RESUME ms after the person lets go. Off under reduced motion.
  */
-import { edgeGeom, edgeGeomV, listBelow, type Box } from "~/lib/flow/geometry";
+import {
+  crossedBoxes,
+  edgeGeom,
+  edgeGeomV,
+  edgeGeomY,
+  listBelow,
+  pathPoints,
+  type Box,
+  type EdgeGeom,
+} from "~/lib/flow/geometry";
 
 const NS = "http://www.w3.org/2000/svg";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -106,7 +115,7 @@ function init(block: HTMLElement) {
     const laneRight = (k: number) => laneLeft(k) + (widths[k - 1] ?? 0);
     const between = (k: number) => laneRight(k) + gap / 2; // gutter between lanes k and k + 1
     const n = widths.length;
-    const OUT = 11;
+    const OUT = 9;
     return (a: string, b: string): number | undefined => {
       const [ra, la] = cells.get(a) ?? [1, 1];
       const [rb, lb] = cells.get(b) ?? [1, 1];
@@ -125,6 +134,102 @@ function init(block: HTMLElement) {
     };
   }
 
+  /**
+   * Gutters of the node grid (either mode), in flow coordinates: x between columns/lanes and
+   * just outside the first and last, y between rows (and outside them on the desktop grid).
+   */
+  function gutters(origin: DOMRect, lanesMode: boolean) {
+    const cs = getComputedStyle(list);
+    const L = list.getBoundingClientRect();
+    const track = (tpl: string, gap: number, start: number, out: number, outEnd = out) => {
+      const sizes = tpl
+        .split(" ")
+        .map(parseFloat)
+        .filter((n) => !Number.isNaN(n));
+      const at: number[] = [];
+      let p = start;
+      sizes.forEach((w, k) => {
+        p += w;
+        if (k < sizes.length - 1) at.push(p + gap / 2);
+        p += gap;
+      });
+      return { inner: at, first: start - out, last: p - gap + outEnd };
+    };
+    const OUT = lanesMode ? 9 : 14;
+    const xs = track(
+      cs.gridTemplateColumns,
+      parseFloat(cs.columnGap) || 0,
+      L.left - origin.left,
+      OUT,
+    );
+    // Below the last grid row, clear of a group box's bottom padding (12px).
+    const ys = track(
+      cs.gridTemplateRows,
+      parseFloat(cs.rowGap) || 0,
+      L.top - origin.top,
+      OUT,
+      lanesMode ? OUT : 24,
+    );
+    return {
+      x: [...xs.inner, xs.first, xs.last],
+      // Phone legends sit right above the lanes, so lanes only use the gaps between rows.
+      y: lanesMode ? ys.inner : [...ys.inner, ys.first, ys.last],
+    };
+  }
+
+  const lengthOf = (d: string) =>
+    pathPoints(d).reduce(
+      (s, p, k, ps) =>
+        s + (k ? Math.hypot(p[0] - (ps[k - 1]?.[0] ?? 0), p[1] - (ps[k - 1]?.[1] ?? 0)) : 0),
+      0,
+    );
+
+  /**
+   * The edge's route: the direct one when it crosses no other node, else the shortest gutter
+   * route (along a column gap or a row gap) that doesn't, else the direct one.
+   */
+  function route(
+    A: Box,
+    B: Box,
+    others: Box[],
+    frames: Box[],
+    lanesMode: boolean,
+    preferred: number | undefined,
+    g: ReturnType<typeof gutters>,
+  ): EdgeGeom {
+    const direct = lanesMode ? edgeGeomV(A, B, preferred) : edgeGeom(A, B);
+    if (!crossedBoxes(direct.d, others).length) return direct;
+    // Grid gutters are as wide as a group box's padding, so a gutter's middle can sit right on
+    // a group's dashed border: try either side of it too, and prefer routes clear of borders.
+    const shifts = lanesMode ? [0] : [0, -3, 3, -7, 7, -11, 11];
+    const tries: EdgeGeom[] = [
+      ...g.x.flatMap((x) => shifts.map((s) => edgeGeomV(A, B, x + s))),
+      ...g.y
+        .flatMap((y) => shifts.map((s) => y + s))
+        .filter((y) => !(y > A.top && y < A.bottom) && !(y > B.top && y < B.bottom))
+        .map((y) => edgeGeomY(A, B, y)),
+    ];
+    const along = (d: string) =>
+      pathPoints(d).filter(([x, y]) =>
+        frames.some(
+          (f) =>
+            ((Math.abs(x - f.left) < 4.5 || Math.abs(x - f.right) < 4.5) &&
+              y > f.top &&
+              y < f.bottom) ||
+            ((Math.abs(y - f.top) < 4.5 || Math.abs(y - f.bottom) < 4.5) &&
+              x > f.left &&
+              x < f.right),
+        ),
+      ).length;
+    let best: { g: EdgeGeom; score: number } | null = null;
+    for (const t of tries) {
+      if (crossedBoxes(t.d, others).length) continue;
+      const score = lengthOf(t.d) + 9 * along(t.d);
+      if (!best || score < best.score) best = { g: t, score };
+    }
+    return best?.g ?? direct;
+  }
+
   function boxOf(el: Element, origin: DOMRect): Box {
     const r = el.getBoundingClientRect();
     return {
@@ -135,14 +240,44 @@ function init(block: HTMLElement) {
     };
   }
 
+  /** Arrowhead markers (plain and lit), referenced from flow.css through --ah / --ah-on. */
+  function arrowheads() {
+    const defs = document.createElementNS(NS, "defs");
+    for (const [suffix, cls] of [
+      ["ah", "ah"],
+      ["ah-on", "ah on"],
+    ] as const) {
+      const m = document.createElementNS(NS, "marker");
+      m.id = `${id}-${suffix}`;
+      m.setAttribute("viewBox", "0 0 8 8");
+      m.setAttribute("refX", "7.5");
+      m.setAttribute("refY", "4");
+      m.setAttribute("markerWidth", "7");
+      m.setAttribute("markerHeight", "7");
+      m.setAttribute("markerUnits", "userSpaceOnUse");
+      m.setAttribute("orient", "auto");
+      const tip = document.createElementNS(NS, "polygon");
+      tip.setAttribute("points", "0,0.5 8,4 0,7.5");
+      tip.setAttribute("class", cls);
+      m.append(tip);
+      defs.append(m);
+    }
+    svg.append(defs);
+    svg.style.setProperty("--ah", `url(#${id}-ah)`);
+    svg.style.setProperty("--ah-on", `url(#${id}-ah-on)`);
+  }
+
   function draw() {
     svg.replaceChildren();
     for (const g of flow.querySelectorAll(".flow-groupbox")) g.remove();
     const lanesMode = isList();
     const origin = flow.getBoundingClientRect();
     svg.setAttribute("viewBox", `0 0 ${origin.width} ${origin.height}`);
+    arrowheads();
     // Lanes sit closer together than grid columns, so their group boxes hug tighter.
-    const [px, pt, pb] = lanesMode ? [4, 17, 6] : [12, 18, 12];
+    const [px, pt, pb] = lanesMode ? [3, 17, 6] : [12, 18, 12];
+    const frames: Box[] = [];
+    const labels: Box[] = [];
     for (const [gid, gl] of Object.entries(groups)) {
       const boxes = nodes
         .filter((n) => n.closest("li")?.dataset.group === gid)
@@ -165,11 +300,17 @@ function init(block: HTMLElement) {
       label.textContent = gl;
       box.append(label);
       flow.prepend(box);
+      frames.push({ left: L, top: T, right: R, bottom: B });
+      labels.push(boxOf(label, origin));
     }
     const via = lanesMode ? laneRoutes(origin) : () => undefined;
+    const g0 = gutters(origin, lanesMode);
+    const all = new Map(nodes.map((n) => [n.dataset.node ?? "", boxOf(n, origin)]));
     edges.forEach(([a, b, style], i) => {
-      const [A, B] = [boxOf(node(a), origin), boxOf(node(b), origin)];
-      const g = lanesMode ? edgeGeomV(A, B, via(a, b)) : edgeGeom(A, B);
+      const A = must(all.get(a), a);
+      const B = must(all.get(b), b);
+      const others = [...[...all].filter(([k]) => k !== a && k !== b).map(([, v]) => v), ...labels];
+      const g = route(A, B, others, frames, lanesMode, via(a, b), g0);
       const p = document.createElementNS(NS, "path");
       p.setAttribute("d", g.d);
       if (style && style !== "solid") p.classList.add(style);
@@ -223,15 +364,18 @@ function init(block: HTMLElement) {
       if (p.classList.contains("dashed") || p.classList.contains("dotted")) return;
       const len = p.getTotalLength();
       p.style.strokeDasharray = `${len}`;
+      // The arrowhead lands once the line has reached it.
+      p.style.markerEnd = "none";
+      const done = () => {
+        p.style.strokeDasharray = "";
+        p.style.markerEnd = "";
+      };
       p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], {
         duration: 1000,
         delay: i * 70,
         easing: "cubic-bezier(0.16, 1, 0.3, 1)",
         fill: "backwards",
-      }).finished.then(
-        () => (p.style.strokeDasharray = ""),
-        () => (p.style.strokeDasharray = ""),
-      );
+      }).finished.then(done, done);
     });
   }
 

@@ -35,8 +35,6 @@ export const legalRag: CaseStudyData = {
     ],
     flow: {
       cols: 6,
-      // Three lanes need a 430px phone here: "Hybrid legal chunker" wraps to three lines below.
-      lanes3Min: 380,
       label: "Parts of the system: ingest above, a question below",
       keyLabel: "on a citation's path",
       groups: { in: "Ingest", ask: "Question" },

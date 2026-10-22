@@ -5,7 +5,7 @@
  * with SVG edges, where a tap opens the bottom sheet.
  *
  * Lanes: a phone layout has 1–3 lanes (columns). Three lanes need a container of at least
- * LANES3_MIN px (a 390px phone) or the diagram's `lanes3Min`; below that the diagram switches
+ * LANES3_MIN px (a 480px viewport, so phones get 2 lanes) or the diagram's `lanes3Min`; below that the diagram switches
  * to its 2-lane layout. A layout that uses 3 lanes must therefore give every node an explicit
  * `mAt2` (lanes 1–2). There is no automatic remap: hubs and branches only read when placed by
  * hand. A layout with at most 2 lanes uses `mAt` everywhere and has no `mAt2`.

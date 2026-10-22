@@ -43,7 +43,7 @@ interface Props {
    */
   autoplay?: boolean;
   /** Flow width (padding included) from which a 3-lane phone layout is used; LANES3_MIN (a
-   * 390px phone) by default. Raise it for diagrams whose titles need wider lanes. */
+   * 480px viewport) by default. Raise it for diagrams whose titles need wider lanes. */
   lanes3Min?: number;
 }
 
@@ -62,9 +62,9 @@ const {
   lanes3Min = LANES3_MIN,
 } = Astro.props;
 const { lanes, lanes2 } = laneCounts(nodes);
-/** Title pieces with a break opportunity after "." and "/" (`extractor.analyze`,
- * `orders/machine.ts`), so narrow lanes wrap at a dot rather than mid-word. */
-const breakable = (t: string) => t.split(/(?<=[./])(?=\S)/);
+/** Title pieces with a break opportunity after "/" (`orders/machine.ts`, `@/shop/store`), so
+ * narrow boxes wrap at a path separator rather than mid-word (or after "machine."). */
+const breakable = (t: string) => t.split(/(?<=\/)(?=\S)/);
 const cellVars = (n: FlowNode) => {
   const m = n.mAt ?? [1, 1];
   const m2 = n.mAt2 ?? m;
