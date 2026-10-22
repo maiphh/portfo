@@ -30,6 +30,8 @@ export interface CaseFlow {
   keyLabel: string;
   /** Accessible name of the node list. */
   label: string;
+  /** Flow width from which the 3-lane phone layout is used (FlowDiagram `lanes3Min`). */
+  lanes3Min?: number;
 }
 
 export interface CaseDive {

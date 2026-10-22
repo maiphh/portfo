@@ -1,7 +1,8 @@
 /**
  * Behaviour for <FlowDiagram> (components/flow/FlowDiagram.astro). Per flow:
- * - picks the layout (grid with edges, or a list) from the container width;
- * - draws the edges from the node boxes, again on every resize;
+ * - picks the layout from the container width: the grid (`at`), or the phone/tablet lanes
+ *   (`mAt`, or `mAt2` below the 3-lane width);
+ * - draws the edges and group boxes from the node boxes in both, again on every resize;
  * - opens a node's details below the flow (grid) or in a bottom sheet (list), keeps the
  *   selection when the layout flips, and returns focus to the node on close;
  * - arrow keys / Home / End move between nodes, Esc closes;
@@ -11,7 +12,16 @@
  *   scrolling or aria change. Paused on hover, keyboard focus, touch, a selection, off screen
  *   or in a hidden tab; resumes RESUME ms after the person lets go. Off under reduced motion.
  */
-import { edgeGeom, listBelow, type Box } from "~/lib/flow/geometry";
+import {
+  crossedBoxes,
+  edgeGeom,
+  edgeGeomV,
+  edgeGeomY,
+  listBelow,
+  pathPoints,
+  type Box,
+  type EdgeGeom,
+} from "~/lib/flow/geometry";
 
 const NS = "http://www.w3.org/2000/svg";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -45,6 +55,9 @@ function init(block: HTMLElement) {
   const groups = JSON.parse(flow.dataset.groups ?? "{}") as Record<string, string>;
   const packets = flow.hasAttribute("data-packets");
   const nodes = [...flow.querySelectorAll<HTMLButtonElement>("[data-node]")];
+  const list = must(flow.querySelector<HTMLElement>(".flow-nodes"), ".flow-nodes");
+  const lanes = Number(flow.dataset.lanes ?? 1);
+  const lanes3Min = Number(flow.dataset.lanes3Min ?? 0);
   const node = (nid: string) =>
     must(
       nodes.find((n) => n.dataset.node === nid),
@@ -60,13 +73,161 @@ function init(block: HTMLElement) {
   flow.classList.add("is-js");
   hint.hidden = false;
 
-  const isList = () => flow.classList.contains("is-list");
+  /** Phone/tablet lanes (details in the bottom sheet) rather than the grid. */
+  const isList = () => flow.classList.contains("is-lanes");
+  const isTwo = () => flow.classList.contains("is-2");
 
-  /** Returns true when the layout flipped. */
+  /** Returns true when the layout flipped between grid and lanes. */
   function setMode(): boolean {
     const was = isList();
-    flow.classList.toggle("is-list", flow.clientWidth < listBelow(cols));
+    const narrow = flow.clientWidth < listBelow(cols);
+    flow.classList.toggle("is-lanes", narrow);
+    flow.classList.toggle("is-2", narrow && lanes > 2 && flow.clientWidth < lanes3Min);
+    // On a phone the whole card is content for the mascot (chat/content.ts): the docked
+    // launcher tucks away rather than sit on the diagram's lanes, edges or gaps.
+    flow.toggleAttribute("data-mascot-avoid", narrow);
     return was !== isList();
+  }
+
+  /** [row, lane] of a node's item in the current lane layout. */
+  const cellOf = (li: HTMLElement): [number, number] => {
+    const [r, l] = (isTwo() ? li.dataset.m2 : li.dataset.m)?.split(",").map(Number) ?? [1, 1];
+    return [r ?? 1, l ?? 1];
+  };
+
+  /**
+   * Lane edges that skip rows and would cross a node go round it: along the gutter beside the
+   * target (different lanes), or the outer margin (same lane at the edge), else straight.
+   */
+  function laneRoutes(origin: DOMRect) {
+    const cells = new Map<string, [number, number]>();
+    const taken = new Set<string>();
+    for (const n of nodes) {
+      const c = cellOf(must(n.closest("li"), "li"));
+      cells.set(must(n.dataset.node, "node id"), c);
+      taken.add(c.join(","));
+    }
+    const widths = getComputedStyle(list).gridTemplateColumns.split(" ").map(parseFloat);
+    const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
+    const L = list.getBoundingClientRect();
+    const laneLeft = (k: number) =>
+      L.left - origin.left + widths.slice(0, k - 1).reduce((s, w) => s + w + gap, 0);
+    const laneRight = (k: number) => laneLeft(k) + (widths[k - 1] ?? 0);
+    const between = (k: number) => laneRight(k) + gap / 2; // gutter between lanes k and k + 1
+    const n = widths.length;
+    const OUT = 9;
+    return (a: string, b: string): number | undefined => {
+      const [ra, la] = cells.get(a) ?? [1, 1];
+      const [rb, lb] = cells.get(b) ?? [1, 1];
+      if (Math.abs(ra - rb) < 2) return undefined;
+      const [lo, hi] = [Math.min(la, lb), Math.max(la, lb)];
+      let blocked = false;
+      for (let r = Math.min(ra, rb) + 1; r < Math.max(ra, rb); r++)
+        for (let l = lo; l <= hi; l++) if (taken.has(`${r},${l}`)) blocked = true;
+      if (!blocked) return undefined;
+      if (la === lb) {
+        if (la === 1) return laneLeft(1) - OUT;
+        if (la === n) return laneRight(n) + OUT;
+        return between(la - 1);
+      }
+      return lb > la ? between(lb - 1) : between(lb);
+    };
+  }
+
+  /**
+   * Gutters of the node grid (either mode), in flow coordinates: x between columns/lanes and
+   * just outside the first and last, y between rows (and outside them on the desktop grid).
+   */
+  function gutters(origin: DOMRect, lanesMode: boolean) {
+    const cs = getComputedStyle(list);
+    const L = list.getBoundingClientRect();
+    const track = (tpl: string, gap: number, start: number, out: number, outEnd = out) => {
+      const sizes = tpl
+        .split(" ")
+        .map(parseFloat)
+        .filter((n) => !Number.isNaN(n));
+      const at: number[] = [];
+      let p = start;
+      sizes.forEach((w, k) => {
+        p += w;
+        if (k < sizes.length - 1) at.push(p + gap / 2);
+        p += gap;
+      });
+      return { inner: at, first: start - out, last: p - gap + outEnd };
+    };
+    const OUT = lanesMode ? 9 : 14;
+    const xs = track(
+      cs.gridTemplateColumns,
+      parseFloat(cs.columnGap) || 0,
+      L.left - origin.left,
+      OUT,
+    );
+    // Below the last grid row, clear of a group box's bottom padding (12px).
+    const ys = track(
+      cs.gridTemplateRows,
+      parseFloat(cs.rowGap) || 0,
+      L.top - origin.top,
+      OUT,
+      lanesMode ? OUT : 24,
+    );
+    return {
+      x: [...xs.inner, xs.first, xs.last],
+      // Phone legends sit right above the lanes, so lanes only use the gaps between rows.
+      y: lanesMode ? ys.inner : [...ys.inner, ys.first, ys.last],
+    };
+  }
+
+  const lengthOf = (d: string) =>
+    pathPoints(d).reduce(
+      (s, p, k, ps) =>
+        s + (k ? Math.hypot(p[0] - (ps[k - 1]?.[0] ?? 0), p[1] - (ps[k - 1]?.[1] ?? 0)) : 0),
+      0,
+    );
+
+  /**
+   * The edge's route: the direct one when it crosses no other node, else the shortest gutter
+   * route (along a column gap or a row gap) that doesn't, else the direct one.
+   */
+  function route(
+    A: Box,
+    B: Box,
+    others: Box[],
+    frames: Box[],
+    lanesMode: boolean,
+    preferred: number | undefined,
+    g: ReturnType<typeof gutters>,
+  ): EdgeGeom {
+    const direct = lanesMode ? edgeGeomV(A, B, preferred) : edgeGeom(A, B);
+    if (!crossedBoxes(direct.d, others).length) return direct;
+    // Grid gutters are as wide as a group box's padding, so a gutter's middle can sit right on
+    // a group's dashed border: try either side of it too, and prefer routes clear of borders.
+    const shifts = lanesMode ? [0] : [0, -3, 3, -7, 7, -11, 11];
+    const tries: EdgeGeom[] = [
+      ...g.x.flatMap((x) => shifts.map((s) => edgeGeomV(A, B, x + s))),
+      ...g.y
+        .flatMap((y) => shifts.map((s) => y + s))
+        .filter((y) => !(y > A.top && y < A.bottom) && !(y > B.top && y < B.bottom))
+        .map((y) => edgeGeomY(A, B, y)),
+    ];
+    const along = (d: string) =>
+      pathPoints(d).filter(([x, y]) =>
+        frames.some(
+          (f) =>
+            ((Math.abs(x - f.left) < 4.5 || Math.abs(x - f.right) < 4.5) &&
+              y > f.top &&
+              y < f.bottom) ||
+            ((Math.abs(y - f.top) < 4.5 || Math.abs(y - f.bottom) < 4.5) &&
+              x > f.left &&
+              x < f.right),
+        ),
+      ).length;
+    let best: { g: EdgeGeom; score: number } | null = null;
+    for (const t of tries) {
+      if (crossedBoxes(t.d, others).length) continue;
+      const score = lengthOf(t.d) + 9 * along(t.d);
+      if (!best || score < best.score) best = { g: t, score };
+    }
+    return best?.g ?? direct;
   }
 
   function boxOf(el: Element, origin: DOMRect): Box {
@@ -79,21 +240,53 @@ function init(block: HTMLElement) {
     };
   }
 
+  /** Arrowhead markers (plain and lit), referenced from flow.css through --ah / --ah-on. */
+  function arrowheads() {
+    const defs = document.createElementNS(NS, "defs");
+    for (const [suffix, cls] of [
+      ["ah", "ah"],
+      ["ah-on", "ah on"],
+    ] as const) {
+      const m = document.createElementNS(NS, "marker");
+      m.id = `${id}-${suffix}`;
+      m.setAttribute("viewBox", "0 0 8 8");
+      m.setAttribute("refX", "7.5");
+      m.setAttribute("refY", "4");
+      m.setAttribute("markerWidth", "7");
+      m.setAttribute("markerHeight", "7");
+      m.setAttribute("markerUnits", "userSpaceOnUse");
+      m.setAttribute("orient", "auto");
+      const tip = document.createElementNS(NS, "polygon");
+      tip.setAttribute("points", "0,0.5 8,4 0,7.5");
+      tip.setAttribute("class", cls);
+      m.append(tip);
+      defs.append(m);
+    }
+    svg.append(defs);
+    svg.style.setProperty("--ah", `url(#${id}-ah)`);
+    svg.style.setProperty("--ah-on", `url(#${id}-ah-on)`);
+  }
+
   function draw() {
     svg.replaceChildren();
     for (const g of flow.querySelectorAll(".flow-groupbox")) g.remove();
-    if (isList()) return;
+    const lanesMode = isList();
     const origin = flow.getBoundingClientRect();
     svg.setAttribute("viewBox", `0 0 ${origin.width} ${origin.height}`);
+    arrowheads();
+    // Lanes sit closer together than grid columns, so their group boxes hug tighter.
+    const [px, pt, pb] = lanesMode ? [3, 17, 6] : [12, 18, 12];
+    const frames: Box[] = [];
+    const labels: Box[] = [];
     for (const [gid, gl] of Object.entries(groups)) {
       const boxes = nodes
         .filter((n) => n.closest("li")?.dataset.group === gid)
         .map((n) => boxOf(n, origin));
       if (!boxes.length) continue;
-      const L = Math.min(...boxes.map((b) => b.left)) - 12;
-      const T = Math.min(...boxes.map((b) => b.top)) - 18;
-      const R = Math.max(...boxes.map((b) => b.right)) + 12;
-      const B = Math.max(...boxes.map((b) => b.bottom)) + 12;
+      const L = Math.min(...boxes.map((b) => b.left)) - px;
+      const T = Math.min(...boxes.map((b) => b.top)) - pt;
+      const R = Math.max(...boxes.map((b) => b.right)) + px;
+      const B = Math.max(...boxes.map((b) => b.bottom)) + pb;
       const box = document.createElement("div");
       box.className = "flow-groupbox";
       box.setAttribute("aria-hidden", "true");
@@ -107,9 +300,17 @@ function init(block: HTMLElement) {
       label.textContent = gl;
       box.append(label);
       flow.prepend(box);
+      frames.push({ left: L, top: T, right: R, bottom: B });
+      labels.push(boxOf(label, origin));
     }
+    const via = lanesMode ? laneRoutes(origin) : () => undefined;
+    const g0 = gutters(origin, lanesMode);
+    const all = new Map(nodes.map((n) => [n.dataset.node ?? "", boxOf(n, origin)]));
     edges.forEach(([a, b, style], i) => {
-      const g = edgeGeom(boxOf(node(a), origin), boxOf(node(b), origin));
+      const A = must(all.get(a), a);
+      const B = must(all.get(b), b);
+      const others = [...[...all].filter(([k]) => k !== a && k !== b).map(([, v]) => v), ...labels];
+      const g = route(A, B, others, frames, lanesMode, via(a, b), g0);
       const p = document.createElementNS(NS, "path");
       p.setAttribute("d", g.d);
       if (style && style !== "solid") p.classList.add(style);
@@ -125,9 +326,17 @@ function init(block: HTMLElement) {
         c.setAttribute("class", "pk");
         c.setAttribute("cx", "0");
         c.setAttribute("cy", "0");
+        // Hidden until its motion begins, so it never waits at the SVG's origin.
+        c.setAttribute("visibility", "hidden");
+        const begin = `${(i * 0.41) % 2.6}s`;
+        const show = document.createElementNS(NS, "set");
+        show.setAttribute("attributeName", "visibility");
+        show.setAttribute("to", "visible");
+        show.setAttribute("begin", begin);
+        c.append(show);
         const m = document.createElementNS(NS, "animateMotion");
         m.setAttribute("dur", "2.6s");
-        m.setAttribute("begin", `${(i * 0.41) % 2.6}s`);
+        m.setAttribute("begin", begin);
         m.setAttribute("repeatCount", "indefinite");
         const mp = document.createElementNS(NS, "mpath");
         mp.setAttribute("href", `#${id}-e${i}`);
@@ -142,7 +351,7 @@ function init(block: HTMLElement) {
 
   /** Draws the edges in, once, the first time the flow is seen. */
   function drawIn() {
-    if (drawnIn || reduce.matches || isList()) return;
+    if (drawnIn || reduce.matches) return;
     drawnIn = true;
     nodes.forEach((n, i) =>
       n.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -155,15 +364,18 @@ function init(block: HTMLElement) {
       if (p.classList.contains("dashed") || p.classList.contains("dotted")) return;
       const len = p.getTotalLength();
       p.style.strokeDasharray = `${len}`;
+      // The arrowhead lands once the line has reached it.
+      p.style.markerEnd = "none";
+      const done = () => {
+        p.style.strokeDasharray = "";
+        p.style.markerEnd = "";
+      };
       p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], {
         duration: 1000,
         delay: i * 70,
         easing: "cubic-bezier(0.16, 1, 0.3, 1)",
         fill: "backwards",
-      }).finished.then(
-        () => (p.style.strokeDasharray = ""),
-        () => (p.style.strokeDasharray = ""),
-      );
+      }).finished.then(done, done);
     });
   }
 
@@ -330,18 +542,15 @@ function init(block: HTMLElement) {
 
     const activeId = () => (lit && current === null && at >= 0 ? nodes[at]?.dataset.node : null);
 
+    /** Real edges into the node: from the previous stop if there is one, else all of them.
+     * A node with no incoming edge is lit on its own. */
     function into(nid: string): SVGPathElement[] {
-      const paths = [...svg.querySelectorAll<SVGPathElement>("path")];
+      const paths = [...svg.querySelectorAll<SVGPathElement>("path")].filter(
+        (p) => p.dataset.b === nid,
+      );
       const from = prev >= 0 ? nodes[prev]?.dataset.node : null;
-      for (const pick of [
-        (p: SVGPathElement) => p.dataset.b === nid && p.dataset.a === from,
-        (p: SVGPathElement) => p.dataset.b === nid,
-        (p: SVGPathElement) => p.dataset.a === nid,
-      ]) {
-        const e = paths.filter(pick);
-        if (e.length) return e;
-      }
-      return [];
+      const fromPrev = paths.filter((p) => p.dataset.a === from);
+      return fromPrev.length ? fromPrev : paths;
     }
 
     function paint() {
@@ -350,7 +559,6 @@ function init(block: HTMLElement) {
         const on = nid != null && n.dataset.node === nid;
         n.classList.toggle("is-auto", on);
         lis[i]?.classList.toggle("is-auto", on);
-        lis[i]?.classList.toggle("is-auto-in", nid != null && i === at - 1);
       });
       const e = nid != null ? into(nid) : [];
       for (const p of svg.querySelectorAll<SVGPathElement>("path"))

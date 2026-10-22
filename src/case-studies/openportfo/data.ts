@@ -66,6 +66,7 @@ export const openportfo: CaseStudyData = {
           title: "Next.js client",
           sub: "the book",
           at: [1, 1],
+          mAt: [1, 1],
           key: true,
           details: {
             does: "Search, holdings, the watchlist, one asset's history and the chat panel. Prices are refreshed on purpose, never pushed.",
@@ -82,6 +83,7 @@ export const openportfo: CaseStudyData = {
           title: "API Gateway",
           sub: "HTTP API, /api/*",
           at: [1, 2],
+          mAt: [2, 1],
           key: true,
           details: {
             does: "Proxies `/api/*` to FastAPI.",
@@ -94,6 +96,7 @@ export const openportfo: CaseStudyData = {
           title: "FastAPI",
           sub: "on Elastic Beanstalk",
           at: [1, 3],
+          mAt: [3, 1],
           key: true,
           details: {
             does: "Users, holdings, the watchlist, valuation, news and the chat agent, behind one API.",
@@ -106,6 +109,7 @@ export const openportfo: CaseStudyData = {
           title: "DynamoDB",
           sub: "holdings, watchlist",
           at: [1, 4],
+          mAt: [4, 1],
           key: true,
           details: {
             does: "Users, holdings, the watchlist, settings, news and the price cache.",
@@ -118,6 +122,7 @@ export const openportfo: CaseStudyData = {
           title: "CoinGecko and vnstock",
           sub: "pulled, cached",
           at: [1, 5],
+          mAt: [3, 2],
           key: true,
           details: {
             does: "Crypto quotes and history from CoinGecko; Vietnamese stocks from `vnstock`, server-side only.",
@@ -130,6 +135,7 @@ export const openportfo: CaseStudyData = {
           title: "LLM provider",
           sub: "OpenAI-compatible",
           at: [2, 2],
+          mAt: [1, 2],
           details: {
             does: "Answers the agent's completion calls and picks which tools to call.",
             tech: ["OpenAI-compatible chat completions", "A default model plus fallbacks"],
@@ -141,6 +147,7 @@ export const openportfo: CaseStudyData = {
           title: "Chat agent",
           sub: "user-scoped tools",
           at: [2, 3],
+          mAt: [2, 2],
           details: {
             does: "Runs complete → tools → complete until the model stops calling tools, then replies. Analysis questions go to a second, read-only analyst prompt.",
             tech: [
@@ -156,6 +163,7 @@ export const openportfo: CaseStudyData = {
           title: "S3",
           sub: "history and snapshots",
           at: [2, 4],
+          mAt: [4, 2],
           details: {
             does: "Price history and the daily snapshots of each book.",
             tech: ["S3"],
@@ -167,6 +175,7 @@ export const openportfo: CaseStudyData = {
           title: "Athena",
           sub: "queries on S3",
           at: [2, 5],
+          mAt: [5, 2],
           details: {
             does: "Queries over the stored history.",
             tech: ["Athena over S3"],
@@ -178,6 +187,7 @@ export const openportfo: CaseStudyData = {
           title: "EventBridge",
           sub: "daily schedule",
           at: [3, 1],
+          mAt: [7, 2],
           group: "job",
           details: {
             does: "Fires the daily jobs.",
@@ -190,6 +200,7 @@ export const openportfo: CaseStudyData = {
           title: "Lambda",
           sub: "jobs only",
           at: [3, 2],
+          mAt: [6, 2],
           group: "job",
           details: {
             does: "Runs the daily jobs: RSS news, a snapshot of each book, and an optional summary email.",
@@ -202,6 +213,7 @@ export const openportfo: CaseStudyData = {
           title: "RSS",
           sub: "news",
           at: [3, 3],
+          mAt: [6, 1],
           group: "job",
           details: {
             does: "News feeds, matched by keyword to the symbols on each book.",
@@ -214,6 +226,7 @@ export const openportfo: CaseStudyData = {
           title: "SES",
           sub: "optional email",
           at: [3, 4],
+          mAt: [7, 1],
           group: "job",
           details: {
             does: "Sends the optional daily summary.",

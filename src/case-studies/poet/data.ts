@@ -42,6 +42,7 @@ export const poet: CaseStudyData = {
           title: "Visitor",
           sub: "reads, gives",
           at: [1, 1],
+          mAt: [1, 1],
           key: true,
           details: {
             does: "Reads the story, picks a gift on Ủng hộ, leaves a name and a message (or gives as Ẩn danh), and pays on PayOS.",
@@ -54,6 +55,7 @@ export const poet: CaseStudyData = {
           title: "GitHub Pages",
           sub: "static HTML",
           at: [1, 2],
+          mAt: [2, 1],
           key: true,
           details: {
             does: "Home, the team, Đồng hành packages for companies, Ủng hộ and the admin page. Shared chrome is three web components: header, footer and lightbox.",
@@ -66,6 +68,7 @@ export const poet: CaseStudyData = {
           title: "Worker poet-donations",
           sub: "the only door",
           at: [1, 3],
+          mAt: [3, 1],
           key: true,
           details: {
             does: "Creates the gift and the PayOS link, receives the webhook, and serves the wall, the receipt status and the admin routes.",
@@ -82,6 +85,7 @@ export const poet: CaseStudyData = {
           title: "D1",
           sub: "gifts and the wall",
           at: [1, 4],
+          mAt: [4, 2],
           key: true,
           details: {
             does: "The `donations` table: order code, amount, display name, message, anonymous flag, status, PayOS ids, created and paid times. Admin users and sessions are separate tables.",
@@ -94,6 +98,7 @@ export const poet: CaseStudyData = {
           title: "Return page",
           sub: "receipt only",
           at: [2, 2],
+          mAt: [5, 2],
           details: {
             does: "Where PayOS sends the browser back. It asks the Worker for the order's status and, when it's paid, shows the thank-you letter.",
             tech: ["`ung-ho/return.html`, `result.js`, `card.js`", "`GET /api/donations/:code`"],
@@ -105,6 +110,7 @@ export const poet: CaseStudyData = {
           title: "PayOS",
           sub: "checkout and webhook",
           at: [2, 3],
+          mAt: [4, 1],
           key: true,
           details: {
             does: "Hosts the checkout and calls the Worker's webhook when a payment lands.",
@@ -117,6 +123,7 @@ export const poet: CaseStudyData = {
           title: "Admin page",
           sub: "publish or hide a gift",
           at: [2, 4],
+          mAt: [2, 2],
           details: {
             does: "Signs in, then shows, publishes or hides a paid gift on the public wall.",
             tech: [
