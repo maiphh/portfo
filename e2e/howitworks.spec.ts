@@ -11,7 +11,7 @@ for (const width of WIDTHS) {
     await page.evaluate(() => document.fonts.ready);
     // The grid with edges, or the list below 728px of container (flow spec).
     const flow = page.locator('[data-flow="how"]');
-    await expect(flow).toHaveClass(width >= 800 ? /\bis-js\b(?!.*is-list)/ : /is-list/);
+    await expect(flow).toHaveClass(width >= 800 ? /\bis-js\b(?!.*is-lanes)/ : /is-lanes/);
     expect(await page.evaluate(overflowReport, "#how")).toEqual([]);
   });
 }
@@ -195,7 +195,7 @@ test.describe("flow on mobile", () => {
   test("a row opens a bottom sheet; Esc, Close and the scrim close it", async ({ page }) => {
     await page.goto("/");
     await page.locator("#how").scrollIntoViewIfNeeded();
-    await expect(page.locator('[data-flow="how"]')).toHaveClass(/is-list/);
+    await expect(page.locator('[data-flow="how"]')).toHaveClass(/is-lanes/);
     const row = page.locator('[data-node="worker"]');
     const sheet = page.locator("dialog#how-sheet");
     const box = await row.boundingBox();
@@ -253,6 +253,16 @@ test.describe("autoplay: the flow tours itself while idle", () => {
   const activeId = (page: import("@playwright/test").Page) =>
     page.locator(lit).evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.node));
 
+  const litEdges = (page: import("@playwright/test").Page) =>
+    page
+      .locator(`${flow} path.auto`)
+      .evaluateAll((ps) =>
+        ps.map((p) => [
+          `${(p as SVGPathElement).dataset.a}→${(p as SVGPathElement).dataset.b}`,
+          getComputedStyle(p).animationName,
+        ]),
+      );
+
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/");
@@ -274,16 +284,14 @@ test.describe("autoplay: the flow tours itself while idle", () => {
       const [id] = await activeId(page);
       if (id && seen.at(-1) !== id) {
         seen.push(id);
-        if (!isMobile && id !== "browser") {
-          // The edge into it is lit and animated.
-          const into = await page
-            .locator(`${flow} path.auto`)
-            .evaluateAll((ps) =>
-              ps.map((p) => [(p as SVGPathElement).dataset.b, getComputedStyle(p).animationName]),
-            );
-          expect(into.length).toBeGreaterThan(0);
-          expect(into.every(([, anim]) => anim === "flow-run")).toBe(true);
-          expect(into.some(([b]) => b === id) || id === "cron").toBe(true);
+        // Only real edges into it are lit (and animated), on the grid and on phone lanes.
+        const into = await litEdges(page);
+        if (EDGES.some((e) => e.endsWith(`→${id}`))) expect(into.length).toBeGreaterThan(0);
+        else expect(into).toEqual([]);
+        for (const [e = "", anim] of into) {
+          expect(EDGES).toContain(e);
+          expect(e.endsWith(`→${id}`)).toBe(true);
+          expect(anim).toBe("flow-run");
         }
       }
       await page.waitForTimeout(150);
@@ -298,6 +306,31 @@ test.describe("autoplay: the flow tours itself while idle", () => {
     expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
     expect(await page.evaluate(() => scrollY)).toBe(y);
     if (isMobile) await expect(page.locator(`${flow} li.is-auto`)).toHaveCount(1);
+  });
+
+  test("a whole loop on phone lanes lights only edges that exist; Cron Trigger alone", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "phone lanes");
+    test.setTimeout(60_000);
+    const lit: Record<string, string[]> = {};
+    const t0 = Date.now();
+    while (Object.keys(lit).length < ORDER.length && Date.now() - t0 < 40_000) {
+      const [id] = await activeId(page);
+      if (id && !(id in lit)) lit[id] = (await litEdges(page)).map(([e]) => e ?? "");
+      await page.waitForTimeout(200);
+    }
+    expect(Object.keys(lit).sort()).toEqual([...ORDER].sort());
+    for (const [id, es] of Object.entries(lit)) {
+      const real = EDGES.filter((e) => e.endsWith(`→${id}`));
+      if (!real.length) expect(es, id).toEqual([]);
+      else expect(es.length, id).toBeGreaterThan(0);
+      for (const e of es) expect(real, id).toContain(e);
+    }
+    // The old list lit D1 → Chat limits, which isn't an edge.
+    expect(lit.quota).toEqual(["worker→quota"]);
+    expect(lit.cron).toEqual([]);
   });
 
   test("a selection stops it; it comes back about 6s after closing", async ({ page, isMobile }) => {

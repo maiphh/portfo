@@ -13,6 +13,8 @@ const nodes: FlowNode[] = [
     title: "Your browser",
     sub: "this page",
     at: [3, 1],
+    mAt: [1, 2],
+    mAt2: [2, 1],
     details: {
       does: "Loads prebuilt pages, then calls the Worker directly for contact, page views, GitHub activity and chat.",
       tech: ["Astro islands, no framework runtime", "`fetch` + server-sent events for chat"],
@@ -24,6 +26,8 @@ const nodes: FlowNode[] = [
     title: "Static pages",
     sub: "Vercel · prebuilt",
     at: [1, 1],
+    mAt: [1, 1],
+    mAt2: [1, 1],
     details: {
       does: "Serves every page as prebuilt HTML, CSS and JS. Only a small health check runs on demand.",
       tech: ["Astro, static output", "`@astrojs/vercel` adapter"],
@@ -35,6 +39,8 @@ const nodes: FlowNode[] = [
     title: "portfo Worker",
     sub: "contact · views · chat",
     at: [3, 2],
+    mAt: [2, 2],
+    mAt2: [3, 1],
     key: true,
     details: {
       does: "One Cloudflare Worker for everything dynamic: `/contact`, `/view`, `/popular`, `/activity` and `/chat`, plus the scheduled GitHub sync.",
@@ -50,6 +56,8 @@ const nodes: FlowNode[] = [
     title: "Cloudflare D1",
     sub: "messages · views · GitHub",
     at: [1, 3],
+    mAt: [3, 1],
+    mAt2: [4, 1],
     key: true,
     details: {
       does: "Stores contact messages, page views and a snapshot of public GitHub repos and activity.",
@@ -62,6 +70,8 @@ const nodes: FlowNode[] = [
     title: "Chat limits",
     sub: "Durable Object · rate limit",
     at: [2, 3],
+    mAt: [3, 2],
+    mAt2: [4, 2],
     key: true,
     details: {
       does: "Caps the chat: 3 messages per 10 seconds, about 10 per visitor every 10 minutes, 50 a day in total.",
@@ -74,6 +84,8 @@ const nodes: FlowNode[] = [
     title: "Workers AI",
     sub: "Llama 3.3 · tool calling",
     at: [3, 3],
+    mAt: [2, 3],
+    mAt2: [5, 1],
     key: true,
     details: {
       does: "Answers chat questions only from tool results: projects, experience, contact details and GitHub stats.",
@@ -89,6 +101,8 @@ const nodes: FlowNode[] = [
     title: "Resend",
     sub: "one email per message",
     at: [4, 3],
+    mAt: [3, 3],
+    mAt2: [6, 1],
     details: {
       does: "Sends me each contact message in the same request that stored it. Reply-to is the sender.",
       tech: ["Resend HTTP API", "called from the Worker"],
@@ -100,6 +114,8 @@ const nodes: FlowNode[] = [
     title: "Email to Phu",
     sub: "reply-to is you",
     at: [4, 4],
+    mAt: [4, 3],
+    mAt2: [6, 2],
     details: {
       does: "Lands in my inbox; replying goes straight to the address you entered.",
       tech: ["plain text email"],
@@ -111,6 +127,8 @@ const nodes: FlowNode[] = [
     title: "Cron Trigger",
     sub: "every 6 hours",
     at: [5, 1],
+    mAt: [1, 3],
+    mAt2: [2, 2],
     key: true,
     details: {
       does: "Runs the Worker's GitHub sync on a schedule, so pages read a snapshot instead of calling GitHub.",
@@ -123,6 +141,8 @@ const nodes: FlowNode[] = [
     title: "GitHub API",
     sub: "public repos and activity",
     at: [5, 3],
+    mAt: [2, 1],
+    mAt2: [3, 2],
     details: {
       does: "Source of the public repositories and contribution activity shown on the site.",
       tech: ["GitHub GraphQL API", "read-only token"],

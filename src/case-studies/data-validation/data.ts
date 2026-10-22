@@ -53,6 +53,7 @@ export const dvp: CaseStudyData = {
           title: "parse-config",
           sub: "the client's workbook",
           at: [1, 1],
+          mAt: [1, 1],
           key: true,
           group: "init",
           details: {
@@ -66,6 +67,7 @@ export const dvp: CaseStudyData = {
           title: "extractor.analyze",
           sub: "read the layout",
           at: [1, 2],
+          mAt: [2, 1],
           group: "init",
           details: {
             does: "Works out the layout of each input sheet or PDF so fields can be found again every month.",
@@ -78,6 +80,7 @@ export const dvp: CaseStudyData = {
           title: "extractor.extract",
           sub: "sample rows",
           at: [1, 3],
+          mAt: [3, 1],
           group: "init",
           details: {
             does: "Pulls sample records from the uploaded inputs.",
@@ -90,6 +93,7 @@ export const dvp: CaseStudyData = {
           title: "engine.translate",
           sub: "rule → function",
           at: [1, 4],
+          mAt: [4, 1],
           key: true,
           group: "init",
           details: {
@@ -107,6 +111,7 @@ export const dvp: CaseStudyData = {
           title: "Compiled client",
           sub: "persist + snapshot",
           at: [1, 5],
+          mAt: [5, 1],
           key: true,
           group: "init",
           details: {
@@ -120,6 +125,7 @@ export const dvp: CaseStudyData = {
           title: "Merge inputs",
           sub: "one pay month",
           at: [2, 1],
+          mAt: [2, 2],
           key: true,
           group: "proc",
           details: {
@@ -133,6 +139,7 @@ export const dvp: CaseStudyData = {
           title: "Run-scoped repair",
           sub: "fix, don't rewrite",
           at: [2, 2],
+          mAt: [3, 2],
           group: "proc",
           details: {
             does: "Applies a repair overlay for this run when an input doesn't quite match what the client was taught.",
@@ -145,6 +152,7 @@ export const dvp: CaseStudyData = {
           title: "extractor.extract",
           sub: "map the columns",
           at: [2, 3],
+          mAt: [4, 2],
           key: true,
           group: "proc",
           details: {
@@ -158,6 +166,7 @@ export const dvp: CaseStudyData = {
           title: "engine.execute",
           sub: "every row, every rule",
           at: [2, 4],
+          mAt: [5, 2],
           key: true,
           group: "proc",
           details: {
@@ -171,6 +180,7 @@ export const dvp: CaseStudyData = {
           title: "Output and report",
           sub: "flags per cell",
           at: [2, 5],
+          mAt: [6, 2],
           key: true,
           group: "proc",
           details: {
@@ -184,6 +194,7 @@ export const dvp: CaseStudyData = {
           title: "Preflight",
           sub: "validate-input",
           at: [3, 1],
+          mAt: [1, 2],
           details: {
             does: "A quick synchronous check of the month's files before process starts.",
             tech: ["`POST …/validate-input`, not a run"],
@@ -195,6 +206,7 @@ export const dvp: CaseStudyData = {
           title: "On-prem LLM",
           sub: "writes code, not verdicts",
           at: [3, 3],
+          mAt: [6, 1],
           details: {
             does: "Reads layouts and translates rules at init. It never judges a payroll row.",
             tech: [

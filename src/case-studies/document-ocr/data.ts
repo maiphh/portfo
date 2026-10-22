@@ -54,6 +54,8 @@ export const ocr: CaseStudyData = {
           title: "Browser user",
           sub: "operators, admins",
           at: [1, 1],
+          mAt: [1, 1],
+          mAt2: [1, 1],
           key: true,
           details: {
             does: "Operators stage files, start a run, correct fields beside the source page, and export Excel. Administrators define what to extract.",
@@ -66,6 +68,8 @@ export const ocr: CaseStudyData = {
           title: "Next.js frontend",
           sub: "App Router · SWR",
           at: [1, 2],
+          mAt: [2, 1],
+          mAt2: [2, 1],
           key: true,
           details: {
             does: "App Router pages for upload, review and export. Talks to the backend over REST.",
@@ -84,6 +88,8 @@ export const ocr: CaseStudyData = {
           title: "Microsoft Entra ID",
           sub: "optional sign-in",
           at: [2, 2],
+          mAt: [2, 2],
+          mAt2: [1, 2],
           details: {
             does: "Optional sign-in. After it, the backend issues the application's own JWT.",
             tech: [
@@ -99,6 +105,8 @@ export const ocr: CaseStudyData = {
           title: "Other application",
           sub: "POST /api/v1/ocr",
           at: [3, 1],
+          mAt: [2, 3],
+          mAt2: [2, 2],
           details: {
             does: "Another system sends files and a template slug, and gets back structured fields and the filled workbook. No browser needed.",
             tech: [
@@ -114,6 +122,8 @@ export const ocr: CaseStudyData = {
           title: "/api/v1 routers",
           sub: "one app, no gateway",
           at: [2, 3],
+          mAt: [3, 2],
+          mAt2: [3, 2],
           key: true,
           group: "api",
           details: {
@@ -131,6 +141,8 @@ export const ocr: CaseStudyData = {
           title: "Domain services",
           sub: "templates · sessions",
           at: [1, 4],
+          mAt: [4, 1],
+          mAt2: [4, 1],
           key: true,
           group: "api",
           details: {
@@ -144,6 +156,8 @@ export const ocr: CaseStudyData = {
           title: "Extraction worker",
           sub: "in-process · fair claim",
           at: [3, 4],
+          mAt: [4, 2],
+          mAt2: [4, 2],
           key: true,
           group: "api",
           details: {
@@ -161,6 +175,8 @@ export const ocr: CaseStudyData = {
           title: "AI clients",
           sub: "engine at runtime",
           at: [2, 5],
+          mAt: [4, 3],
+          mAt2: [5, 2],
           key: true,
           group: "api",
           details: {
@@ -177,6 +193,8 @@ export const ocr: CaseStudyData = {
           title: "Render and rule pools",
           sub: "pages · rules",
           at: [3, 5],
+          mAt: [3, 3],
+          mAt2: [5, 1],
           key: true,
           group: "api",
           details: {
@@ -194,6 +212,8 @@ export const ocr: CaseStudyData = {
           title: "PostgreSQL",
           sub: "record + work queue",
           at: [1, 6],
+          mAt: [5, 1],
+          mAt2: [6, 1],
           key: true,
           details: {
             does: "The system of record (templates, sessions, pages) and the work queue.",
@@ -206,6 +226,8 @@ export const ocr: CaseStudyData = {
           title: "VLM, or OCR + LLM",
           sub: "outside the process",
           at: [2, 6],
+          mAt: [5, 3],
+          mAt2: [6, 2],
           key: true,
           details: {
             does: "The model providers, outside the process: a vision-language model, or a Mistral-compatible OCR service plus an LLM mapper.",
@@ -218,6 +240,8 @@ export const ocr: CaseStudyData = {
           title: "Local blob store",
           sub: "uploads · images",
           at: [3, 6],
+          mAt: [5, 2],
+          mAt2: [7, 1],
           details: {
             does: "Holds staged uploads and the review image for each page.",
             tech: [

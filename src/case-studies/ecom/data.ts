@@ -45,6 +45,7 @@ export const ecom: CaseStudyData = {
           title: "Host pages",
           sub: "storefront and desk",
           at: [2, 1],
+          mAt: [1, 1],
           key: true,
           details: {
             does: "The buyer storefront and the seller desk. In Mirror Now these are the `(store)` and `(desk)` route groups.",
@@ -60,6 +61,7 @@ export const ecom: CaseStudyData = {
           title: "@/shop/store and desk",
           sub: "host adapters",
           at: [2, 2],
+          mAt: [2, 1],
           key: true,
           details: {
             does: "The only doors a page uses: one for buyers, one for the seller desk.",
@@ -75,6 +77,7 @@ export const ecom: CaseStudyData = {
           title: "createShop",
           sub: "the engine",
           at: [2, 3],
+          mAt: [3, 1],
           key: true,
           group: "eng",
           details: {
@@ -91,6 +94,7 @@ export const ecom: CaseStudyData = {
           title: "orders/machine.ts",
           sub: "pure step function",
           at: [1, 3],
+          mAt: [3, 2],
           key: true,
           group: "eng",
           details: {
@@ -104,6 +108,7 @@ export const ecom: CaseStudyData = {
           title: "priceCart",
           sub: "discount producers",
           at: [1, 4],
+          mAt: [4, 1],
           group: "eng",
           details: {
             does: "Prices a cart from a list of discount producers.",
@@ -119,6 +124,7 @@ export const ecom: CaseStudyData = {
           title: "PaymentPort",
           sub: "charge · verify",
           at: [2, 4],
+          mAt: [4, 2],
           key: true,
           group: "eng",
           details: {
@@ -135,6 +141,7 @@ export const ecom: CaseStudyData = {
           title: "Gateway",
           sub: "Postgres or in-memory",
           at: [3, 3],
+          mAt: [5, 1],
           key: true,
           group: "eng",
           details: {
@@ -151,6 +158,7 @@ export const ecom: CaseStudyData = {
           title: "PayOS webhook",
           sub: "/api/hooks/payos",
           at: [2, 5],
+          mAt: [6, 2],
           key: true,
           details: {
             does: "PayOS reports a payment; the port verifies it and the machine decides what it means.",
@@ -163,6 +171,7 @@ export const ecom: CaseStudyData = {
           title: "Cloudinary",
           sub: "product images",
           at: [3, 5],
+          mAt: [2, 2],
           details: {
             does: "Stores and serves product images.",
             tech: ["Cloudinary"],

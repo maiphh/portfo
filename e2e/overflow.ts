@@ -1,6 +1,8 @@
 /**
  * Everything inside `selector` that pokes out of it or the viewport, scrolls sideways, has a
  * clamped flow label, or sets text under 12px. Runs in the page (page.evaluate).
+ * Text set to end in an ellipsis (`text-overflow: ellipsis`, the one-line sub-line of a phone
+ * flow box) is cut on purpose and doesn't count as scrolling sideways.
  */
 export function overflowReport(selector: string) {
   const sec = document.querySelector<HTMLElement>(selector);
@@ -35,6 +37,7 @@ export function overflowReport(selector: string) {
       el instanceof HTMLElement &&
       !el.hasAttribute("data-scroll-x") &&
       el.clientWidth > 0 &&
+      getComputedStyle(el).textOverflow !== "ellipsis" &&
       el.scrollWidth > el.clientWidth + 1
     )
       out.push(`${name(el)} scrollWidth ${el.scrollWidth} > clientWidth ${el.clientWidth}`);

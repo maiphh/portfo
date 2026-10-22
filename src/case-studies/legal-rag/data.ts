@@ -35,6 +35,8 @@ export const legalRag: CaseStudyData = {
     ],
     flow: {
       cols: 6,
+      // Three lanes need a 430px phone here: "Hybrid legal chunker" wraps to three lines below.
+      lanes3Min: 380,
       label: "Parts of the system: ingest above, a question below",
       keyLabel: "on a citation's path",
       groups: { in: "Ingest", ask: "Question" },
@@ -44,6 +46,8 @@ export const legalRag: CaseStudyData = {
           title: "Next.js app",
           sub: "browser client",
           at: [2, 1],
+          mAt: [1, 2],
+          mAt2: [1, 2],
           key: true,
           details: {
             does: "The chat and upload screens. Signs in with Microsoft Entra and renders answers as markdown with their citation line.",
@@ -60,6 +64,8 @@ export const legalRag: CaseStudyData = {
           title: "FastAPI",
           sub: "ingest and ask",
           at: [2, 2],
+          mAt: [2, 2],
+          mAt2: [2, 2],
           key: true,
           details: {
             does: "One process for both jobs: storing documents and answering questions. Files and crawled HTML live on the document row; embeddings live on the chunk row.",
@@ -72,6 +78,8 @@ export const legalRag: CaseStudyData = {
           title: "Legal-site link",
           sub: "HTML source",
           at: [1, 3],
+          mAt: [3, 1],
+          mAt2: [3, 1],
           group: "in",
           details: {
             does: "A link to a page on a Vietnamese legal-document site. The law id is read from the URL and the site's document API returns the HTML.",
@@ -84,6 +92,8 @@ export const legalRag: CaseStudyData = {
           title: "HTML tag chunker",
           sub: "the page's own anchors",
           at: [1, 4],
+          mAt: [4, 1],
+          mAt2: [4, 1],
           key: true,
           group: "in",
           details: {
@@ -97,6 +107,8 @@ export const legalRag: CaseStudyData = {
           title: "PDF or image",
           sub: "scanned or digital",
           at: [2, 3],
+          mAt: [3, 2],
+          mAt2: [3, 2],
           group: "in",
           details: {
             does: "An uploaded file with no anchors to trust. Pages are rendered to images and read one at a time, in order.",
@@ -112,6 +124,8 @@ export const legalRag: CaseStudyData = {
           title: "VLM markdown",
           sub: "Điều · Khoản · Điểm",
           at: [2, 4],
+          mAt: [4, 2],
+          mAt2: [4, 2],
           group: "in",
           details: {
             does: "A vision-language model turns each page into markdown that marks `## Điều`, `### Khoản` and `#### Điểm`.",
@@ -124,6 +138,8 @@ export const legalRag: CaseStudyData = {
           title: "Hybrid legal chunker",
           sub: "repair, then label",
           at: [2, 5],
+          mAt: [5, 2],
+          mAt2: [5, 2],
           key: true,
           group: "in",
           details: {
@@ -141,6 +157,8 @@ export const legalRag: CaseStudyData = {
           title: "PostgreSQL + pgvector",
           sub: "chunks with their address",
           at: [2, 6],
+          mAt: [6, 2],
+          mAt2: [6, 1],
           key: true,
           details: {
             does: "Stores each chunk with its address prefix and its embedding.",
@@ -156,6 +174,8 @@ export const legalRag: CaseStudyData = {
           title: "Embed the question",
           sub: "on-prem embeddings",
           at: [3, 3],
+          mAt: [3, 3],
+          mAt2: [6, 2],
           key: true,
           group: "ask",
           details: {
@@ -169,6 +189,8 @@ export const legalRag: CaseStudyData = {
           title: "Cosine top-k",
           sub: "rerank off by default",
           at: [3, 4],
+          mAt: [4, 3],
+          mAt2: [7, 2],
           key: true,
           group: "ask",
           details: {
@@ -185,6 +207,8 @@ export const legalRag: CaseStudyData = {
           title: "Answer, or fallback",
           sub: "no match: fixed sentence",
           at: [3, 5],
+          mAt: [5, 3],
+          mAt2: [8, 2],
           key: true,
           group: "ask",
           details: {
@@ -198,6 +222,8 @@ export const legalRag: CaseStudyData = {
           title: "On-prem LLM",
           sub: "inside the network",
           at: [3, 6],
+          mAt: [6, 3],
+          mAt2: [9, 2],
           details: {
             does: "Serves the answer, the page reads and the chunk labels over HTTP.",
             tech: ["Chat completions over `httpx`"],
