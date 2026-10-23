@@ -85,50 +85,36 @@ const img = (name: string) => `/work/openportfo/${name}.webp`;
     </div>
   </div>
 
-  <div slot="dive-markets" class="shots">
-    <img
-      class="shot"
-      src={img("markets")}
-      width="1200"
-      height="750"
-      loading="lazy"
-      decoding="async"
-      alt="Vietnam stocks: a HOSE industry heatmap with quotes powered by vnstock."
-    />
-    <img
-      class="shot"
-      src={img("asset-btc")}
-      width="1200"
-      height="750"
-      loading="lazy"
-      decoding="async"
-      alt="Bitcoin's asset page: a price-history chart with 7D, 30D, 90D and 1Y ranges."
-    />
+  <div slot="dive-agent" class="mk">
+    <p class="mk-label">the chat can</p>
+    <ul class="mk-chips" aria-label="What the agent can do">
+      <li class="acc">read the book</li>
+      <li class="acc">look up a quote</li>
+      <li class="acc">read the news</li>
+      <li>add or remove a holding</li>
+    </ul>
   </div>
 
-  <div slot="dive-fakes" class="mk mk-two">
-    <div>
-      <p class="mk-label">tests and a local demo</p>
-      <pre class="mk-code"><code>STORAGE_BACKEND=<span class="k">memory</span>
-AUTH_MODE=<span class="k">fake</span>
-<span class="c"># token "fake:alice" is the user</span></code></pre>
-    </div>
-    <div>
-      <p class="mk-label">deployed</p>
-      <pre class="mk-code"><code>STORAGE_BACKEND=<span class="k">aws</span>
-<span class="c"># DynamoDB + S3, same API</span>
-<span class="c"># LocalStack :4566 without an account</span></code></pre>
-    </div>
+  <div slot="dive-news" class="mk">
+    <ul class="mk-chips" aria-label="How news arrives">
+      <li>RSS feeds</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li>daily job</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li class="acc">news for your symbols</li>
+    </ul>
   </div>
 
-  <img
-    slot="dive-clock"
-    class="shot"
-    src={img("portfolio")}
-    width="1200"
-    height="700"
-    loading="lazy"
-    decoding="async"
-    alt="The portfolio page: value, cost basis and profit-and-loss cards, and an empty daily profit-and-loss grid that says snapshots appear after the snapshot job runs."
-  />
+  <div slot="dive-email" class="mk">
+    <p class="mk-label">the email carries</p>
+    <ul class="mk-chips" aria-label="What the email includes">
+      <li class="acc">performance</li>
+      <li class="acc">price changes</li>
+      <li class="acc">news</li>
+    </ul>
+  </div>
 </CaseStudy>

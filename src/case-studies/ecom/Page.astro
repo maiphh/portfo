@@ -106,49 +106,37 @@ const desk: [string, string][] = [
     </p>
   </div>
 
-  <div slot="dive-boundary" class="mk">
-    <pre class="mk-code"><code><span class="c">// src/shop/boundaries.test.ts, paraphrased</span>
-<span class="k">for each</span> file under src/shop:
-  <span class="k">fail if</span> it imports "next", "react" or "@/app"</code></pre>
-    <p class="mk-label">still Next-shaped, on purpose (the swap points)</p>
-    <ul class="mk-chips">
-      <li>src/shop/auth/neon.ts</li>
-      <li>src/shop/payments/payos.ts</li>
+  <div slot="dive-payment" class="mk">
+    <ul class="mk-chips" aria-label="How an order becomes paid">
+      <li>checkout</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li>PayOS</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li class="acc">order paid</li>
+    </ul>
+    <p>Cash on delivery does not create a charge.</p>
+  </div>
+
+  <div slot="dive-admin" class="mk">
+    <p class="mk-label">the desk manages</p>
+    <ul class="mk-chips" aria-label="What the admin desk covers">
+      <li class="acc">catalog</li>
+      <li class="acc">orders</li>
+      <li class="acc">sales</li>
     </ul>
   </div>
 
-  <div slot="dive-extend" class="mk mk-two">
-    <div>
-      <p class="mk-label">priceCart(cart, producers)</p>
-      <ul class="mk-chips" aria-label="Discount producers">
-        <li class="acc">sale-off</li>
-        <li>+ coupon (appended)</li>
-      </ul>
-    </div>
-    <div>
-      <p class="mk-label">PaymentPort</p>
-      <ul class="mk-chips" aria-label="What a provider implements">
-        <li class="acc">methods</li>
-        <li class="acc">charge</li>
-        <li class="acc">verify</li>
-        <li>lookupPaid?</li>
-      </ul>
-      <p class="mk-label">unchanged</p>
-      <ul class="mk-chips">
-        <li>placeOrder</li>
-        <li>orders/machine.ts</li>
-      </ul>
-    </div>
+  <div slot="dive-store" class="mk">
+    <ul class="mk-chips" aria-label="What a new store reuses">
+      <li class="acc">same engine</li>
+      <li>new pages</li>
+      <li>Mirror Now is the first</li>
+    </ul>
   </div>
-
-  <pre
-    slot="dive-memory"
-    class="mk-code ec-demo"
-  ><code><span class="c">$ npm run shop -- demo  # in memory, sample product</span>
-card      Mug · unitPriceVnd 10000 · salePriceVnd <span class="k">8000</span> · percentOff 20 · stock 4
-cart      1 × Mug · discountVnd 2000 · totalVnd <span class="k">8000</span>
-order     totalVnd 8000 · status <span class="k">awaiting_payment</span>
-afterEnd  Mug · salePriceVnd 10000 · percentOff 0 · stock <span class="k">3</span></code></pre>
 
   <div slot="extra" class="mk ec-routes">
     <div>

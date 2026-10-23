@@ -21,16 +21,6 @@ const path = [
   { t: "D1", s: "status: paid" },
   { t: "Admin publishes", s: "then the wall shows it" },
 ];
-const routes: [string, string][] = [
-  ["POST /api/donations", "Create a payment: the Worker asks PayOS for a link and stores the row."],
-  [
-    "POST /api/webhooks/payos",
-    "PayOS says a payment landed. Signature checked: the only write of paid.",
-  ],
-  ["GET /api/donations/:code", "Status for the receipt page. No name, no message."],
-  ["GET /api/donations", "The public wall: published gifts only."],
-  ["Return and cancel URLs", "Send the browser to the receipt. Never write paid."],
-];
 const img = (name: string) => `/work/poet/${name}.webp`;
 ---
 
@@ -70,28 +60,18 @@ const img = (name: string) => `/work/poet/${name}.webp`;
     />
   </div>
 
-  <div slot="dive-paid" class="mk">
-    <div class="mk-scroll" data-scroll-x>
-      <table>
-        <caption class="sr-only">The Worker's routes</caption>
-        <thead>
-          <tr>
-            <th scope="col">Route</th>
-            <th scope="col">What it does</th>
-          </tr>
-        </thead>
-        <tbody>
-          {routes.map(([r, w], i) => (
-            <tr class:list={{ "pt-key": i === 1 }}>
-              <th scope="row">
-                <code>{r}</code>
-              </th>
-              <td>{w}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  <div slot="dive-donate" class="mk">
+    <ul class="mk-chips" aria-label="A real donation">
+      <li>Ủng hộ form</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li>PayOS checkout</li>
+      <li class="sep" aria-hidden="true">
+        →
+      </li>
+      <li class="acc">gift paid</li>
+    </ul>
   </div>
 
   <img
@@ -103,16 +83,5 @@ const img = (name: string) => `/work/poet/${name}.webp`;
     loading="lazy"
     decoding="async"
     alt="The gift wall: a top-three podium and a searchable list with two sample gifts, one named and one shown as 'Một nhà hảo tâm'."
-  />
-
-  <img
-    slot="dive-pages"
-    class="shot pt-home"
-    src={img("home-hero")}
-    width="630"
-    height="740"
-    loading="lazy"
-    decoding="async"
-    alt="POET's home page opening: 'Tuổi trẻ. Nhiệt huyết. Nghệ thuật.' with a short introduction and two buttons."
   />
 </CaseStudy>

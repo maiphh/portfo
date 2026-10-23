@@ -147,38 +147,26 @@ export const poet: CaseStudyData = {
   },
   dives: [
     {
-      id: "paid",
-      title: "Only the signed webhook can mark a gift paid",
+      id: "donate",
+      title: "A gift is a real PayOS payment",
       paragraphs: [
-        "The Ủng hộ form asks the Worker to create a PayOS payment; the Worker stores the row and returns the link. When the payment lands, PayOS calls `POST /api/webhooks/payos`, the signature is checked, and only then is the gift paid.",
-        "The return and cancel URLs send the browser to a receipt. They never write paid, so a visitor who closes the tab, or comes back before the webhook, can't create a fake gift.",
+        "The form asks the Worker to create a PayOS payment. The Worker stores the gift and returns the checkout link.",
+        "PayOS tells the Worker when the payment lands. The signature is checked, and only then is the gift marked paid.",
+        "Returning to the site does not mark it paid. That page is a receipt.",
       ],
-      shows: "The one route that can change money state is server-side and signed.",
-      caption:
-        "Illustration of the Worker's routes from projects/poet/architecture.md. No secrets, ids or credentials.",
+      shows: "The donation is a real payment, recorded by the server.",
+      caption: "PayOS checkout, then a signed notice that the gift was paid.",
     },
     {
       id: "wall",
-      title: "A gift goes public only when someone publishes it",
+      title: "A donor is shown on the site",
       paragraphs: [
-        "The wall shows the display name or “Ẩn danh”, the message, the amount and the paid time, and only for gifts an admin has published. It has a top-three podium and a searchable list.",
-        "The status API the receipt calls never returns a name or a message. The thank-you letter is drawn from details the donor's own browser kept before checkout.",
+        "The public wall shows the name, or “Ẩn danh” when the donor stays unnamed, with the message, the amount and when it was paid.",
+        "A gift appears there after it is paid and an admin publishes it.",
       ],
-      shows: "Paid and public are two separate decisions.",
+      shows: "A real donation can be seen on the frontend.",
       caption:
-        "The gift wall on the live site, captured on 21 Oct 2026 with the Worker's answer replaced by two sample gifts (no real donors).",
-    },
-    {
-      id: "pages",
-      title: "Plain pages, one origin to change",
-      paragraphs: [
-        "The site is static HTML, CSS and JavaScript on GitHub Pages: no framework and no build step. Copy and layout live in plain HTML and one stylesheet; the header, footer and lightbox are web components.",
-        "`config.js` is the only place the Worker's origin is set, and the Worker accepts `/api/*` calls only from the Pages origin.",
-      ],
-      shows:
-        "A volunteer can edit a page without a toolchain, and moving the API is a one-line change.",
-      caption:
-        "The home page's opening lines on the live site. The photo beside them, from a real trip with children, is cropped out on purpose.",
+        "The gift wall on the live site, captured on 21 Oct 2026 with two sample gifts. No real donors.",
     },
   ],
   limits: {

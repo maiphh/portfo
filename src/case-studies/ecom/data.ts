@@ -193,39 +193,37 @@ export const ecom: CaseStudyData = {
   },
   dives: [
     {
-      id: "boundary",
-      title: "The shop is not a Next.js app",
+      id: "payment",
+      title: "The shop takes a real payment",
       paragraphs: [
-        "`src/shop` has the catalog, the cart, the price, the stock, the payment and the order. A test walks every file under it and fails the suite if one imports `next`, `react` or `@/app`.",
-        "Pages are a host. They call `@/shop/store` and `@/shop/desk` and never see Drizzle, PayOS or Cloudinary. The two files still tied to Next (Neon Auth's SDK and the PayOS return URL) are named as the swap points.",
+        "Checkout charges through PayOS. When PayOS confirms the payment, and the amount and the order match, the order is marked paid.",
+        "A notice for a cancelled order is rejected. Coming back to the site is not what marks the order paid.",
+        "Cash on delivery is a separate choice. It does not create a charge.",
       ],
-      shows:
-        "The engine a new client gets is the same code Mirror Now runs, not a fork of its pages.",
-      caption:
-        "Illustration of the boundary rule from projects/ecom/README.md. Private repo; paraphrased, not the test's code.",
+      shows: "A paid order is a real payment, not a label the page flips on its own.",
+      caption: "PayOS confirms the payment. The order machine records it.",
     },
     {
-      id: "extend",
-      title: "A new discount or payment doesn't edit checkout",
+      id: "admin",
+      title: "The seller runs the shop from an admin desk",
       paragraphs: [
-        "`priceCart` already takes a list of discount producers. A sale-off is one; a coupon is appended to the same list. Adding a price rule is a new producer, not a branch inside `placeOrder`.",
-        "A payment provider implements `PaymentPort` and is registered with a webhook at `/api/hooks/<name>`. The state machine stays a pure step function, and cash on delivery is a status, not a fake charge.",
+        "The desk sits beside the storefront. The seller edits the catalog, follows orders, and manages sales.",
+        "Buyers do not see it. `/admin` sends a seller to the desk.",
+        "The desk uses the same engine as the store. It does not keep a second copy of checkout.",
       ],
-      shows:
-        "The places that change for a new promotion or a new provider are listed, and checkout isn't one of them.",
-      caption: "Illustration from projects/ecom/highlights.md.",
+      shows: "Shopping and running the shop are two doors into one system.",
+      caption: "Catalog, orders and sales, from the seller desk.",
     },
     {
-      id: "memory",
-      title: "The test double is a second database",
+      id: "store",
+      title: "A new store is a new front, not a new engine",
       paragraphs: [
-        "`memoryGateway()` implements the storage port. `npm test` and `npm run shop -- demo` run the real engine against it, with no Postgres and no payment keys.",
-        "`scripts/verify-live.ts` is the same engine on a real database. It forces cash on delivery, so it moves no money, and deletes the rows it wrote.",
+        "The catalog, the cart, the price, the stock, the payment and the orders live in one engine.",
+        "A new shop is another set of pages that call that engine. Mirror Now is the first.",
+        "Changing a page does not rewrite checkout.",
       ],
-      shows:
-        "A sale, a checkout and the stock an order takes are proven by running the engine, not by mocking it.",
-      caption:
-        "Real npm run shop -- demo output, condensed to one line per object (in memory, sample product; ids, dates and image URLs left out). Recorded for the moodboard on 21 Oct 2026.",
+      shows: "The next store starts from the same engine Mirror Now uses.",
+      caption: "Pages change. The engine stays.",
     },
   ],
   extra: {

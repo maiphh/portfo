@@ -2,7 +2,7 @@
 /**
  * The shared case-study page (portfo-design case-studies/moodboards/case-study-skeleton.md):
  * opener → overview → the highlight → motion cut (flagged) → how it works (FlowDiagram) →
- * deep dives → limits → next. Each project passes its data (lib/case.ts) and fills slots:
+ * highlights → limits → next. Each project passes its data (lib/case.ts) and fills slots:
  *   signature      the opener's signature object (right of the headline)
  *   highlight      the one component that proves the claim
  *   dive-<id>      the artifact for each deep dive
@@ -39,7 +39,7 @@ const showVideo = CASE_VIDEOS.has(entry.id) ? data.video : undefined;
 const rail = [
   { href: "#overview", label: "Overview" },
   { href: "#how-it-works", label: "How it works" },
-  { href: "#deep-dives", label: "Deep dives" },
+  { href: "#deep-dives", label: "Highlights" },
   ...(extra ? [{ href: `#${extra.id}`, label: extra.rail }] : []),
   { href: "#limits", label: "Limits" },
 ];
@@ -245,7 +245,7 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
       </section>
 
       <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h">
-        <h2 id="dd-h">Deep dives</h2>
+        <h2 id="dd-h">Highlights</h2>
         {dive.map((x) => (
           <details class="cs2-dive" id={`dive-${x.id}`} data-dive>
             <summary>

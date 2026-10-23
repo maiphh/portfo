@@ -254,38 +254,37 @@ export const openportfo: CaseStudyData = {
   },
   dives: [
     {
-      id: "markets",
-      title: "Two markets, one book, priced on demand",
+      id: "agent",
+      title: "A chat agent that works on your portfolio",
       paragraphs: [
-        "Crypto comes from CoinGecko and Vietnamese stocks from `vnstock`, both server-side. The book shows them side by side with value, profit and loss and allocation, and each currency's totals stay native when an exchange rate is missing.",
-        "Nothing is streamed. Opening or refreshing the book pulls quotes in one batch; a quote is cached for minutes and a history series is stored and reused. A failed call keeps the last good price.",
+        "The chat can look up holdings, quotes and news, and it can add or remove a holding or a watchlist item.",
+        "It only sees the signed-in user's book. A tool runs on the server. The model never receives a token.",
+        "The agent does not claim the book changed unless that tool succeeded.",
       ],
-      shows:
-        "A tracker for a few checks a day doesn't need a price socket, and the API is the only thing that talks to a market.",
-      caption:
-        "Local renders of the public repo: the Vietnam stocks heatmap and one crypto asset (sample holdings; quotes as the API returned them at render time).",
+      shows: "The chat is a way to use the portfolio, not a separate app beside it.",
+      caption: "The agent calls the same book the screens use.",
     },
     {
-      id: "fakes",
-      title: "The same API runs on AWS or entirely in memory",
+      id: "news",
+      title: "News is fetched from RSS",
       paragraphs: [
-        "Storage and auth are ports. `STORAGE_BACKEND=memory` and `AUTH_MODE=fake` keep the unit tests and a local demo off AWS, with a token such as `fake:alice` as the user. `STORAGE_BACKEND=aws` points the same API at DynamoDB and S3.",
-        "LocalStack stands in for those two when a developer wants the AWS adapters without an account. Tests leave the AWS adapters off, so they stay on the fakes.",
+        "A daily job reads RSS feeds and stores the items.",
+        "Each item is matched to the symbols on a person's book, so the list is about what they hold.",
+        "The browser does not call the feeds. The job does.",
       ],
-      shows: "The screens on this page were rendered from the public repo without an AWS account.",
-      caption: "Illustration of the two run modes, from projects/openportfo/architecture.md.",
+      shows: "News arrives on its own, matched to the book.",
+      caption: "RSS in, then a list tied to the person's symbols.",
     },
     {
-      id: "clock",
-      title: "Lambda is a clock, not the API",
+      id: "email",
+      title: "Updates go out by email",
       paragraphs: [
-        "EventBridge fires once a day. Lambda then ingests RSS news, snapshots each book into S3 and, if someone asked for it, sends a summary email through SES.",
-        "A page load never goes through Lambda: the book is served by FastAPI on Beanstalk. The daily snapshots are what the portfolio's history chart and daily profit-and-loss grid read.",
+        "The same daily job can send a summary: performance, price changes and news.",
+        "It is sent when someone has asked for it.",
+        "Opening the site does not send the mail. The scheduled job does.",
       ],
-      shows:
-        "Scheduled work and request work are split, so a cold start never sits in front of a person.",
-      caption:
-        "Local render of the portfolio page before the first snapshot job has run (sample user).",
+      shows: "The book can reach you without you opening it.",
+      caption: "Performance, price changes and news, in one email.",
     },
   ],
   limits: {

@@ -43,7 +43,7 @@ if (page) {
   );
   for (const t of targets) io.observe(t);
 
-  // Deep dives: open on wide screens.
+  // Highlights: open on wide screens.
   const wide = matchMedia("(min-width: 900px)");
   const dives = [...page.querySelectorAll<HTMLDetailsElement>("[data-dive]")];
   const syncDives = () => {

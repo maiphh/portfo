@@ -38,9 +38,9 @@ describe.each(Object.entries(all))("%s", (_slug, d) => {
     }
   });
 
-  it("names a motion module, three or more dives, and a caption for each", () => {
+  it("names a motion module, at least one highlight, and a caption for each", () => {
     expect(d.motion).toBeTruthy();
-    expect(d.dives.length).toBeGreaterThanOrEqual(3);
+    expect(d.dives.length).toBeGreaterThanOrEqual(1);
     for (const x of d.dives) expect(x.caption.length).toBeGreaterThan(10);
   });
 });

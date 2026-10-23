@@ -83,7 +83,7 @@ export const PAGES: CasePage[] = [
     heading: /Worker poet-donations/,
     groups: [],
     dotted: 0,
-    dives: 3,
+    dives: 2,
     sig: "[data-money]",
     lit: "[data-paid]",
   },
@@ -240,7 +240,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
       .locator("main img")
       .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
     expect(srcs).toEqual(
-      ["form", "home-hero", "letter", "wall"].map((n) => `/work/poet/${n}.webp`),
+      ["form", "letter", "wall"].map((n) => `/work/poet/${n}.webp`),
     );
   });
 
