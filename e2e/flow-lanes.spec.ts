@@ -17,6 +17,7 @@ const DIAGRAMS = [
     flow: "cs",
   })),
   { name: "document-ocr application", url: "/work/document-ocr/", flow: "app" },
+  { name: "data-validation application", url: "/work/data-validation/", flow: "app" },
 ];
 const WIDTHS = [320, 360, 390, 430, 768, 1024, 1440];
 const diagram = (name: string) => {

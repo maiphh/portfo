@@ -19,11 +19,6 @@ const rows = [
   { id: "E-103", expected: "1,105.00", sheet: "1,150.00", off: "+45.00" },
   { id: "E-104", expected: "1,312.25", sheet: "1,312.25" },
 ];
-const ladder = [
-  ["1", "Full translation prompt", "model default", "runtime default"],
-  ["2 … N−1", "Compact repair: previous code + error class", "0.35", "low → medium → high"],
-  ["N", "Same repair prompt", "0.35", "high"],
-];
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={dvp}>
@@ -79,63 +74,36 @@ const ladder = [
     </p>
   </div>
 
-  <div slot="dive-ladder" class="mk">
-    <div class="mk-scroll" data-scroll-x>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Attempt</th>
-            <th scope="col">Prompt</th>
-            <th scope="col">Temperature</th>
-            <th scope="col">Reasoning</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ladder.map(([a, p, t, r], i) => (
-            <tr>
-              <th scope="row" class="num">
-                {a}
-              </th>
-              <td>{p}</td>
-              <td class="num">{t}</td>
-              <td>{i > 0 ? <span class="dvp-tag">{r}</span> : r}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <p>
-      Out of budget: one diagnostic call that may not emit code. The rule becomes a stub returning{" "}
-      <code>None</code>; the batch continues.
-    </p>
+  <div slot="dive-validate" class="mk">
+    <p class="mk-label">matches the stored structure</p>
+    <ul class="mk-chips" aria-label="File matches">
+      <li class="acc">same sheets and columns</li>
+      <li>the month can run</li>
+    </ul>
+    <p class="mk-label">structure changed</p>
+    <ul class="mk-chips" aria-label="File does not match">
+      <li class="bad">unknown sheet or column</li>
+      <li class="acc">ask the user to map it</li>
+    </ul>
   </div>
 
-  <div slot="dive-gate" class="mk">
-    <ul class="mk-chips dvp-steps" aria-label="The gate, in order">
-      <li>completion</li>
+  <div slot="dive-translate" class="mk">
+    <ul class="mk-chips dvp-steps" aria-label="Translation retry">
+      <li>translate the rule</li>
       <li class="sep" aria-hidden="true">
         →
       </li>
-      <li>strip fences</li>
+      <li>check the code</li>
       <li class="sep" aria-hidden="true">
         →
       </li>
-      <li>AST check</li>
+      <li>retry with the error</li>
       <li class="sep" aria-hidden="true">
         →
       </li>
-      <li>dry-run, with a deadline</li>
-      <li class="sep" aria-hidden="true">
-        →
-      </li>
-      <li class="acc">stored function</li>
+      <li class="acc">store the function</li>
     </ul>
-    <p class="mk-label">on a pay month, a TypeError gets</p>
-    <ul class="mk-chips" aria-label="Execution retries">
-      <li>auto-cast retry</li>
-      <li>all-text retry</li>
-      <li class="acc">field = None, row continues</li>
-    </ul>
+    <p>Out of attempts, that rule returns nothing. The rest of the client still translates.</p>
   </div>
 
   <div slot="dive-sandbox" class="mk">

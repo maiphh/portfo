@@ -9,15 +9,16 @@ export interface SelectDetail {
   edges: SVGPathElement[];
 }
 
-/** Run `fn` each time a node of the page's FlowDiagram is selected. */
+/** Run `fn` each time a node of any FlowDiagram on the page is selected. */
 export function onFlowSelect(
   root: HTMLElement,
   fn: (d: SelectDetail, svg: SVGSVGElement) => void,
 ): void {
-  const block = root.querySelector<HTMLElement>("[data-flow-block]");
-  const svg = block?.querySelector<SVGSVGElement>("[data-flow-edges]");
-  if (!block || !svg) return;
-  block.addEventListener("flow:select", (e) => fn((e as CustomEvent<SelectDetail>).detail, svg));
+  for (const block of root.querySelectorAll<HTMLElement>("[data-flow-block]")) {
+    const svg = block.querySelector<SVGSVGElement>("[data-flow-edges]");
+    if (!svg) continue;
+    block.addEventListener("flow:select", (e) => fn((e as CustomEvent<SelectDetail>).detail, svg));
+  }
 }
 
 /** One dot along `path` (from its start, or from its end when `reverse`). */

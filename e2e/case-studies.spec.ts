@@ -275,7 +275,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
 test.describe("DVP promo cut (approved 2026-10-22)", () => {
   const URL = "/work/data-validation/";
 
-  test("muted, no preload, poster, described; plays in view", async ({ page }) => {
+  test("muted, no preload, poster, no scene description; plays in view", async ({ page }) => {
     await page.goto(URL);
     const v = page.locator("main video[data-case-video]");
     await expect(v).toHaveCount(1);
@@ -286,7 +286,7 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
         preload: el.preload,
         poster: el.getAttribute("poster"),
         autoplay: el.autoplay,
-        desc: document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent,
+        described: el.getAttribute("aria-describedby"),
       })),
     ).toMatchObject({
       muted: true,
@@ -294,8 +294,9 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
       preload: "none",
       poster: "/work/data-validation/motion-poster.jpg",
       autoplay: false,
-      desc: expect.stringContaining("What plays:"),
+      described: null,
     });
+    await expect(page.locator("#vid-desc")).toHaveCount(0);
     await expect(page.locator(".cs2-video figcaption")).toContainText(/not results/);
     const res = await page.request.get("/work/data-validation/motion.mp4");
     expect(res.status()).toBe(200);

@@ -43,14 +43,6 @@
 .dvp-rows tr {
   transition: opacity 0.3s;
 }
-.dvp-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border: 1px solid var(--acc);
-  border-radius: 3px;
-  color: var(--acc);
-  font: 500 13px var(--code);
-}
 /* Motion running: rows are checked one at a time; the flag appears when its row is reached. */
 .dvp-sig.is-anim [data-row]:not(.lit) {
   opacity: 0.35;
