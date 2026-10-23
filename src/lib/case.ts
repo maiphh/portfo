@@ -72,8 +72,8 @@ export interface CaseVideo {
   src: string;
   poster: string;
   caption: string;
-  /** Text description of what plays (the clip has no speech, so no captions track). */
-  description: string;
+  /** Text description of what plays (the clip has no speech, so no captions track). Omit to show the caption only. */
+  description?: string;
 }
 
 /** An extra section after the deep dives (e.g. the first shop built on a template). Its body is
@@ -99,7 +99,20 @@ export interface CaseStudyData {
   overview: CaseOverview;
   highlight: { title: string; caption: string };
   video?: CaseVideo;
-  how: { summary: string; stack: CaseStackItem[]; flow: CaseFlow };
+  how: {
+    summary: string;
+    /** Shown beside the summary. An empty list hides the stack and the versions link. */
+    stack: CaseStackItem[];
+    /** A second diagram, rendered above the architecture diagram. Same component, its own nodes. */
+    application?: { title: string; flow: CaseFlow };
+    /** Heading for the architecture diagram, so the two subsections are named. */
+    architectureTitle?: string;
+    /** Sentence under that heading. */
+    architectureNote?: string;
+    /** Idle tour on every diagram in this section. Pauses while a part is hovered, focused, or open. */
+    autoplay?: boolean;
+    flow: CaseFlow;
+  };
   dives: CaseDive[];
   limits: CaseLimits;
 }

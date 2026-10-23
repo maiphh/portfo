@@ -28,20 +28,113 @@ export const ocr: CaseStudyData = {
     poster: "/work/document-ocr/motion-poster.jpg",
     caption:
       "The platform's 30-second dark-mode promo cut, no sound. The dashboard numbers on screen are motion demo values; the measured results are in the Outcome above.",
-    description:
-      "Title words PDF, pages, pixels, data on a dark Warm Charcoal canvas. The upload screen with a template selected and staged PDFs, then the review screen: a scan line crosses a sample page, field boxes light up and values fill beside it. The pipeline: upload, preprocess, OCR or VLM, LLM map, export. A dashboard with demo stat cards, field accuracy and session logs, then the end card, OCR Platform.",
   },
   how: {
-    summary:
+    summary: "A document comes in as a file and leaves as a workbook.",
+    stack: [],
+    autoplay: true,
+    application: {
+      title: "Application flow",
+      flow: {
+        cols: 5,
+        label: "Stages a document passes through",
+        keyLabel: "on a document's path",
+        groups: { extract: "Extraction" },
+        nodes: [
+          {
+            id: "input",
+            title: "Input",
+            sub: "files and a template",
+            at: [1, 1],
+            mAt: [1, 1],
+            key: true,
+            details: {
+              does: "An operator uploads PDFs or images and chooses a template. Another system can send the same files through the API.",
+              tech: ["Upload in the browser, or the API"],
+              why: "People and other systems start a job the same way: files, plus the template that says what to read.",
+            },
+          },
+          {
+            id: "preprocess",
+            title: "Preprocess",
+            sub: "page images",
+            at: [1, 2],
+            mAt: [2, 1],
+            key: true,
+            details: {
+              does: "Each file is split and rendered into page images, so the next stage has a clean page to read.",
+              tech: ["Split per page, per file, or into chunks"],
+              why: "The model reads images. Rendering happens before extraction, on its own queue.",
+            },
+          },
+          {
+            id: "ocr",
+            title: "OCR + LLM",
+            sub: "text, then fields",
+            at: [1, 3],
+            mAt: [3, 1],
+            key: true,
+            group: "extract",
+            details: {
+              does: "A text OCR reads the page, then a language model maps that text onto the template fields.",
+              tech: ["OCR service, then an LLM"],
+              why: "One of the two extraction paths. An admin can switch to it. It returns the same fields as the vision-language model.",
+            },
+          },
+          {
+            id: "vlm",
+            title: "VLM",
+            sub: "image to fields",
+            at: [2, 3],
+            mAt: [3, 2],
+            key: true,
+            group: "extract",
+            details: {
+              does: "A vision-language model reads the page image and returns the fields directly. This is the default.",
+              tech: ["Vision-language model"],
+              why: "The other extraction path. Same template, same fields, so the rest of the pipeline does not change.",
+            },
+          },
+          {
+            id: "post",
+            title: "Post process",
+            sub: "rules clean values",
+            at: [1, 4],
+            mAt: [4, 1],
+            key: true,
+            details: {
+              does: "Rules clean the values the model returned. That cleaned row is what the operator reviews.",
+              tech: ["Rules on the template"],
+              why: "The model proposes the values. Rules make them consistent before a person checks them.",
+            },
+          },
+          {
+            id: "output",
+            title: "Output",
+            sub: "review and Excel",
+            at: [1, 5],
+            mAt: [5, 1],
+            key: true,
+            details: {
+              does: "The operator checks the fields beside the source page and exports Excel. An API caller receives the same fields and the same workbook.",
+              tech: ["Review screen and Excel export"],
+              why: "The browser and the API hand over the same result.",
+            },
+          },
+        ],
+        edges: [
+          ["input", "preprocess"],
+          ["preprocess", "ocr"],
+          ["preprocess", "vlm"],
+          ["ocr", "post"],
+          ["vlm", "post"],
+          ["post", "output"],
+        ],
+      },
+    },
+    architectureTitle: "Architecture",
+    architectureNote:
       "Two apps on one PostgreSQL database and a local blob store. The database is also the work queue, so there is no Redis. Select any part to see what it does, its tech and the decision behind it.",
-    stack: [
-      { label: "Frontend", value: "Next.js", version: "16.2.10" },
-      { label: "API", value: "FastAPI", version: "0.136.3" },
-      { label: "Database and queue", value: "PostgreSQL", version: "15+" },
-      { label: "Inference", value: "VLM, or OCR + LLM" },
-      { label: "Sign-in", value: "Microsoft Entra ID, optional" },
-      { label: "Files", value: "Local blob store" },
-    ],
     flow: {
       cols: 6,
       label: "Parts of the system, in the order a page travels",
@@ -271,40 +364,37 @@ export const ocr: CaseStudyData = {
   },
   dives: [
     {
-      id: "queue",
-      title: "Two knobs set every other cap",
+      id: "template",
+      title: "New document types are templates, not code changes",
       paragraphs: [
-        "There is no Redis: PostgreSQL is the queue, and workers claim rows with `FOR UPDATE SKIP LOCKED`, so two pods cannot take the same page.",
-        "Claim is two steps. First pick the session with the least work already running (then the oldest), skipping any over its in-flight cap; then lock one queued unit inside it. A 200-page PDF cannot fill every extract slot while everyone else waits.",
-        "Render and extract are separate stages. Operators set render and extract concurrency (defaults 4 and 8); the ready buffer, pod cap, per-session cap and model concurrency are derived from those two, so the limits cannot drift apart.",
+        "An admin creates a template for each kind of document. The template holds the fields to read, the instructions for the model, the rules that clean the values, and the Excel layout those values fill.",
+        "Adding a document type does not require a code change. The same pipeline runs every template, so the platform grows by configuration.",
+        "Each run keeps the template it started with. Editing that template later does not change a job that is already in progress.",
       ],
-      shows: "Fairness and overlap are an explicit policy, not a pile of independent limits.",
-      caption:
-        "Illustration built from projects/ocr/highlights.md. Defaults are implementation settings, not results.",
+      shows: "A new document type is configuration. One pipeline serves all of them.",
+      caption: "The four parts an admin sets on a template. Field names stay generic.",
     },
     {
-      id: "rules",
-      title: "Rules run in a sandbox and never undo a correction",
+      id: "queue",
+      title: "Two queues, because extraction is the slow step",
       paragraphs: [
-        "Rule types are small on purpose: `copy_field`, `strip`, `pattern` (a regex capture) and `python`. Default rules run in order, then switch groups: a group watches one trigger field and the first matching case runs.",
-        "A Python rule is one function, `transform(data, context)`. It returns a value, `None` to clear the field, or `SKIP` to leave it. Only `datetime`, `math`, `re` and `unicodedata` can be imported; `eval`, `exec`, `open`, dynamic import and dunder access are rejected.",
-        "Rules run in a separate process pool with a timeout, so a bad template cannot take down the API. And a rule never overwrites a field an operator already corrected by hand.",
+        "Turning a PDF into page images is quick. Waiting on the model is the bottleneck.",
+        "Render and extraction each have their own queue. Render keeps using the CPU while extraction waits on the model, instead of sitting idle behind it.",
+        "When several documents are in flight, extraction takes turns. A round-robin claim picks the job with the least work already running, so one long PDF cannot take every slot.",
       ],
-      shows:
-        "Templates can carry real logic without becoming a way to break the service or the review.",
-      caption:
-        "Illustration of the documented rule contract (projects/ocr/highlights.md). Not code from the project.",
+      shows: "Render stays busy, and no single document crowds out the others.",
+      caption: "One queue renders pages. The other runs extraction.",
     },
     {
       id: "api",
-      title: "Other applications use the same queue",
+      title: "Other systems connect through a managed API",
       paragraphs: [
-        "`POST /api/v1/ocr` is a machine route on the same FastAPI process: no second service in front of it. A caller sends files and a template slug with an API key, hashed at rest and acting as the user it belongs to, so the same admission caps apply.",
-        "The call returns 202 with a `result_url` as soon as the job is queued; an optional `wait_seconds` is capped at 60. Extraction never runs inside the request. When the session completes, `GET /api/v1/ocr/{id}` returns the post-processed fields and the filled workbook. A webhook carries only the id and status.",
+        "The browser is not the only way in. Other applications can send documents and receive the workbook.",
+        "API management lives in the product. An admin creates a key for each system. The key is shown once, only a hash is stored, and the key acts as the user it belongs to.",
+        "A caller sends files and a template, and gets back the extracted fields and the filled Excel file. The job uses the same queues as a job started in the UI.",
       ],
-      shows:
-        "Integration is one route on the same queue, with the same frozen template, not a separate pipeline.",
-      caption: "Illustration built from projects/ocr/architecture.md.",
+      shows: "Integration is the same pipeline, with keys an admin can manage.",
+      caption: "A key, a template, and the same workbook the UI exports.",
     },
   ],
   limits: {

@@ -16,6 +16,7 @@ const DIAGRAMS = [
     url: `/work/${s}/`,
     flow: "cs",
   })),
+  { name: "document-ocr application", url: "/work/document-ocr/", flow: "app" },
 ];
 const WIDTHS = [320, 360, 390, 430, 768, 1024, 1440];
 const diagram = (name: string) => {

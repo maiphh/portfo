@@ -393,8 +393,8 @@ test.describe("autoplay: the flow tours itself while idle", () => {
     await expect(page.locator(`${flow} path.auto`)).toHaveCount(0);
   });
 
-  test("only the home flow tours", async ({ page }) => {
-    await page.goto("/work/document-ocr/");
+  test("a case study without the tour flag does not tour", async ({ page }) => {
+    await page.goto("/work/legal-rag/");
     await expect(page.locator("[data-flow][data-autoplay]")).toHaveCount(0);
     await expect(page.locator("[data-flow][data-auto]")).toHaveCount(0);
   });

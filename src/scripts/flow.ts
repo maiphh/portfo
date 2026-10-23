@@ -7,7 +7,7 @@
  *   selection when the layout flips, and returns focus to the node on close;
  * - arrow keys / Home / End move between nodes, Esc closes;
  * - motion (edges drawing in once, the home page's packets) only without reduced motion;
- * - `autoplay` (home page): while nobody is using the flow, steps through the nodes in DOM
+ * - `autoplay` (opt-in): while nobody is using the flow, steps through the nodes in DOM
  *   (path) order and lights the edge into each one. Highlight only: no panel, sheet, focus,
  *   scrolling or aria change. Paused on hover, keyboard focus, touch, a selection, off screen
  *   or in a hidden tab; resumes RESUME ms after the person lets go. Off under reduced motion.

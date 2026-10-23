@@ -161,16 +161,18 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
               playsinline
               preload="none"
               poster={showVideo.poster}
-              aria-describedby="vid-desc"
+              aria-describedby={showVideo.description ? "vid-desc" : undefined}
               data-case-video
             >
               <source src={showVideo.src} type="video/mp4" />
             </video>
             <figcaption>
               {showVideo.caption}
-              <span id="vid-desc" class="cs2-vid-desc">
-                What plays: {showVideo.description}
-              </span>
+              {showVideo.description && (
+                <span id="vid-desc" class="cs2-vid-desc">
+                  What plays: {showVideo.description}
+                </span>
+              )}
             </figcaption>
           </figure>
         </section>
@@ -182,25 +184,51 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
             <h2 id="how-h">How it works</h2>
             <p set:html={richText(how.summary)} />
           </div>
-          <div>
-            <dl class="cs2-stack" aria-label="Stack">
-              {how.stack.map((s) => (
-                <div>
-                  <dt>{s.label}</dt>
-                  <dd>
-                    {s.value}
-                    {s.version && <code>{s.version}</code>}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p class="cs2-full">
-              <a href="#stack" data-open-stack>
-                Full stack with versions
-              </a>
-            </p>
-          </div>
+          {how.stack.length > 0 && (
+            <div>
+              <dl class="cs2-stack" aria-label="Stack">
+                {how.stack.map((s) => (
+                  <div>
+                    <dt>{s.label}</dt>
+                    <dd>
+                      {s.value}
+                      {s.version && <code>{s.version}</code>}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p class="cs2-full">
+                <a href="#stack" data-open-stack>
+                  Full stack with versions
+                </a>
+              </p>
+            </div>
+          )}
         </div>
+        {how.application && (
+          <div class="cs2-how-sub">
+            <h3>{how.application.title}</h3>
+            <FlowDiagram
+              id="app"
+              cols={how.application.flow.cols}
+              nodes={how.application.flow.nodes}
+              edges={how.application.flow.edges}
+              groups={how.application.flow.groups}
+              label={how.application.flow.label}
+              keyLabel={how.application.flow.keyLabel}
+              lanes3Min={how.application.flow.lanes3Min}
+              hint="Select any stage to see what it does, its tech and the decision behind it."
+              accent={acc}
+              autoplay={how.autoplay}
+            />
+          </div>
+        )}
+        {(how.architectureTitle || how.architectureNote) && (
+          <div class="cs2-how-sub">
+            {how.architectureTitle && <h3>{how.architectureTitle}</h3>}
+            {how.architectureNote && <p set:html={richText(how.architectureNote)} />}
+          </div>
+        )}
         <FlowDiagram
           id="cs"
           cols={how.flow.cols}
@@ -212,6 +240,7 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           lanes3Min={how.flow.lanes3Min}
           hint="Select any part to see what it does, its tech and the decision behind it."
           accent={acc}
+          autoplay={how.autoplay}
         />
       </section>
 

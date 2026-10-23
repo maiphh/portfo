@@ -51,7 +51,7 @@ test.describe("Document OCR case study", () => {
         preload: el.preload,
         poster: el.getAttribute("poster"),
         autoplay: el.autoplay,
-        desc: document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent,
+        described: el.getAttribute("aria-describedby"),
       })),
     ).toMatchObject({
       muted: true,
@@ -59,8 +59,9 @@ test.describe("Document OCR case study", () => {
       preload: "none",
       poster: "/work/document-ocr/motion-poster.jpg",
       autoplay: false,
-      desc: expect.stringContaining("What plays:"),
+      described: null,
     });
+    await expect(page.locator("#vid-desc")).toHaveCount(0);
     const res = await page.request.get("/work/document-ocr/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(500_000);
@@ -87,7 +88,7 @@ test.describe("Document OCR case study", () => {
     await expect(page.locator(".org-badge")).toHaveCount(3);
   });
 
-  test("the flow opens details, and the stack link opens the versions table", async ({
+  test("the architecture flow opens details; the how section has no stack", async ({
     page,
     isMobile,
   }) => {
@@ -115,11 +116,31 @@ test.describe("Document OCR case study", () => {
       await expect(page.locator('[data-flow="cs"] .flow-groupbox')).toHaveText("FastAPI process");
       await expect(page.locator('[data-flow="cs"] path.dotted')).toHaveCount(1);
     }
-    const stack = page.locator("details#stack");
-    await expect(stack).not.toHaveAttribute("open", "");
-    await page.getByRole("link", { name: "Full stack with versions" }).click();
-    await expect(stack).toHaveAttribute("open", "");
-    await expect(stack.getByRole("table").first()).toBeVisible();
+    await expect(page.locator("#how-it-works .cs2-stack")).toHaveCount(0);
+    await expect(page.locator("#how-it-works .cs2-how-sub > h3")).toHaveText([
+      "Application flow",
+      "Architecture",
+    ]);
+    await expect(page.getByRole("link", { name: "Full stack with versions" })).toHaveCount(0);
+  });
+
+  test("both diagrams tour until a stage is opened", async ({ page, isMobile }) => {
+    await page.goto(URL);
+    for (const id of ["app", "cs"]) {
+      const flow = page.locator(`[data-flow="${id}"]`);
+      await flow.scrollIntoViewIfNeeded();
+      await expect(flow).toHaveAttribute("data-autoplay", "");
+      await expect(flow).toHaveAttribute("data-auto", "running", { timeout: 4000 });
+      await expect(flow.locator(".flow-node.is-auto")).toHaveCount(1, { timeout: 5000 });
+    }
+    const node = page.locator('[data-flow="app"] [data-node="input"]');
+    await node.scrollIntoViewIfNeeded();
+    if (isMobile) await node.tap();
+    else await node.click();
+    await expect(page.locator('[data-flow="app"]')).toHaveAttribute("data-auto", "paused");
+    await expect(page.locator('[data-flow="app"] .is-auto')).toHaveCount(0);
+    const detail = isMobile ? page.locator("dialog#app-sheet") : page.locator("#app-detail");
+    await expect(detail.locator("h3").first()).toHaveText(/Input/);
   });
 
   test("deep dives: open on desktop, an accordion on phones", async ({ page, isMobile }) => {

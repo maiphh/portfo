@@ -37,9 +37,9 @@ interface Props {
   /** Home page only: a dot loops along each edge while the flow is on screen. */
   packets?: boolean;
   /**
-   * Home page only: while idle, step through the nodes in path order (about 2.8s each) and
-   * light the edge into each one. Highlight only; paused while someone uses the flow, off
-   * screen or in a hidden tab, and off under reduced motion (scripts/flow.ts).
+   * While idle, step through the nodes in path order (about 2.8s each) and light the edge
+   * into each one. Highlight only; paused while a part is hovered, focused, or open, while
+   * the diagram is off screen or the tab is hidden, and off under reduced motion (scripts/flow.ts).
    */
   autoplay?: boolean;
   /** Flow width (padding included) from which a 3-lane phone layout is used; LANES3_MIN (a

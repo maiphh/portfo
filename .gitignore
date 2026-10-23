@@ -18,7 +18,7 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
-# OS / editor
+# OS / editor/new
 .DS_Store
 .idea/
 

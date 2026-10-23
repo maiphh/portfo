@@ -47,28 +47,29 @@ function proof(root: HTMLElement) {
 }
 
 function flowSelect(root: HTMLElement) {
-  const block = root.querySelector<HTMLElement>("[data-flow-block]");
-  const svg = block?.querySelector<SVGSVGElement>("[data-flow-edges]");
-  if (!block || !svg) return;
-  block.addEventListener("flow:select", (e) => {
-    const { id, node, edges } = (
-      e as CustomEvent<{ id: string; node: HTMLElement; edges: SVGPathElement[] }>
-    ).detail;
-    const line = document.createElement("i");
-    line.className = "flow-scan";
-    line.setAttribute("aria-hidden", "true");
-    node.append(line);
-    line
-      .animate(
-        [
-          { transform: "translateY(0)", opacity: 1 },
-          { transform: `translateY(${node.offsetHeight - 2}px)`, opacity: 0 },
-        ],
-        { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
-      )
-      .finished.finally(() => line.remove());
-    edges.forEach((p, i) => setTimeout(() => packet(svg, p, p.dataset.a !== id), i * 60));
-  });
+  for (const block of root.querySelectorAll<HTMLElement>("[data-flow-block]")) {
+    const svg = block.querySelector<SVGSVGElement>("[data-flow-edges]");
+    if (!svg) continue;
+    block.addEventListener("flow:select", (e) => {
+      const { id, node, edges } = (
+        e as CustomEvent<{ id: string; node: HTMLElement; edges: SVGPathElement[] }>
+      ).detail;
+      const line = document.createElement("i");
+      line.className = "flow-scan";
+      line.setAttribute("aria-hidden", "true");
+      node.append(line);
+      line
+        .animate(
+          [
+            { transform: "translateY(0)", opacity: 1 },
+            { transform: `translateY(${node.offsetHeight - 2}px)`, opacity: 0 },
+          ],
+          { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+        )
+        .finished.finally(() => line.remove());
+      edges.forEach((p, i) => setTimeout(() => packet(svg, p, p.dataset.a !== id), i * 60));
+    });
+  }
 }
 
 export default function ocr(root: HTMLElement) {

@@ -19,14 +19,6 @@ const fields = [
   { id: "party", label: "party", value: "Sample Co.", y: 46 },
   { id: "total", label: "total", value: "1,250.00", y: 78 },
 ];
-const caps = [
-  ["Ready-to-extract buffer", "2 × extract", "16"],
-  ["Units one pod may hold", "ready + extract", "24"],
-  ["Units one session may hold", "extract / 2, then a fair share", "4"],
-  ["VLM, OCR and LLM concurrency", "= extract", "8"],
-];
-// Two sessions sharing the extract lane: filled = session A, outlined = session B.
-const extract = [1, 1, 0, 1, 0, 1, 0, 1];
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={ocr}>
@@ -90,98 +82,48 @@ const extract = [1, 1, 0, 1, 0, 1, 0, 1];
     </p>
   </div>
 
-  <div slot="dive-queue" class="ocr-queue">
-    <div
-      class="ocr-lanes"
-      role="img"
-      aria-label="Render lane with 4 slots, a ready buffer of 16, and an extract lane of 8 slots shared by two sessions"
-    >
-      <span>render · 4</span>
-      <p>
-        {[0, 1, 2, 3].map(() => (
-          <i class="on"></i>
-        ))}
-      </p>
-      <span>ready · 2×8</span>
-      <p>
-        {Array.from({ length: 16 }, (_, i) => (
-          <i class:list={["q", { on: i < 11 }]}></i>
-        ))}
-      </p>
-      <span>extract · 8</span>
-      <p>
-        {extract.map((a) => (
-          <i class:list={[a ? "on" : "b"]}></i>
-        ))}
-      </p>
+  <div slot="dive-template" class="ocr-api">
+    <div>
+      <code>schema</code>
+      <p>The fields to read, and the workbook column each one fills.</p>
     </div>
-    <div class="ocr-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Cap</th>
-            <th scope="col">Formula</th>
-            <th scope="col">At extract 8</th>
-          </tr>
-        </thead>
-        <tbody>
-          {caps.map(([c, f, v]) => (
-            <tr>
-              <th scope="row">{c}</th>
-              <td>{f}</td>
-              <td class="num">{v}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <code>prompts</code>
+      <p>What the model is asked. A missing value stays empty.</p>
+    </div>
+    <div>
+      <code>rules</code>
+      <p>How values are cleaned before anyone reviews them.</p>
+    </div>
+    <div>
+      <code>workbook</code>
+      <p>The Excel layout the export fills.</p>
     </div>
   </div>
 
-  <div slot="dive-rules" class="ocr-rule">
-    <pre><code><span class="c"># one function per Python rule (illustration)</span>
-import re
-
-def transform(data, context):
-    value = data.get("doc_no")
-    if value is None:
-        return SKIP  <span class="c"># leave the field as it is</span>
-    return re.sub(r"\s+", "", value)</code></pre>
-    <ul class="ocr-rule-no" aria-label="Rejected in rules">
-      <li>
-        <code>eval</code>
-      </li>
-      <li>
-        <code>exec</code>
-      </li>
-      <li>
-        <code>open</code>
-      </li>
-      <li>
-        <code>__import__</code>
-      </li>
-      <li>
-        <code>__dunder__</code>
-      </li>
-    </ul>
+  <div slot="dive-queue" class="ocr-api">
+    <div>
+      <code>render queue</code>
+      <p>Page images. It keeps running while extraction waits on the model.</p>
+    </div>
+    <div>
+      <code>extract queue</code>
+      <p>The slow step. Jobs take turns, so one document cannot fill it.</p>
+    </div>
   </div>
 
   <div slot="dive-api" class="ocr-api">
     <div>
-      <code>POST /api/v1/ocr</code>
-      <p>
-        Files + <code>template_slug</code>, API key. Returns 202 with <code>session_id</code> and{" "}
-        <code>result_url</code>.
-      </p>
+      <code>keys</code>
+      <p>Created for each connected system. Shown once, stored as a hash.</p>
     </div>
     <div>
-      <code>same worker</code>
-      <p>
-        Same frozen template, same Postgres work-unit queue (<code>SKIP LOCKED</code>).
-      </p>
+      <code>call</code>
+      <p>Files and a template, the same inputs as the upload screen.</p>
     </div>
     <div>
-      <code>GET /api/v1/ocr/{"{id}"}</code>
-      <p>200 with records and the filled workbook. A webhook sends only the id and status.</p>
+      <code>result</code>
+      <p>The fields and the filled workbook.</p>
     </div>
   </div>
 </CaseStudy>

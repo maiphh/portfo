@@ -272,10 +272,16 @@
   gap: var(--s5) 64px;
 }
 @media (min-width: 900px) {
-  .cs2-how-head {
+  .cs2-how-head:has(.cs2-stack) {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     align-items: end;
   }
+}
+.cs2-how-sub {
+  margin-top: var(--s6);
+}
+.cs2-how-sub > h3 {
+  margin-bottom: var(--s3);
 }
 .cs2-how-head h2 {
   margin-bottom: var(--s3);

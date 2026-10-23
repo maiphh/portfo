@@ -181,118 +181,7 @@
   font-size: 15.5px !important;
 }
 
-/* deep dive: queue */
-.ocr-queue,
-.ocr-rule {
-  display: grid;
-  gap: 20px;
-  padding: clamp(16px, 2.5vw, 28px);
-  background: var(--sheet);
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-  min-width: 0;
-}
-.ocr-lanes {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 12px 18px;
-  align-items: center;
-}
-.ocr-lanes span {
-  font-size: 14px;
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-.ocr-lanes p {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-width: none !important;
-}
-.ocr-lanes i {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  border: 1.5px solid var(--rule-2);
-}
-.ocr-lanes i.on {
-  background: var(--acc);
-  border-color: var(--acc);
-}
-.ocr-lanes i.q.on {
-  background: transparent;
-  border-color: var(--acc);
-}
-.ocr-lanes i.b {
-  border-color: var(--faint);
-}
-.ocr-scroll {
-  min-width: 0;
-}
-.ocr-queue table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 14.5px;
-}
-.ocr-queue th,
-.ocr-queue td {
-  padding: 10px 10px 10px 0;
-  border-top: 1px solid var(--rule);
-  text-align: left;
-  vertical-align: top;
-  color: var(--ink-2);
-  overflow-wrap: anywhere;
-  font-weight: 450;
-}
-.ocr-queue thead th {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 600;
-}
-.ocr-queue thead th:last-child,
-.ocr-queue td.num {
-  width: 26%;
-}
-.ocr-queue td.num {
-  font-family: var(--code);
-  color: var(--ink);
-}
-
-/* deep dive: rules */
-.ocr-rule pre {
-  margin: 0;
-  padding: 16px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: var(--sheet-2);
-  border-radius: 4px;
-  font: 500 13px/1.6 var(--code);
-  color: var(--ink);
-}
-.ocr-rule pre code {
-  font-size: 13px !important;
-  overflow-wrap: anywhere !important;
-}
-.ocr-rule .c {
-  color: var(--muted);
-}
-.ocr-rule-no {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  list-style: none;
-}
-.ocr-rule-no li {
-  padding: 4px 10px;
-  border: 1px solid var(--rule-2);
-  border-radius: 3px;
-  text-decoration: line-through;
-  text-decoration-color: var(--acc);
-  font-size: 13px !important;
-}
-
-/* deep dive: API */
+/* deep dive cards */
 .ocr-api {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
@@ -318,7 +207,4 @@
 .ocr-api p {
   font-size: 14.5px !important;
   line-height: 1.5 !important;
-}
-.ocr-rule-no code {
-  font-size: 13px !important;
 }

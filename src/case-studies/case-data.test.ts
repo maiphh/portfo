@@ -20,17 +20,21 @@ const all: Record<string, CaseStudyData> = {
 };
 
 describe.each(Object.entries(all))("%s", (_slug, d) => {
+  const flows = [d.how.flow, ...(d.how.application ? [d.how.application.flow] : [])];
+
   it("has a valid flow", () => {
-    const { nodes, edges, cols, groups } = d.how.flow;
-    expect(flowProblems(nodes, edges, cols, groups)).toEqual([]);
+    for (const { nodes, edges, cols, groups } of flows)
+      expect(flowProblems(nodes, edges, cols, groups)).toEqual([]);
   });
 
   it("keeps each group's members adjacent (the group box and the list labels need it)", () => {
-    const order = d.how.flow.nodes.map((n) => n.group ?? "");
-    for (const g of new Set(order.filter(Boolean))) {
-      const first = order.indexOf(g);
-      const last = order.lastIndexOf(g);
-      expect(order.slice(first, last + 1).every((x) => x === g)).toBe(true);
+    for (const flow of flows) {
+      const order = flow.nodes.map((n) => n.group ?? "");
+      for (const g of new Set(order.filter(Boolean))) {
+        const first = order.indexOf(g);
+        const last = order.lastIndexOf(g);
+        expect(order.slice(first, last + 1).every((x) => x === g)).toBe(true);
+      }
     }
   });
 
