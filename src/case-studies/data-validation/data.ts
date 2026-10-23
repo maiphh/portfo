@@ -27,9 +27,9 @@ export const dvp: CaseStudyData = {
     src: "/work/data-validation/motion.mp4",
     poster: "/work/data-validation/motion-poster.jpg",
     caption:
-      "The platform's 15-second promo cut, no sound. The row and the stat cards on screen are promo sample values, not results.",
+      "The platform's 30-second dark-mode promo cut, no sound. The row and the stat cards on screen are promo sample values, not results.",
     description:
-      "The title word AI. Rules, AI, code: a plain-language rule (net equals basic plus overtime plus allowance minus deductions) is translated into a net_pay function. Input, code, result: the function runs on a sample timesheet row, and the expected net pay disagrees with the sheet, so the row is flagged before the next run. Demo stat cards, then the end card, Talentnet DVP, Data Validation and Processing.",
+      "The title word AI on a near-black canvas. Rules, AI, code: a plain-language rule (net equals basic plus overtime plus allowance minus deductions) is translated into a net_pay function. Input, code, result: the function runs on a sample timesheet row, and the expected net pay disagrees with the sheet, so the row is flagged before the next run. Demo stat cards, then the end card, Talentnet DVP, Data Validation and Processing.",
   },
   how: {
     summary:

@@ -27,9 +27,9 @@ export const ocr: CaseStudyData = {
     src: "/work/document-ocr/motion.mp4",
     poster: "/work/document-ocr/motion-poster.jpg",
     caption:
-      "The platform's 15-second promo cut, no sound. The dashboard numbers on screen are motion demo values; the measured results are in the Outcome above.",
+      "The platform's 30-second dark-mode promo cut, no sound. The dashboard numbers on screen are motion demo values; the measured results are in the Outcome above.",
     description:
-      "Title words PDF, pages, pixels, data. The upload screen with a template selected and staged PDFs, then the review screen: a scan line crosses a sample page, field boxes light up and values fill beside it. The pipeline: upload, preprocess, OCR or VLM, LLM map, export. A dashboard with demo stat cards, field accuracy and session logs, then the end card, OCR Platform.",
+      "Title words PDF, pages, pixels, data on a dark Warm Charcoal canvas. The upload screen with a template selected and staged PDFs, then the review screen: a scan line crosses a sample page, field boxes light up and values fill beside it. The pipeline: upload, preprocess, OCR or VLM, LLM map, export. A dashboard with demo stat cards, field accuracy and session logs, then the end card, OCR Platform.",
   },
   how: {
     summary:

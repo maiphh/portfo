@@ -14,20 +14,20 @@ The platform is template-driven. An admin binds an Excel workbook, a field schem
 
 The current default inference path is direct VLM. Rendered page images go to a vision-language model that returns schema-shaped JSON. A hybrid path is also supported. A Mistral-compatible OCR service produces text, then an LLM maps that text to the same schema. Admins can switch the active engine at runtime. Compiled rules then turn raw model output into baseline structured fields for review and Excel export.
 
-## What the 15s video shows
+## What the 30s video shows
 
-Packaged file: `motion.mp4` (15.000s), copied from `ocr_platform_motion.mp4`. Ignore the 30s cut.
+Packaged file: `motion.mp4` (30.000s, dark mode), copied from `ocr_platform_motion_30s_dark.mp4`.
 
-Source note. `motion/timeline.py` currently authors the same scenes at `DUR = 30.0` with extra dwell between events. `motion/render.py`'s module docstring still says "15s promo", while `main()` writes `ocr_platform_motion_{DUR}s.mp4` from that 30s timeline. Scene order and on-screen labels below come from those two files. Timestamps below are the authored 30s constants. The delivered 15s file is the shorter cut of this sequence, not a separate story.
+Source: `motion/timeline.py` (`DUR = 30.0`) and `motion/render.py` (`--theme dark`). Warm Charcoal palette from the app's `.dark` tokens. Scene motion stays at the app's own speed; the extra time is dwell so each screen can be read.
 
-Scene order and labels:
+Scene order and labels (30s constants):
 
-1. **Title card.** Slam words `PDF` → `PAGES` → `PIXELS` → `DATA.`, each with overline `01 · Input`, `02 · Render`, `03 · Recognize`, `04 · Structure`. Corner tagline: `PDF → structured data`.
-2. **Process, upload.** Shell title `Document Extraction`. Prompt `How do you want to extract?` with `Use a template` selected. File zone shows `Upload files`, `Paste files`, and staged PDFs. Primary action `Start Extraction`.
-3. **Process, review.** Progress reads `N / 24 pages`, then `Extraction complete`. A scan line crosses the source page. Bounding boxes light up. Structured field labels and values fill beside the page. Those demo identity, period, and amount fields are illustrative schema only, not a client field list.
-4. **Pipeline.** Overline `The pipeline`. Headline `From pixels to records.` Five nodes in order: `Upload` (Staged multi-file PDFs), `Preprocess` (Render, chunk, clean), `OCR · VLM` (Hybrid extraction), `LLM map` (Template schema), `Export` (Review to Excel). Footer bar `Processing batch` with percent.
-5. **Dashboard.** Shell title `Dashboard`. Stat cards `Pages processed`, `Extraction accuracy`, `Time saved` (motion demo figures only). Panels `Field Accuracy Board` and `Session Logs`. Rows flip from `Running` to `Completed`. Toast `Export ready` / `Session report downloaded` after the Export click.
-6. **End card.** Wordmark `OCR Platform` and line `Template-driven PDF extraction · Review · Excel export`.
+1. **Title card (0–4s).** Slam words `PDF` → `PAGES` → `PIXELS` → `DATA.`, each with overline `01 · Input`, `02 · Render`, `03 · Recognize`, `04 · Structure`. Corner tagline: `PDF → structured data`.
+2. **Process, upload (4–~8.6s).** Shell title `Document Extraction`. Prompt `How do you want to extract?` with `Use a template` selected. File zone shows `Upload files`, `Paste files`, and staged PDFs. Primary action `Start Extraction`.
+3. **Process, review (~8.6–12s).** Progress reads `N / 24 pages`, then `Extraction complete`. A scan line crosses the source page. Bounding boxes light up. Structured field labels and values fill beside the page. Those demo identity, period, and amount fields are illustrative schema only, not a client field list.
+4. **Pipeline (12–20s).** Overline `The pipeline`. Headline `From pixels to records.` Five nodes in order: `Upload` (Staged multi-file PDFs), `Preprocess` (Render, chunk, clean), `OCR · VLM` (Hybrid extraction), `LLM map` (Template schema), `Export` (Review to Excel). Footer bar `Processing batch` with percent.
+5. **Dashboard (20–26s).** Shell title `Dashboard`. Stat cards `Pages processed`, `Extraction accuracy`, `Time saved` (motion demo figures only). Panels `Field Accuracy Board` and `Session Logs`. Rows flip from `Running` to `Completed`. Toast `Export ready` / `Session report downloaded` after the Export click.
+6. **End card (26–30s).** Wordmark `OCR Platform` and line `Template-driven PDF extraction · Review · Excel export`.
 
 ## Highlights
 
@@ -56,7 +56,7 @@ Two months after go-live:
 - `/Users/phu.mai/Projects/ocr/ocr/docs/specs/system-overview.md`
 - `/Users/phu.mai/Projects/ocr/ocr/motion/timeline.py`
 - `/Users/phu.mai/Projects/ocr/ocr/motion/render.py`
-- `/Users/phu.mai/Projects/ocr/ocr/motion/ocr_platform_motion.mp4`
+- `/Users/phu.mai/Projects/ocr/ocr/motion/ocr_platform_motion_30s_dark.mp4`
 - `/Users/phu.mai/Projects/ocr/ocr/frontend/package.json` and `package-lock.json` (stack versions)
 - `/Users/phu.mai/Projects/ocr/ocr/backend/pyproject.toml` and `uv.lock` (stack versions)
 - `/Users/phu.mai/Projects/ocr/ocr/backend/app/core/config.py` (default engine and storage)
