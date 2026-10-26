@@ -30,6 +30,11 @@ body {
   visibility: hidden;
   pointer-events: none;
 }
+/* Without JS the launcher can't open anything (the panel is wired by scripts/chat/boot), so it
+   isn't shown: a dead button would only sit over the page, e.g. the case-study rail's links. */
+html:not(.js) .chat-launcher {
+  display: none;
+}
 .chat-launcher {
   z-index: 94;
   display: grid;

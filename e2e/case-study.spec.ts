@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { overflowReport } from "./overflow";
+import { lumaSpread } from "./pixels";
 
 const URL = "/work/document-ocr/";
 // The 8 audit widths, plus both sides of the 6-column flow's list switch (1076px container).
@@ -60,16 +61,14 @@ test.describe("Document OCR case study", () => {
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
-    // The poster is a lazy <img> (a poster="" attribute is fetched even with preload="none").
-    await expect(page.locator(".cs2-video-poster")).toHaveAttribute("loading", "lazy");
-    await expect(page.locator(".cs2-video-poster")).toHaveAttribute(
-      "src",
-      "/work/document-ocr/motion-poster.jpg",
-    );
+    // The poster="" is set only as the frame nears the viewport (in the markup it would be
+    // fetched with the page even with preload="none").
+    await expect(v).toHaveAttribute("data-poster-src", "/work/document-ocr/motion-poster.jpg");
     const res = await page.request.get("/work/document-ocr/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(500_000);
     await v.scrollIntoViewIfNeeded();
+    await expect(v).toHaveAttribute("poster", "/work/document-ocr/motion-poster.jpg");
     await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   });
 
@@ -177,6 +176,58 @@ test.describe("Document OCR case study", () => {
       "true",
     );
   });
+
+  for (const [w, h] of [
+    [1440, 900],
+    [430, 932],
+    [768, 1024],
+  ] as const)
+    test(`the poster is not fetched on first load at ${w}×${h}, only once scrolled near`, async ({
+      page,
+    }) => {
+      const seen: string[] = [];
+      page.on("request", (r) => {
+        if (r.url().includes("motion-poster")) seen.push(r.url());
+      });
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(URL);
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(800);
+      expect(seen).toEqual([]);
+      await expect(page.locator("video[data-case-video]")).not.toHaveAttribute("poster", /./);
+      // Scroll until the frame is just under 200px below the fold: the poster loads, once.
+      await page.evaluate(() => {
+        const f = document.querySelector(".cs2-video-frame");
+        if (f) scrollBy(0, f.getBoundingClientRect().top - innerHeight - 150);
+      });
+      await expect.poll(() => seen.length).toBe(1);
+      await page.locator(".cs2-video-frame").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      expect(seen).toHaveLength(1);
+    });
+
+  // Native controls paint an opaque grey layer over anything under the video, so the poster has
+  // to be the video's own: the frame must show the poster's pixels, not a flat fill.
+  for (const mode of ["normal", "reduce", "nojs"] as const)
+    test(`the poster is visible in the frame (${mode})`, async ({ browser, isMobile }) => {
+      test.skip(isMobile, "sizes are set per context; runs once");
+      const ctx = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        javaScriptEnabled: mode !== "nojs",
+        reducedMotion: mode === "reduce" ? "reduce" : "no-preference",
+      });
+      const page = await ctx.newPage();
+      // Hold the video file back so "normal" shows the poster stage before any frame decodes.
+      await page.route("**/motion.mp4", () => {});
+      await page.goto(URL);
+      const v = page.locator(mode === "nojs" ? "video.cs2-video-nojs" : "video[data-case-video]");
+      await expect(v).toHaveCount(1);
+      await expect(v).toBeVisible();
+      await v.scrollIntoViewIfNeeded();
+      await expect(v).toHaveAttribute("poster", "/work/document-ocr/motion-poster.jpg");
+      await expect.poll(() => lumaSpread(browser, v), { timeout: 8000 }).toBeGreaterThan(12);
+      await ctx.close();
+    });
 
   test("the first screen ends on the rail at the fold", async ({ page }) => {
     for (const [w, h] of [

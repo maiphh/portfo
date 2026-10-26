@@ -65,6 +65,28 @@ if (page) {
     });
   if (location.hash === "#stack" && stack) stack.open = true;
 
+  // The poster is set only as the video frame nears the viewport (200px ahead), not with the
+  // page: a poster="" in the markup is fetched right away, even with preload="none".
+  const cutVideo = page.querySelector<HTMLVideoElement>("video[data-poster-src]");
+  if (cutVideo) {
+    const load = () => {
+      if (!cutVideo.getAttribute("poster")) cutVideo.poster = cutVideo.dataset.posterSrc ?? "";
+    };
+    if (!("IntersectionObserver" in window)) load();
+    else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io.disconnect();
+            load();
+          }
+        },
+        { rootMargin: "200px 0px" },
+      );
+      io.observe(cutVideo.closest(".cs2-video-frame") ?? cutVideo);
+    }
+  }
+
   // The short cut: muted, plays only while half in view. Reduced motion, Save-Data or
   // prefers-reduced-data: no autoplay; a play button sits on the poster instead.
   const video = page.querySelector<HTMLVideoElement>("[data-case-video]");

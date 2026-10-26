@@ -126,18 +126,11 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
             <div class="cs2-video-frame">
               {/* Muted, no preload. It plays while half in view (scripts/case/page.ts) unless
                   reduced motion or a data saver is on; then a play button sits on the poster.
-                  The poster is a lazy <img> under the (transparent until it has frames) video:
-                  a poster="" attribute is fetched with the page even with preload="none". */}
+                  The poster is the video's own poster="" (Chrome's controls paint over anything
+                  underneath), but it is set by page.ts only once the frame is within 200px of the
+                  viewport: in the markup a poster="" is fetched with the page even with
+                  preload="none". Without JS the <noscript> copy carries the poster directly. */}
               <div class="cs2-video-media">
-                <img
-                  class="cs2-video-poster"
-                  src={showVideo.poster}
-                  alt=""
-                  width="1280"
-                  height="720"
-                  loading="lazy"
-                  decoding="async"
-                />
                 <video
                   controls
                   muted
@@ -146,10 +139,26 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
                   width="1280"
                   height="720"
                   aria-describedby={showVideo.description ? "vid-desc" : undefined}
+                  data-poster-src={showVideo.poster}
                   data-case-video
                 >
                   <source src={showVideo.src} type="video/mp4" />
                 </video>
+                <noscript>
+                  <video
+                    class="cs2-video-nojs"
+                    controls
+                    muted
+                    playsinline
+                    preload="none"
+                    width="1280"
+                    height="720"
+                    poster={showVideo.poster}
+                    aria-describedby={showVideo.description ? "vid-desc" : undefined}
+                  >
+                    <source src={showVideo.src} type="video/mp4" />
+                  </video>
+                </noscript>
               </div>
               <button class="cs2-video-play" type="button" hidden data-video-play>
                 <svg viewBox="0 0 16 16" aria-hidden="true">

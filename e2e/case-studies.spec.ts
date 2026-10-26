@@ -230,6 +230,109 @@ test.describe("Hero A", () => {
     await ctx.close();
   });
 
+  // The visible part of each rail link (the rail scrolls sideways) against the chat launcher.
+  const railUnderLauncher = () => {
+    const l = document.querySelector(".chat-launcher");
+    if (!l || getComputedStyle(l).display === "none") return [];
+    const L = l.getBoundingClientRect();
+    const R = document.querySelector("[data-rail]")?.getBoundingClientRect();
+    if (!R) return ["no rail"];
+    const hits: string[] = [];
+    for (const a of document.querySelectorAll("[data-rail] a")) {
+      const r = a.getBoundingClientRect();
+      const w = Math.min(r.right, R.right, L.right) - Math.max(r.left, R.left, L.left);
+      const h = Math.min(r.bottom, L.bottom) - Math.max(r.top, L.top);
+      if (w > 0 && h > 0) hits.push((a.textContent ?? "").trim());
+    }
+    return hits;
+  };
+  const LAUNCHER_SIZES = [
+    [360, 780],
+    [390, 844],
+    [430, 932],
+    [768, 1024],
+    [1440, 900],
+  ] as const;
+
+  for (const js of [true, false])
+    test(`the chat button never covers a rail link (${js ? "JS" : "no JS"})`, async ({
+      browser,
+      isMobile,
+    }) => {
+      test.skip(isMobile, "sizes are set per context; runs once");
+      test.setTimeout(120_000);
+      for (const [width, height] of LAUNCHER_SIZES) {
+        const ctx = await browser.newContext({
+          viewport: { width, height },
+          javaScriptEnabled: js,
+          reducedMotion: "reduce",
+        });
+        const page = await ctx.newPage();
+        for (const slug of ["legal-rag", "document-ocr", "openportfo"]) {
+          await page.goto(`/work/${slug}/`);
+          if (!js) {
+            // It can't open the chat without JS, so it isn't shown at all.
+            await expect(page.locator(".chat-launcher")).toBeHidden();
+            expect(await page.evaluate(railUnderLauncher), `${slug} ${width}`).toEqual([]);
+            continue;
+          }
+          // After the launcher settles (boot.ts re-places it at 400ms and 2.6s), then with the
+          // rail stuck under the nav.
+          await page.waitForTimeout(2800);
+          expect(await page.evaluate(railUnderLauncher), `${slug} ${width} top`).toEqual([]);
+          await page.mouse.wheel(0, height);
+          await page.waitForTimeout(1200);
+          expect(await page.evaluate(railUnderLauncher), `${slug} ${width} stuck`).toEqual([]);
+        }
+        await ctx.close();
+      }
+    });
+
+  test("the rail count is the small accent pill; the rest of the rail reads at 12px+", async ({
+    page,
+  }) => {
+    await page.goto("/work/legal-rag/");
+    const pill = page.locator(".cs2-rail__n");
+    await expect(pill).toHaveAttribute("aria-hidden", "true");
+    const css = await pill.evaluate((el) => {
+      const c = getComputedStyle(el);
+      const acc = c.getPropertyValue("--acc").trim();
+      const probe = document.createElement("i");
+      probe.style.color = acc;
+      document.body.append(probe);
+      const accRgb = getComputedStyle(probe).color;
+      probe.remove();
+      return {
+        accent: c.color === accRgb,
+        border: `${c.borderTopWidth} ${c.borderTopStyle} ${c.borderTopColor === c.color}`,
+        radius: c.borderTopLeftRadius,
+        size: c.fontSize,
+        padding: c.padding,
+      };
+    });
+    expect(css).toEqual({
+      accent: true,
+      border: "1px solid true",
+      radius: "3px",
+      size: "11px",
+      padding: "3px 4px",
+    });
+    // The 11px count is decorative (aria-hidden, with an sr-only " (n)"); every other piece of
+    // rail text keeps the 12px floor (the overflow audit skips the sideways-scrolling rail).
+    const small = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-rail] *")]
+        .filter(
+          (el) =>
+            el.firstChild?.nodeType === Node.TEXT_NODE &&
+            (el.textContent ?? "").trim() &&
+            !el.closest('[aria-hidden="true"], .sr-only') &&
+            parseFloat(getComputedStyle(el).fontSize) < 12,
+        )
+        .map((el) => el.outerHTML.slice(0, 60)),
+    );
+    expect(small).toEqual([]);
+  });
+
   test("with motion, the intro plays once and lands as the rail hairline", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -376,17 +479,15 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
-    await expect(page.locator(".cs2-video-poster")).toHaveAttribute("loading", "lazy");
-    await expect(page.locator(".cs2-video-poster")).toHaveAttribute(
-      "src",
-      "/work/data-validation/motion-poster.jpg",
-    );
+    // The poster="" is set only as the frame nears the viewport.
+    await expect(v).toHaveAttribute("data-poster-src", "/work/data-validation/motion-poster.jpg");
     await expect(page.locator(".cs2-video figcaption")).toContainText(/not results/);
     await expect(page.locator(".cs2-video-head")).toContainText(/demo values/i);
     const res = await page.request.get("/work/data-validation/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(300_000);
     await v.scrollIntoViewIfNeeded();
+    await expect(v).toHaveAttribute("poster", "/work/data-validation/motion-poster.jpg");
     await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   });
 

@@ -123,8 +123,12 @@
 }
 .cs-hero-a__ol {
   display: block;
-  color: transparent;
-  -webkit-text-stroke: max(1.5px, 0.006em) var(--hero-stroke);
+  /* The variable font's glyphs are built from overlapping contours, so a bare stroke draws their
+     seams inside t, e, R. Painting the stroke first and a ground-coloured fill over it hides the
+     seams; the stroke is doubled because the fill covers its inner half. */
+  color: var(--ground);
+  -webkit-text-stroke: max(3px, 0.012em) var(--hero-stroke);
+  paint-order: stroke fill;
   opacity: 0;
   visibility: hidden; /* shown only by the intro */
 }
@@ -318,7 +322,7 @@ html:not(.js) .cs-hero-a__sweep {
   position: absolute;
   left: var(--gutter);
   right: var(--gutter);
-  bottom: -1px;
+  top: -1px;
   height: 1px;
   background: var(--acc);
   transform: scaleX(0);
@@ -328,16 +332,15 @@ html:not(.js) .cs-hero-a__sweep {
 html:not(.js) .cs2-rail__ln {
   display: none;
 }
+/* The count is decorative (aria-hidden; the link carries an sr-only " (n)"), so it may sit at
+   11px, under the 12px floor for reading text. */
 .cs2-rail__n {
-  display: inline-grid;
-  place-items: center;
-  min-width: 24px;
-  height: 18px;
-  padding: 0 5px;
-  border: 1px solid var(--rule-2);
-  border-radius: 9px;
-  font: 500 12px/1 var(--code);
-  color: var(--ink-2);
+  display: inline-block;
+  padding: 3px 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font: 500 11px/1 var(--code);
+  color: var(--acc);
 }
 
 /* ---------- sections ---------- */
@@ -460,25 +463,15 @@ html:not(.js) .cs2-rail__ln {
   min-width: 0;
 }
 .cs2-video video {
-  position: relative;
   display: block;
   width: 100%;
   height: auto;
   border-radius: 4px;
-  background: transparent; /* the lazy poster below shows through until there are frames */
-}
-.cs2-video-media {
-  position: relative;
-  border-radius: 4px;
   background: var(--sheet);
 }
-.cs2-video-poster {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
+/* Without JS the <noscript> copy (poster in its markup) stands in for the lazy one. */
+html:not(.js) .cs2-video video[data-case-video] {
+  display: none;
 }
 /* The short cut sits right after the overview, framed like a screen. */
 .cs2-video-head {

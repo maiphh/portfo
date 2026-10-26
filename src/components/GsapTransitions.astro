@@ -116,19 +116,7 @@ const covered = !!slug;
   }
   /* Pre-hide the case-study entrance targets when JS is on (this rule + the
      entrance timeline replace each other; see the failsafes in the script). */
-  .js
-    article.cs
-    :is(
-      .back,
-      .sheet-head,
-      .cs-head .meta-line,
-      .cs-head h1,
-      .cs-head .lede,
-      .cs-head .facts,
-      .prose,
-      .cs-side > *,
-      .cs-next a
-    ) {
+  .js article.cs :is(.back, .sheet-head, .prose, .cs-side > *, .cs-next a) {
     opacity: 0;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -140,19 +128,7 @@ const covered = !!slug;
     .t-covered #t-curtain .col {
       transform: scaleY(0);
     }
-    .js
-      article.cs
-      :is(
-        .back,
-        .sheet-head,
-        .cs-head .meta-line,
-        .cs-head h1,
-        .cs-head .lede,
-        .cs-head .facts,
-        .prose,
-        .cs-side > *,
-        .cs-next a
-      ) {
+    .js article.cs :is(.back, .sheet-head, .prose, .cs-side > *, .cs-next a) {
       opacity: 1;
     }
   }
@@ -181,9 +157,7 @@ const covered = !!slug;
   const readoutText = document.getElementById("t-readout-text") as HTMLElement;
   const cols = gsap.utils.toArray<HTMLElement>("#t-curtain .col");
 
-  const TARGETS =
-    ".back, .sheet-head, .cs-head .meta-line, .cs-head h1, .cs-head .lede, " +
-    ".cs-head .facts, .prose, .cs-side > *, .cs-next a";
+  const TARGETS = ".back, .sheet-head, .prose, .cs-side > *, .cs-next a";
   const reveals = gsap.utils.toArray<HTMLElement>(`article.cs ${TARGETS}`);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
