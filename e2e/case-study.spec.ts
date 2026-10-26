@@ -22,12 +22,10 @@ for (const width of WIDTHS) {
 test.describe("Document OCR case study", () => {
   test("Phu's answers: README results, solo, no old figures", async ({ page }) => {
     await page.goto(URL);
-    const head = page.locator(".cs2-open");
+    const head = page.locator(".cs-hero-a__meta");
     await expect(head.locator(".org-badge")).toHaveText(/Enterprise\s*,?\s*Talentnet/);
-    await expect(head.locator(".meta-line > span:not(.org-badge)")).not.toContainText([
-      "Talentnet",
-    ]);
-    await expect(head.locator(".meta-line")).toContainText("Solo");
+    await expect(head.locator(".cs-hero-a__mi")).not.toContainText("Talentnet");
+    await expect(head).toContainText("Solo");
     // Verbatim from projects/ocr/README.md "## Result".
     await expect(page.locator("#overview")).toContainText(
       "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
@@ -40,7 +38,7 @@ test.describe("Document OCR case study", () => {
     await expect(page.getByText("TODO (Phu):")).toHaveCount(0);
   });
 
-  test("the promo cut: muted, no preload, poster, described; plays in view", async ({ page }) => {
+  test("the promo cut: muted, no preload, lazy poster; plays in view", async ({ page }) => {
     await page.goto(URL);
     const v = page.locator("main video[data-case-video]");
     await expect(v).toHaveCount(1);
@@ -57,11 +55,17 @@ test.describe("Document OCR case study", () => {
       muted: true,
       inline: true,
       preload: "none",
-      poster: "/work/document-ocr/motion-poster.jpg",
+      poster: null,
       autoplay: false,
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
+    // The poster is a lazy <img> (a poster="" attribute is fetched even with preload="none").
+    await expect(page.locator(".cs2-video-poster")).toHaveAttribute("loading", "lazy");
+    await expect(page.locator(".cs2-video-poster")).toHaveAttribute(
+      "src",
+      "/work/document-ocr/motion-poster.jpg",
+    );
     const res = await page.request.get("/work/document-ocr/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(500_000);
@@ -174,19 +178,17 @@ test.describe("Document OCR case study", () => {
     );
   });
 
-  test("reduced motion: the proof sheet is static and complete", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(URL);
-    await expect(page.locator("[data-proof]")).not.toHaveClass(/is-anim/);
-    await expect(page.locator("[data-proof] dd").first()).toBeVisible();
-  });
-
-  test("with motion, the scan line fills the workbook as the opener scrolls", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(URL);
-    await expect(page.locator("[data-proof]")).toHaveClass(/is-anim/);
-    await page.mouse.wheel(0, 900);
-    await expect(page.locator("[data-proof] [data-cell].lit")).toHaveCount(4);
+  test("the first screen ends on the rail at the fold", async ({ page }) => {
+    for (const [w, h] of [
+      [390, 844],
+      [430, 932],
+      [1024, 768],
+      [1440, 900],
+    ] as const) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(URL);
+      const r = await page.locator("[data-rail]").boundingBox();
+      expect(Math.round((r?.y ?? 0) + (r?.height ?? 0)), `${w}×${h}`).toBeLessThanOrEqual(h);
+    }
   });
 });

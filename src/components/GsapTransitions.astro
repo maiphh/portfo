@@ -61,6 +61,11 @@ const covered = !!slug;
   #t-readout[hidden] {
     display: none;
   }
+  /* Without JS nothing would ever lift the SSR-covered curtain (its failsafe is a script too). */
+  html:not(.js) #t-curtain,
+  html:not(.js) #t-readout {
+    display: none !important;
+  }
   /* …but a flagged arrival (Base.astro sets .t-covered on <html>) must cover from
      the very first paint, hidden attribute or not — otherwise it blinks once. */
   .t-covered #t-curtain[hidden],

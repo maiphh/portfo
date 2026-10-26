@@ -4,8 +4,9 @@
  * - the depth rail marks the section in view;
  * - deep dives are open on wide screens and an accordion on narrow ones;
  * - "Full stack with versions" opens the stack table;
- * - the page's motion module (one authored moment + its flow select effect) loads only
- *   without reduced motion.
+ * - the short cut (OCR, DVP) autoplays muted while half in view, unless reduced motion or a
+ *   data saver is on: then a play button sits on its poster;
+ * - without reduced motion: the Hero A intro (hero-a.ts) and the page's flow select effect.
  */
 const page = document.querySelector<HTMLElement>("[data-case]");
 
@@ -33,13 +34,17 @@ if (page) {
       else a.removeAttribute("aria-current");
     }
   };
+  // The short cut sits between Overview and the rest, and counts as Overview.
+  const cut = document.getElementById("video");
+  if (cut) targets.splice(1, 0, cut);
+  const seen = new Map<Element, boolean>();
   const io = new IntersectionObserver(
     (entries) => {
-      const seen = entries.filter((e) => e.isIntersecting);
-      const last = seen.at(-1);
-      if (last) setCurrent(last.target.id);
+      for (const e of entries) seen.set(e.target, e.isIntersecting);
+      const on = targets.filter((t) => seen.get(t)).at(-1);
+      if (on) setCurrent(on === cut ? "overview" : on.id);
     },
-    { rootMargin: "-30% 0px -60% 0px" },
+    { rootMargin: "-120px 0px -55% 0px" },
   );
   for (const t of targets) io.observe(t);
 
@@ -60,14 +65,29 @@ if (page) {
     });
   if (location.hash === "#stack" && stack) stack.open = true;
 
-  // The promo cut: muted, plays only while in view and only without reduced motion. With
-  // reduced motion it stays on its poster until someone presses play.
+  // The short cut: muted, plays only while half in view. Reduced motion, Save-Data or
+  // prefers-reduced-data: no autoplay; a play button sits on the poster instead.
   const video = page.querySelector<HTMLVideoElement>("[data-case-video]");
+  const playBtn = page.querySelector<HTMLButtonElement>("[data-video-play]");
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   if (video) {
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const lean = conn?.saveData === true || matchMedia("(prefers-reduced-data: reduce)").matches;
+    const auto = () => !still.matches && !lean;
     // A pause we didn't cause (the visitor's) stops the in-view autoplay for good.
     let touched = false;
     let ours = false;
+    const syncBtn = () => {
+      if (playBtn) playBtn.hidden = auto() || !video.paused || video.currentTime > 0;
+    };
+    syncBtn();
+    still.addEventListener("change", syncBtn);
+    playBtn?.addEventListener("click", () => {
+      touched = true;
+      void video.play().catch(() => {});
+      video.focus();
+    });
+    video.addEventListener("play", syncBtn);
     video.addEventListener("pause", () => {
       if (ours) ours = false;
       else touched = true;
@@ -75,9 +95,11 @@ if (page) {
     new IntersectionObserver(
       ([e]) => {
         if (!e) return;
-        if (e.isIntersecting && !still.matches && !touched) {
+        if (e.isIntersecting && auto() && !touched) {
           video.loop = true;
-          void video.play().catch(() => {});
+          void video.play().catch(() => {
+            if (playBtn) playBtn.hidden = false;
+          });
         } else if (!e.isIntersecting && !video.paused) {
           ours = true;
           video.pause();
@@ -89,6 +111,9 @@ if (page) {
 
   const key = page.dataset.motion;
   const load = key ? motions[key] : undefined;
-  if (load && !matchMedia("(prefers-reduced-motion: reduce)").matches)
-    void load().then((m) => m.default(page));
+  if (!still.matches) {
+    const hero = page.querySelector<HTMLElement>("[data-hero-a]");
+    if (hero) void import("./hero-a").then((m) => m.default(hero));
+    if (load) void load().then((m) => m.default(page));
+  }
 }

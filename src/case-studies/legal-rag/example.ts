@@ -1,5 +1,5 @@
 /**
- * The one sample citation the Legal RAG page shows (signature, highlight, flow details).
+ * The one sample citation the Legal RAG page shows (highlight, flow details).
  * Generic on purpose: no real decree number. To show a real one later, change it here only.
  */
 export const EXAMPLE = {

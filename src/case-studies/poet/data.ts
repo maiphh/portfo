@@ -9,8 +9,10 @@ import type { CaseStudyData } from "~/lib/case";
 
 export const poet: CaseStudyData = {
   motion: "poet",
-  signatureCaption:
-    "The money path. Only the signed webhook can write paid; the return page only shows a receipt.",
+  hero_name: "POET",
+  hero_mark: "youth charity",
+  hero_tag: "donations · PayOS",
+  hero_w: 3.14,
   overview: {
     problem:
       "POET, a youth charity, wanted a site that tells the story of its school visits and lets people give online, with a public wall of gifts. Static pages can't be trusted to decide that a payment happened, and a donor's name shouldn't go public without someone checking it.",

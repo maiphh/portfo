@@ -92,10 +92,20 @@ export interface CaseStudyData {
    * `lead`, then a link to the source, then `rest`. */
   credit?: { lead: string; label: string; href: string; rest?: string };
   extra?: CaseExtra;
-  /** Key into scripts/case/motion.ts: the page's one authored moment and its flow select effect. */
+  /** Key into the motion registry in scripts/case/page.ts: the page's flow select effect. */
   motion?: string;
-  /** Caption under the opener's signature object. */
-  signatureCaption: string;
+  /** Hero A (components/case/CaseHeroTitle.astro): the short display name set huge as the h1.
+   * Falls back to the entry title. */
+  hero_name?: string;
+  /** Exact substring of the entry's headline that gets the accent mark. No mark if absent or not
+   * found. */
+  hero_mark?: string;
+  /** Short label riding the scan line in the intro (decorative, aria-hidden). No tag if absent. */
+  hero_tag?: string;
+  /** Em width of the widest word of `hero_name` in Hubot Sans 820 / wdth 118 / −0.055em,
+   * measured in Chrome (the word at 100px in a hidden span, width ÷ 100), so the name fills the
+   * column without JS. Re-measure if the name changes. Fallback: 0.7 × the longest word's letters. */
+  hero_w?: number;
   overview: CaseOverview;
   highlight: { title: string; caption: string };
   video?: CaseVideo;

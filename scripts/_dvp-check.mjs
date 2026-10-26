@@ -3,7 +3,12 @@ import { chromium } from "@playwright/test";
 const crossingsOf = (fid) => {
   const flow = document.querySelector(`[data-flow="${fid}"]`);
   const o = flow.getBoundingClientRect();
-  const rel = (r) => ({ l: r.left - o.left, t: r.top - o.top, r: r.right - o.left, b: r.bottom - o.top });
+  const rel = (r) => ({
+    l: r.left - o.left,
+    t: r.top - o.top,
+    r: r.right - o.left,
+    b: r.bottom - o.top,
+  });
   const nodes = [...flow.querySelectorAll("[data-node]")].map((n) => ({
     id: n.dataset.node,
     r: rel(n.getBoundingClientRect()),
@@ -22,7 +27,11 @@ const crossingsOf = (fid) => {
       }
     }
   }
-  return { bad, dashed: flow.querySelectorAll("path.dashed").length, groups: [...flow.querySelectorAll(".flow-groupbox")].map((g) => g.textContent) };
+  return {
+    bad,
+    dashed: flow.querySelectorAll("path.dashed").length,
+    groups: [...flow.querySelectorAll(".flow-groupbox")].map((g) => g.textContent),
+  };
 };
 
 const browser = await chromium.launch({ channel: "chrome" });
@@ -47,7 +56,9 @@ await page.waitForFunction(
 );
 const wide = await page.evaluate(crossingsOf, "app");
 await page.locator('[data-flow="app"] [data-node="month"]').click();
-const detail = (await page.locator("#app-detail h3").first().innerText()).replace(/\s+/g, " ").trim();
+const detail = (await page.locator("#app-detail h3").first().innerText())
+  .replace(/\s+/g, " ")
+  .trim();
 const paused = await page.locator('[data-flow="app"]').getAttribute("data-auto");
 
 await page.setViewportSize({ width: 390, height: 844 });
@@ -55,5 +66,7 @@ await page.locator('[data-flow="app"]').scrollIntoViewIfNeeded();
 await page.waitForTimeout(500);
 const phone = await page.evaluate(crossingsOf, "app");
 
-console.log(JSON.stringify({ errors, headings, videoDesc, dives, detail, paused, wide, phone }, null, 2));
+console.log(
+  JSON.stringify({ errors, headings, videoDesc, dives, detail, paused, wide, phone }, null, 2),
+);
 await browser.close();

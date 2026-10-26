@@ -3,7 +3,7 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { legalRag } from "./data";
-import { EXAMPLE, examplePrefix } from "./example";
+import { examplePrefix } from "./example";
 import "./rag.css";
 
 interface Props {
@@ -12,61 +12,9 @@ interface Props {
   next?: CollectionEntry<"work"> | undefined;
 }
 const { entry, prev, next } = Astro.props;
-const address = [`Số: ${EXAMPLE.docNo}`, EXAMPLE.article, EXAMPLE.clause];
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={legalRag}>
-  <div slot="signature" class="rag-sig" data-statute>
-    <p class="rag-head" aria-label={`Address carried by the chunk: ${address.join(" › ")}`}>
-      {address.map((a, i) => (
-        <>
-          {i > 0 && <i aria-hidden="true">›</i>}
-          <span data-seg>{a}</span>
-        </>
-      ))}
-    </p>
-    <div class="rag-page" aria-hidden="true">
-      <p class="rag-art">
-        {EXAMPLE.article}. {EXAMPLE.articleTitle}
-      </p>
-      <div class="rag-k">
-        <b>1.</b>
-        <span class="rag-bars">
-          <i></i>
-          <i></i>
-        </span>
-      </div>
-      <div class="rag-k rag-chunk" data-chunk>
-        <code class="rag-prefix">{examplePrefix}</code>
-        <b>2.</b>
-        <span class="rag-bars">
-          <i></i>
-          <i></i>
-          <i></i>
-        </span>
-        <div class="rag-d">
-          <b>a)</b>
-          <span class="rag-bars">
-            <i></i>
-          </span>
-        </div>
-        <div class="rag-d">
-          <b>b)</b>
-          <span class="rag-bars">
-            <i></i>
-          </span>
-        </div>
-      </div>
-      <div class="rag-k">
-        <b>3.</b>
-        <span class="rag-bars">
-          <i></i>
-          <i></i>
-        </span>
-      </div>
-    </div>
-  </div>
-
   <div slot="highlight" class="mk rag-hl">
     <div class="rag-chunkcard">
       <code>{examplePrefix}</code>

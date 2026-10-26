@@ -4,7 +4,7 @@ headline: Answers that keep the citation.
 summary: A legal RAG payroll assistant, built solo at Talentnet. Its Tag Chunker keeps the full Điều › Khoản › Điểm path on every chunk, so answers point to the correct document.
 org: Talentnet
 org_badge: Enterprise · Talentnet
-accent: { line: "#b3a8ff", tint: "#26233d" }
+accent: { line: "#ff8f33", tint: "#33210f" }
 meta: [Legal RAG, Solo, In production]
 period: Sep 2025 – now
 order: 2

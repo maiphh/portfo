@@ -33,36 +33,205 @@
   overflow-wrap: anywhere;
 }
 
-/* ---------- 1. opener ---------- */
-.cs2-open.cs-head {
-  display: grid;
-  gap: var(--s6);
-  padding: var(--s6) 0 var(--s7);
-  align-items: center;
+/* ---------- 1. hero A · title (HERO-A-SPEC.md §3) ----------
+   The name is the hero. The HTML is the end state (filled name, headline with its mark); the
+   intro in scripts/case/hero-a.ts only runs without reduced motion. */
+.cs-hero-a {
+  --hero-stroke: #75756e; /* 3.97:1 on the ground; decorative, shown only during the intro */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(18px, 3vh, 36px);
+  padding-block: clamp(22px, 4vh, 48px) clamp(28px, 5vh, 56px);
+  /* The rail sits at the fold: viewport − nav − the article's top padding − crumbs − rail. */
+  min-height: calc(100svh - var(--nav-h) - var(--s5) - 44px - 50px);
 }
-@media (min-width: 1024px) {
-  .cs2-open.cs-head {
-    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-    gap: 64px;
-    padding: var(--s7) 0 var(--s8);
+.cs-hero-a__meta {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font: 500 12px/1.4 var(--code);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cs-hero-a__meta .org-badge {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.cs-hero-a__meta .cs-hero-a__mi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  overflow: hidden; /* clips the dot of the chip that starts each line */
+  min-width: 0;
+}
+.cs-hero-a__mi > span {
+  position: relative;
+  white-space: nowrap;
+}
+.cs-hero-a__meta .cs-hero-a__mi > span::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0;
+  border-radius: 50%;
+  background: var(--faint);
+}
+@media (max-width: 599px) {
+  .cs-hero-a__meta .org-badge + .cs-hero-a__mi {
+    flex-basis: 100%;
   }
 }
-.cs2-open-text {
-  min-width: 0;
+
+.cs-hero-a__stage {
+  position: relative;
+  margin: auto 0;
+  container-type: inline-size;
 }
-.cs2-open h1 {
-  font-variation-settings: "wdth" 112;
-  font-weight: 760;
-  letter-spacing: -0.03em;
-  max-width: 14ch;
-  overflow-wrap: break-word;
-}
-.cs2-open .lede {
-  max-width: 52ch;
-}
-.cs2-sig {
-  min-width: 0;
+.cs-hero-a__name {
+  position: relative;
+  display: grid;
   margin: 0;
+  max-width: none;
+  /* The widest word fills the column: --w is its measured em width (lib/case.ts hero_w). */
+  font: 820 min(19rem, 100cqw / var(--w) * 0.985) / 0.84 var(--display);
+  font-variation-settings: "wdth" 118;
+  letter-spacing: -0.055em;
+  text-wrap: nowrap;
+  color: var(--ink);
+}
+/* Two columns: the first screen should hold the whole hero, so the name is also capped by the
+   height left after the nav, crumbs, meta, headline row and rail (about 460px). */
+@media (min-width: 900px) {
+  .cs-hero-a__name {
+    font-size: min(
+      19rem,
+      100cqw / var(--w) * 0.985,
+      (100svh - var(--nav-h) - 460px) / var(--lines) / 0.84
+    );
+  }
+}
+.cs-hero-a__name > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+.cs-hero-a__ol {
+  display: block;
+  color: transparent;
+  -webkit-text-stroke: max(1.5px, 0.006em) var(--hero-stroke);
+  opacity: 0;
+  visibility: hidden; /* shown only by the intro */
+}
+/* The wipe needs overflow: hidden; the padding keeps descenders inside it. */
+.cs-hero-a__fill {
+  overflow: hidden;
+  padding: 0.1em 0 0.24em;
+  margin: -0.1em 0 -0.24em;
+}
+.cs-hero-a__fill-in {
+  display: block;
+}
+.cs-hero-a__sweep {
+  position: absolute;
+  inset-block: -6%;
+  left: 0;
+  width: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.cs-hero-a__sweep i {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  background: var(--acc);
+  box-shadow:
+    0 0 18px var(--acc),
+    0 0 60px var(--acc);
+}
+.cs-hero-a__sweep b {
+  position: absolute;
+  top: -4px;
+  left: 12px;
+  transform: translateY(-100%);
+  white-space: nowrap;
+  font: 600 12px/1 var(--code);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+html:not(.js) .cs-hero-a__sweep {
+  display: none;
+}
+/* Hide the stage until the intro starts, with a CSS fallback in case the script stalls. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .cs-hero-a__stage {
+    visibility: hidden;
+    animation: cs-hero-show 0s 2.5s forwards;
+  }
+}
+@keyframes cs-hero-show {
+  to {
+    visibility: visible;
+  }
+}
+
+.cs-hero-a__row {
+  display: grid;
+  gap: 18px 48px;
+  align-items: end;
+}
+@media (min-width: 900px) {
+  .cs-hero-a__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.cs-hero-a__line {
+  font: 680 clamp(1.7rem, 1.1rem + 2.4vw, 3.3rem) / 1.04 var(--display);
+  font-variation-settings: "wdth" 110;
+  letter-spacing: -0.03em;
+  max-width: 16ch;
+  text-wrap: balance;
+  color: var(--ink);
+}
+@media (max-width: 480px) {
+  .cs-hero-a__line {
+    font-size: clamp(1.85rem, 9.2vw, 2.5rem);
+  }
+}
+.hx-mark {
+  position: relative;
+  z-index: 0;
+  background: none;
+  color: inherit;
+  white-space: nowrap;
+}
+.hx-mk {
+  position: absolute;
+  /* Flush with the word: the bar never crosses the gutter when the mark starts or ends a line. */
+  left: 0;
+  right: 0;
+  bottom: 0.02em;
+  height: 0.16em;
+  z-index: -1;
+  border-radius: 2px;
+  background: var(--acc);
+  transform-origin: 0 50%;
+}
+.cs-hero-a__side {
+  min-width: 0;
+}
+.cs-hero-a__side .lede {
+  max-width: 54ch;
+  font-size: 1rem;
+  color: var(--ink-2);
 }
 .cs2 figcaption {
   margin-top: 10px;
@@ -122,8 +291,9 @@
   min-height: 48px;
   min-width: 44px;
   color: var(--muted);
+  gap: 7px;
   font-weight: 550;
-  font-size: 0.95rem;
+  font-size: 15px;
   text-decoration: none;
   border-bottom: 2px solid transparent;
   white-space: nowrap;
@@ -140,6 +310,36 @@
   outline-offset: -2px;
 }
 
+.cs2-rail .wrap {
+  position: relative;
+}
+/* Where the hero's scan line lands (scripts/case/hero-a.ts draws it in). */
+.cs2-rail__ln {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: -1px;
+  height: 1px;
+  background: var(--acc);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+html:not(.js) .cs2-rail__ln {
+  display: none;
+}
+.cs2-rail__n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--rule-2);
+  border-radius: 9px;
+  font: 500 12px/1 var(--code);
+  color: var(--ink-2);
+}
+
 /* ---------- sections ---------- */
 .cs2-sec {
   padding: var(--s8) 0;
@@ -151,6 +351,7 @@
   border-top: 0;
 }
 .cs2-sec > h2,
+.cs2-video-head h2,
 .cs2-how-head h2 {
   font-size: clamp(1.9rem, 1.1rem + 2.4vw, 3.2rem);
   font-variation-settings: "wdth" 108;
@@ -259,11 +460,84 @@
   min-width: 0;
 }
 .cs2-video video {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
   border-radius: 4px;
+  background: transparent; /* the lazy poster below shows through until there are frames */
+}
+.cs2-video-media {
+  position: relative;
+  border-radius: 4px;
   background: var(--sheet);
+}
+.cs2-video-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+/* The short cut sits right after the overview, framed like a screen. */
+.cs2-video-head {
+  margin-bottom: var(--s5);
+}
+.cs2-video-head h2 {
+  margin-bottom: 8px;
+}
+.cs2-video-head p {
+  font: 500 12px/1.4 var(--code);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cs2-video figure {
+  max-width: 1120px;
+}
+.cs2-video-frame {
+  position: relative;
+  padding: clamp(6px, 1vw, 12px);
+  background: #0c0c0c;
+  border: 1px solid var(--rule);
+  border-top: 2px solid var(--acc);
+  border-radius: 6px;
+}
+.cs2-video-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px 0 18px;
+  border: 1px solid var(--acc);
+  border-radius: 24px;
+  background: rgba(12, 12, 12, 0.86);
+  color: var(--ink);
+  font: 600 15px/1 var(--text);
+  cursor: pointer;
+}
+.cs2-video-play[hidden] {
+  display: none;
+}
+.cs2-video-play svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--acc);
+}
+.cs2-video-play:hover {
+  background: #000;
+}
+.cs2-video-play:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.cs2-video figcaption {
+  font-size: 14px;
 }
 
 /* 5. how it works */

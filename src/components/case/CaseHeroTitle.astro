@@ -1,0 +1,106 @@
+---
+/**
+ * Hero A · Title (portfo-design case-studies/prototype-heroes/HERO-A-SPEC.md §2): the project
+ * name, set huge, is the hero. Without JS or with reduced motion the HTML is the end state (the
+ * filled name, the headline with its accent mark). scripts/case/hero-a.ts plays the intro: the
+ * outline letters rise, an accent scan line sweeps once and leaves the filled name behind, the
+ * mark draws, and the line "lands" as the rail's hairline (CaseStudy.astro).
+ */
+import type { CollectionEntry } from "astro:content";
+import Icon from "~/components/Icon.astro";
+import OrgBadge from "~/components/OrgBadge.astro";
+import type { CaseStudyData } from "~/lib/case";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  data: CaseStudyData;
+}
+const { entry, data } = Astro.props;
+const d = entry.data;
+const words = (data.hero_name ?? d.title).split(" ");
+// Fallback width when unmeasured: about 0.7em per letter of the longest word.
+const w = data.hero_w ?? Math.max(...words.map((x) => x.length)) * 0.7;
+const mark = data.hero_mark;
+const at = mark ? d.headline.indexOf(mark) : -1;
+const pre = mark && at >= 0 ? d.headline.slice(0, at) : d.headline;
+const post = mark && at >= 0 ? d.headline.slice(at + mark.length) : null;
+---
+
+<header class="cs-hero-a" data-hero-a>
+  <p class="cs-hero-a__meta">
+    {d.org_badge && <OrgBadge label={d.org_badge} />}
+    <span class="cs-hero-a__mi">
+      {d.meta.map((m) => (
+        <span>{m}</span>
+      ))}
+      {d.period && <span>{d.period}</span>}
+    </span>
+  </p>
+
+  <div class="cs-hero-a__stage" style={`--w:${w};--lines:${words.length}`}>
+    <h1 id="cs-h" class="cs-hero-a__name">
+      <span class="cs-hero-a__ol" aria-hidden="true">
+        {words.map((x, i) => (
+          <>
+            {i > 0 && <br />}
+            {x}
+          </>
+        ))}
+      </span>
+      <span class="cs-hero-a__fill">
+        <span class="cs-hero-a__fill-in">
+          {words.map((x, i) => (
+            <>
+              {i > 0 && " "}
+              {i > 0 && <br />}
+              {x}
+            </>
+          ))}
+        </span>
+      </span>
+    </h1>
+    {data.hero_tag && (
+      <span class="cs-hero-a__sweep" aria-hidden="true">
+        <i />
+        <b>{data.hero_tag}</b>
+      </span>
+    )}
+  </div>
+
+  <div class="cs-hero-a__row">
+    <p class="cs-hero-a__line">
+      {pre}
+      {post !== null && (
+        <mark class="hx-mark">
+          {mark}
+          <span class="hx-mk" aria-hidden="true" />
+        </mark>
+      )}
+      {post}
+    </p>
+    <div class="cs-hero-a__side">
+      <p class="lede">{d.summary}</p>
+      {data.credit && (
+        <p class="cs2-credit" data-credit>
+          {data.credit.lead}{" "}
+          <a class="link" href={data.credit.href} rel="noopener">
+            {data.credit.label}
+          </a>
+          {data.credit.rest}
+        </p>
+      )}
+      {d.links.length > 0 && (
+        <ul class="cs2-links" aria-label="Links">
+          {d.links.map((l) => (
+            <li>
+              <a class="link" href={l.href} rel="noopener">
+                {l.label}
+                <Icon name="out" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</header>

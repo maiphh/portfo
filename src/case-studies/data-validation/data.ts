@@ -8,8 +8,10 @@ import type { CaseStudyData } from "~/lib/case";
 
 export const dvp: CaseStudyData = {
   motion: "dvp",
-  signatureCaption:
-    "Illustration: a made-up rule, its generated function and made-up rows. The flagged cell is where the sheet disagrees with the rule.",
+  hero_name: "DVP",
+  hero_mark: "turned into code",
+  hero_tag: "client rule → code",
+  hero_w: 2.42,
   overview: {
     problem:
       "In HR outsourcing payroll, every employer client has its own calculation and validation rules and its own Excel or PDF layouts for a pay month. The manual path: someone reads the client's rules, rebuilds or checks the month's sheets by hand, and catches mismatches after the fact.",

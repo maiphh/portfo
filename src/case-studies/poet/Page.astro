@@ -13,32 +13,10 @@ interface Props {
 }
 const { entry, prev, next } = Astro.props;
 
-const path = [
-  { t: "Ủng hộ form", s: "pick a gift, leave a name" },
-  { t: "Worker", s: "creates the PayOS link" },
-  { t: "PayOS", s: "checkout" },
-  { t: "Signed webhook", s: "signature checked", paid: true },
-  { t: "D1", s: "status: paid" },
-  { t: "Admin publishes", s: "then the wall shows it" },
-];
 const img = (name: string) => `/work/poet/${name}.webp`;
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={poet}>
-  <div slot="signature" class="pt-sig" data-money>
-    <ol class="pt-path">
-      {path.map((p) => (
-        <li class:list={{ paid: p.paid }} data-step data-paid={p.paid ? "" : undefined}>
-          <b>{p.t}</b>
-          <span>{p.s}</span>
-        </li>
-      ))}
-    </ol>
-    <p class="pt-dead">
-      <span aria-hidden="true">↳</span> return URL: shows a receipt, never writes paid
-    </p>
-  </div>
-
   <div slot="highlight" class="shots two pt-hl">
     <img
       class="shot"

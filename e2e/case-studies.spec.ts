@@ -1,9 +1,9 @@
 /**
  * Every page on the shared case-study template (e2e/case-study.spec.ts goes deeper on the
  * first one, Document OCR): overflow, flow label clamp and min font at the audit widths, the
- * flow's details panel and mobile sheet, reduced motion, and the page's authored moment. Then
- * the public projects' links, credit and screenshots, the order of the case studies, and the
- * retired URLs.
+ * flow's details panel and mobile sheet. Then Hero A on all six pages (name, mark, reduced
+ * motion, no-JS, the intro), the public projects' links, credit and screenshots, the order of
+ * the case studies, and the retired URLs.
  */
 import { expect, test } from "@playwright/test";
 import { overflowReport } from "./overflow";
@@ -20,9 +20,6 @@ interface CasePage {
   dives: number;
   /** The approved promo cut renders on this page. */
   video?: boolean;
-  /** The signature's root and what lights up in it when the moment plays. */
-  sig: string;
-  lit: string;
 }
 
 export const PAGES: CasePage[] = [
@@ -35,8 +32,6 @@ export const PAGES: CasePage[] = [
     groups: ["Ingest", "Question"],
     dotted: 1,
     dives: 3,
-    sig: "[data-statute]",
-    lit: "[data-chunk]",
   },
   {
     slug: "data-validation",
@@ -48,8 +43,6 @@ export const PAGES: CasePage[] = [
     groups: ["Init / update-rules", "Process"],
     dotted: 2,
     dives: 3,
-    sig: "[data-compiler]",
-    lit: "tr.flag",
   },
   {
     slug: "openportfo",
@@ -60,8 +53,6 @@ export const PAGES: CasePage[] = [
     groups: ["Daily clock"],
     dotted: 1,
     dives: 3,
-    sig: "[data-book]",
-    lit: "[data-refresh]",
   },
   {
     slug: "ecom",
@@ -72,8 +63,6 @@ export const PAGES: CasePage[] = [
     groups: ["src/shop engine"],
     dotted: 0,
     dives: 3,
-    sig: "[data-engine]",
-    lit: "[data-core]",
   },
   {
     slug: "poet",
@@ -84,8 +73,6 @@ export const PAGES: CasePage[] = [
     groups: [],
     dotted: 0,
     dives: 2,
-    sig: "[data-money]",
-    lit: "[data-paid]",
   },
 ];
 
@@ -113,7 +100,7 @@ for (const p of PAGES) {
       await expect(page.locator(".cs2-crumbs")).toContainText(p.title);
       await expect(page.locator("article.cs2[data-case]")).toHaveCount(1);
       await expect(page.locator(".cs-sheet")).toHaveCount(0);
-      await expect(page.locator(".cs2-open .org-badge")).toHaveCount(p.badge ? 1 : 0);
+      await expect(page.locator(".cs-hero-a__meta .org-badge")).toHaveCount(p.badge ? 1 : 0);
       await expect(page.locator("[data-dive]")).toHaveCount(p.dives);
       await expect(page.locator("main video")).toHaveCount(p.video ? 1 : 0);
     });
@@ -145,24 +132,118 @@ for (const p of PAGES) {
         await expect(page.locator("#cs-detail")).toHaveAttribute("data-state", "empty");
       }
     });
+  });
+}
 
-    test("reduced motion: the signature is static and complete", async ({ page }) => {
+/** Hero A (HERO-A-SPEC.md): the name is the h1, the headline's mark, the meta strip. */
+const HEROES = [
+  { slug: "document-ocr", name: "Document OCR", mark: "clean data out" },
+  { slug: "legal-rag", name: "Legal RAG", mark: "the citation" },
+  { slug: "data-validation", name: "DVP", mark: "turned into code" },
+  { slug: "openportfo", name: "OpenPortfo", mark: "side by side" },
+  { slug: "ecom", name: "Ecom", mark: "many storefronts" },
+  { slug: "poet", name: "POET", mark: "youth charity" },
+];
+
+/** What the hero looks like at rest: the HTML end state. */
+const heroState = () => {
+  const q = (s: string) => document.querySelector<HTMLElement>(s);
+  const css = (s: string) => {
+    const el = q(s);
+    return el ? getComputedStyle(el) : null;
+  };
+  return {
+    stage: css(".cs-hero-a__stage")?.visibility,
+    fill: css(".cs-hero-a__fill")?.transform,
+    fillIn: css(".cs-hero-a__fill-in")?.transform,
+    outline: css(".cs-hero-a__ol")?.visibility,
+    sweep:
+      css(".cs-hero-a__sweep")?.display === "none" || css(".cs-hero-a__sweep")?.opacity === "0",
+    mark: css(".hx-mk")?.transform,
+    line: css(".cs-hero-a__line")?.opacity,
+    noSig: !q(".cs2-sig, [data-sig], .cs2-open"),
+  };
+};
+const AT_REST = {
+  stage: "visible",
+  fill: "none",
+  fillIn: "none",
+  outline: "hidden",
+  sweep: true,
+  mark: "none",
+  line: "1",
+  noSig: true,
+};
+
+test.describe("Hero A", () => {
+  for (const h of HEROES) {
+    const url = `/work/${h.slug}/`;
+    test(`${h.slug}: one h1 named "${h.name}", the mark, the rail count`, async ({ page }) => {
+      await page.goto(url);
+      const h1 = page.locator("h1");
+      await expect(h1).toHaveCount(1);
+      await expect(
+        page.getByRole("heading", { level: 1, name: h.name, exact: true }),
+      ).toBeVisible();
+      await expect(page.locator(".cs-hero-a__ol")).toHaveAttribute("aria-hidden", "true");
+      await expect(page.locator(".cs-hero-a__line mark.hx-mark")).toHaveText(h.mark);
+      const n = await page.locator("[data-dive]").count();
+      await expect(page.locator('[data-rail] a[href="#deep-dives"]')).toHaveText(
+        `Highlights${String(n).padStart(2, "0")} (${n})`,
+      );
+      await expect(page.locator(".cs-hero-a__meta")).toHaveCSS("font-size", "12px");
+    });
+
+    test(`${h.slug}: reduced motion shows the end state`, async ({ page }) => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(url);
       await page.waitForTimeout(400);
-      await expect(page.locator(p.sig)).not.toHaveClass(/is-anim/);
-      await expect(page.locator(`${p.sig} ${p.lit}`)).toBeVisible();
+      expect(await page.evaluate(heroState)).toEqual(AT_REST);
+      await expect(page.locator(".cs-hero-a__ol .char, .cs-hero-a__ol div")).toHaveCount(0);
     });
 
-    test("with motion, the authored moment plays to its final state", async ({ page }) => {
-      await page.emulateMedia({ reducedMotion: "no-preference" });
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await page.goto(url);
-      await expect(page.locator(p.sig)).toHaveClass(/is-anim/);
-      await expect(page.locator(`${p.sig} ${p.lit}`)).toHaveClass(/lit/, { timeout: 6000 });
+    test(`${h.slug}: the hero at rest fits from 320px to 1440px`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(url);
+        await page.evaluate(() => document.fonts.ready);
+        expect(await page.evaluate(overflowReport, "[data-hero-a]"), `${width}px`).toEqual([]);
+      }
     });
+  }
+
+  test("no JS: the name, headline and mark are complete; no sweep, no hairline", async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const page = await ctx.newPage();
+    for (const h of HEROES) {
+      await page.goto(`/work/${h.slug}/`);
+      expect(await page.evaluate(heroState), h.slug).toEqual(AT_REST);
+      await expect(page.locator(".cs-hero-a__sweep")).toBeHidden();
+      await expect(page.locator(".cs2-rail__ln")).toBeHidden();
+      // The page-transition curtain is SSR-covered on case pages; without JS it must not show.
+      await expect(page.locator("#t-curtain")).toBeHidden();
+      await expect(page.locator("#t-readout")).toBeHidden();
+    }
+    await ctx.close();
   });
-}
+
+  test("with motion, the intro plays once and lands as the rail hairline", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/work/legal-rag/");
+    // Mid-intro the outline is split into letters and shown.
+    await expect(page.locator(".cs-hero-a__ol")).toHaveCSS("visibility", "visible");
+    await expect.poll(() => page.locator(".cs-hero-a__ol div").count()).toBeGreaterThan(0);
+    // Then: the filled name at rest, the hairline drawn under the rail.
+    await expect
+      .poll(() => page.evaluate(heroState), { timeout: 8000 })
+      .toMatchObject({ fill: "none", fillIn: "none", outline: "hidden", sweep: true, line: "1" });
+    await expect(page.locator(".cs2-rail__ln")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+  });
+});
 
 /** Order of the case studies (home order, without Craftland, which has no page). */
 const ORDER = ["document-ocr", "legal-rag", "data-validation", "openportfo", "ecom", "poet"];
@@ -218,7 +299,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
       credit.locator('a[href="https://github.com/Open-Dev-Society/OpenStock"]'),
     ).toBeVisible();
     // A personal project (Phu, 2026-10-22), not presented as coursework.
-    await expect(page.locator(".cs2-open .meta-line")).toContainText("Personal project");
+    await expect(page.locator(".cs-hero-a__meta")).toContainText("Personal project");
     expect(await page.locator("main").innerText()).not.toMatch(/assessment|RMIT|coursework/i);
   });
 
@@ -239,9 +320,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
     const srcs = await page
       .locator("main img")
       .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
-    expect(srcs).toEqual(
-      ["form", "letter", "wall"].map((n) => `/work/poet/${n}.webp`),
-    );
+    expect(srcs).toEqual(["form", "letter", "wall"].map((n) => `/work/poet/${n}.webp`));
   });
 
   for (const slug of ["openportfo", "poet"])
@@ -275,7 +354,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
 test.describe("DVP promo cut (approved 2026-10-22)", () => {
   const URL = "/work/data-validation/";
 
-  test("muted, no preload, poster, no scene description; plays in view", async ({ page }) => {
+  test("muted, no preload, lazy poster, no scene description; plays in view", async ({ page }) => {
     await page.goto(URL);
     const v = page.locator("main video[data-case-video]");
     await expect(v).toHaveCount(1);
@@ -292,12 +371,18 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
       muted: true,
       inline: true,
       preload: "none",
-      poster: "/work/data-validation/motion-poster.jpg",
+      poster: null,
       autoplay: false,
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
+    await expect(page.locator(".cs2-video-poster")).toHaveAttribute("loading", "lazy");
+    await expect(page.locator(".cs2-video-poster")).toHaveAttribute(
+      "src",
+      "/work/data-validation/motion-poster.jpg",
+    );
     await expect(page.locator(".cs2-video figcaption")).toContainText(/not results/);
+    await expect(page.locator(".cs2-video-head")).toContainText(/demo values/i);
     const res = await page.request.get("/work/data-validation/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(300_000);
@@ -305,7 +390,7 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
     await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   });
 
-  test("reduced motion: stays on its poster", async ({ page }) => {
+  test("reduced motion: stays on its poster; the play button plays it", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(URL);
     const v = page.locator("main video[data-case-video]");
@@ -315,5 +400,40 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
       true,
       0,
     ]);
+    const play = page.locator("[data-video-play]");
+    await expect(play).toBeVisible();
+    expect((await play.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await play.click();
+    await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+    await expect(v).toBeFocused();
+    await expect(play).toBeHidden();
+  });
+
+  test("data saver: no autoplay, the play button instead", async ({ page }) => {
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, "connection", { value: { saveData: true } }),
+    );
+    await page.goto(URL);
+    const v = page.locator("main video[data-case-video]");
+    await v.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
+    expect(await v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
+    await expect(page.locator("[data-video-play]")).toBeVisible();
+  });
+
+  test("the cut sits right after the overview and counts as Overview in the rail", async ({
+    page,
+  }) => {
+    await page.goto(URL);
+    expect(await page.evaluate(() => document.querySelector("#overview + section")?.id ?? "")).toBe(
+      "video",
+    );
+    await page
+      .locator("#video h2")
+      .evaluate((h) => window.scrollBy(0, h.getBoundingClientRect().top - 140));
+    await expect(page.locator('[data-rail] a[href="#overview"]')).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
   });
 });

@@ -1,107 +1,4 @@
-/* Legal RAG: the annotated statute (signature), the chunk card (highlight), dive artifacts.
-   Static state = the final state; scripts/case/rag.ts animates only without reduced motion. */
-.rag-sig {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-  background: var(--sheet);
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-}
-.rag-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  font: 500 13px/1.4 var(--code);
-  color: var(--acc);
-  max-width: none !important;
-}
-.rag-head i {
-  font-style: normal;
-  color: var(--muted);
-}
-.rag-head span {
-  padding: 4px 8px;
-  border: 1px solid var(--acc);
-  background: var(--acc-tint);
-  border-radius: 3px;
-  transition: opacity 0.3s;
-}
-.rag-page {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-  background: var(--sheet-2);
-  border-radius: 3px;
-}
-.rag-art {
-  font-weight: 650;
-  font-size: 17px;
-  color: var(--ink);
-}
-.rag-k,
-.rag-d {
-  display: grid;
-  grid-template-columns: 1.8em minmax(0, 1fr);
-  gap: 6px 8px;
-  align-items: start;
-  color: var(--ink-2);
-}
-.rag-k b,
-.rag-d b {
-  font: 500 14px var(--code);
-}
-.rag-d {
-  grid-column: 2;
-}
-.rag-bars {
-  display: grid;
-  gap: 7px;
-  padding-top: 6px;
-}
-.rag-bars i {
-  display: block;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--rule-2);
-}
-.rag-bars i:last-child:not(:first-child) {
-  width: 70%;
-}
-.rag-chunk {
-  position: relative;
-  padding: 12px;
-  margin: 0 -6px;
-  border: 1px solid var(--acc);
-  background: var(--acc-tint);
-  border-radius: 3px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  transform: translateX(6px);
-  transition:
-    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s;
-}
-.rag-prefix {
-  grid-column: 1 / -1;
-  color: var(--acc) !important;
-  font-size: 12.5px !important;
-  overflow-wrap: anywhere;
-  transition: opacity 0.3s;
-}
-/* Motion running: the address assembles and the chunk peels off as the opener scrolls. */
-.rag-sig.is-anim [data-seg]:not(.lit) {
-  opacity: 0.18;
-}
-.rag-sig.is-anim .rag-chunk:not(.lit) {
-  transform: none;
-  box-shadow: none;
-  border-color: transparent;
-  background: transparent;
-}
-.rag-sig.is-anim .rag-chunk:not(.lit) .rag-prefix {
-  opacity: 0;
-}
+/* Legal RAG: the chunk card (highlight) and the deep-dive artifacts. */
 
 /* highlight */
 .rag-chunkcard {
@@ -112,8 +9,9 @@
 .rag-chunkcard code {
   display: block;
   padding: 14px 18px;
-  border-bottom: 1px solid var(--acc);
-  color: var(--acc) !important;
+  /* The citation address stays violet (citations only), whatever the page accent. */
+  border-bottom: 1px solid var(--violet);
+  color: var(--violet) !important;
   font-size: clamp(13px, 1.6vw, 17px) !important;
   overflow-wrap: anywhere;
 }
