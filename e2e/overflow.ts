@@ -17,13 +17,14 @@ export function overflowReport(selector: string) {
     !el.parentElement?.closest("[data-scroll-x]") &&
     // A running intro (Hero A) clips its own layers on purpose; it is audited at rest.
     !el.closest("[data-anim]") &&
-    // A Highlights plate's stage places its labels over the drawing; highlights.spec audits it.
-    !el.closest(".plate .stage") &&
+    // A Highlights drawing's artwork (aria-hidden SVG, overflow visible); highlights.spec audits
+    // its markers, and the page scrollWidth check still catches any sideways scroll.
+    !el.closest(".fig svg") &&
     getComputedStyle(el).visibility !== "hidden";
   const name = (el: Element) =>
     `${el.tagName.toLowerCase()}${el.getAttribute("class") ? "." + el.getAttribute("class")?.replace(/\s+/g, ".") : ""} "${(el.textContent ?? "").trim().slice(0, 32)}"`;
 
-  // Deliberate bleeds (phone plates reach the screen edge): the overhang they add to their
+  // Deliberate bleeds (e.g. phone artifacts reach the screen edge): the overhang they add to their
   // ancestors is allowed while they stay inside the viewport.
   const bleeds = [...sec.querySelectorAll("[data-bleed]")].filter(
     (b) => b.getClientRects().length > 0,
