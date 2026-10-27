@@ -545,7 +545,13 @@ export const SCENES: Record<string, PlateScene> = {
       ph: {
         yaw: 58,
         el: 26,
-        sn: { schema: [0, -5], prompts: [0, -2], rules: [0, 1], workbook: [0, 4] },
+        sn: {
+          schema: [0, -10],
+          prompts: [0, -4],
+          rules: [0, 2],
+          workbook: [0, 8],
+          "run keeps its template": [0, 6],
+        },
       },
     },
   },

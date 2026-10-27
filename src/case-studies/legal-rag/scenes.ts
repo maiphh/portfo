@@ -537,7 +537,7 @@ export const SCENES: Record<string, PlateScene> = {
         yaw: 0,
         el: 90,
         ground: "grid",
-        sn: { "merged forward": [0, -4], "“Khoản 1” < 50 chars": [0, 4] },
+        sn: { "merged forward": [-6, -24], "“Khoản 1” < 50 chars": [0, 4] },
       },
     },
   },
@@ -545,7 +545,7 @@ export const SCENES: Record<string, PlateScene> = {
     draw: fallback,
     asp: ASP,
     cam: {
-      dk: { yaw: 12, el: 20, flow: "scr", sn: { dedupe: [24, -12] } },
+      dk: { yaw: 12, el: 20, flow: "scr", sn: { dedupe: [30, -26] } },
       ph: { yaw: 16, el: 28 },
     },
   },
@@ -553,8 +553,19 @@ export const SCENES: Record<string, PlateScene> = {
     draw: refuse,
     asp: ASP,
     cam: {
-      dk: { yaw: 58, el: 40, flow: "up", ground: "none", sn: { "nothing left": [-56, 16] } },
-      ph: { yaw: 56, el: 44, ground: "none" },
+      dk: {
+        yaw: 58,
+        el: 40,
+        flow: "up",
+        ground: "none",
+        sn: { "nothing left": [-74, 16], model: [36, 0] },
+      },
+      ph: {
+        yaw: 56,
+        el: 44,
+        ground: "none",
+        sn: { top_k: [0, -5], "nothing left": [0, 10], model: [0, 6] },
+      },
     },
   },
 };

@@ -498,15 +498,24 @@ export const SCENES: Record<string, PlateScene> = {
     draw: payment,
     asp: ASP,
     cam: {
-      dk: { yaw: 62, el: 30, flow: "up", sn: { "PayOS charges": [-34, -22] } },
-      ph: { yaw: 62, el: 32 },
+      dk: {
+        yaw: 62,
+        el: 30,
+        flow: "up",
+        sn: { "PayOS charges": [-50, -34], rejected: [-12, -8] },
+      },
+      ph: {
+        yaw: 62,
+        el: 32,
+        sn: { "notice · order cancelled": [0, -14], "amount + order match": [0, 6] },
+      },
     },
   },
   admin: {
     draw: admin,
     asp: ASP,
     cam: {
-      dk: { yaw: 18, el: 14, flow: "scr", sn: { "no second checkout": [-60, 34] } },
+      dk: { yaw: 18, el: 14, flow: "scr", sn: { "no second checkout": [-30, 46] } },
       ph: { yaw: 20, el: 24 },
     },
   },

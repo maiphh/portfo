@@ -22,7 +22,7 @@ const ph = scene.draw(true, scene.cam.ph);
 const N = dk.n;
 const end = plate.read[mode]?.at(-1) ?? "";
 const stages = [
-  { cls: "dk", r: dk.render(scene.asp[0], 0.05, 760) },
+  { cls: "dk", r: dk.render(scene.asp[0], 0.05, 600) },
   { cls: "ph", r: ph.render(scene.asp[1], 0.05, 300) },
 ];
 const modes = plate.modes ?? [["d", "", ""] as [string, string, string]];

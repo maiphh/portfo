@@ -649,7 +649,16 @@ export const SCENES: Record<string, PlateScene> = {
     asp: ASP,
     cam: {
       dk: { yaw: 24, el: 40, flow: "scr" },
-      ph: { yaw: 24, el: 40, sn: { "structure changed": [0, -5] } },
+      ph: {
+        yaw: 24,
+        el: 40,
+        // phone: lift "structure changed" clear of the gate's own label
+        sn: {
+          "this month’s file": [-50, -4],
+          "structure changed": [0, -36],
+          "map the file": [-8, 5],
+        },
+      },
     },
   },
   translate: {
@@ -662,7 +671,18 @@ export const SCENES: Record<string, PlateScene> = {
         yaw: 66,
         el: 50,
         ground: "none",
-        sn: { checked: [0, 8], translator: [0, -12], "other rules translate": [0, 5] },
+        // phone: a longer column so each part keeps its own label row
+        A: 1.5,
+        lab: { stub: "w", "function kept": "w" },
+        sn: {
+          "one rule": [0, 22],
+          translator: [0, 30],
+          "5 tries · 180 s": [0, 45],
+          "one function": [0, 48],
+          checked: [0, 58],
+          "other rules translate": [0, 43],
+          "retry with code + error": [0, -25],
+        },
       },
     },
   },
@@ -670,15 +690,19 @@ export const SCENES: Record<string, PlateScene> = {
     draw: sandbox,
     asp: ASP,
     cam: {
-      dk: { yaw: 45, cutaway: 54 },
+      dk: { yaw: 45, cutaway: 54, sn: { open: [22, 2], setattr: [-6, 6] } },
       ph: {
         yaw: 45,
         cutaway: 40,
+        // phone: the callers and the rule go left, so "helper" has the right side to itself
+        lab: { "three callers": "w", "the rule": "w" },
         sn: {
+          "three callers": [0, -40],
           "the rule": [0, -10],
           "one sandbox": [0, -10],
-          "fixed modules": [0, 4],
-          setattr: [0, 5],
+          helper: [0, -14],
+          "fixed modules": [0, 18],
+          setattr: [0, 24],
         },
       },
     },

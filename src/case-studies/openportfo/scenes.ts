@@ -469,7 +469,17 @@ export const SCENES: Record<string, PlateScene> = {
   agent: {
     draw: agent,
     asp: ASP,
-    cam: { dk: { yaw: 50, el: 60, ground: "none" }, ph: { yaw: 50, el: 60, ground: "none" } },
+    cam: {
+      dk: { yaw: 50, el: 60, ground: "none" },
+      // phone: the failure tag goes under its tile, clear of the server and token labels
+      ph: {
+        yaw: 50,
+        el: 60,
+        ground: "none",
+        lab: { "tool failed": "s" },
+        sn: { "tool failed": [-34, 86] },
+      },
+    },
   },
   news: {
     draw: news,

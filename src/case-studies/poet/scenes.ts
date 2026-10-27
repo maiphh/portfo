@@ -323,8 +323,16 @@ export const SCENES: Record<string, PlateScene> = {
     draw: wall,
     asp: ASP,
     cam: {
-      dk: { yaw: 4, el: 10, flow: "x", ground: "outline", upright: true },
-      ph: { yaw: 6, el: 30, ground: "outline" },
+      // the anonymous-name label rides above the publish gate and the wall's own label
+      dk: {
+        yaw: 4,
+        el: 10,
+        flow: "x",
+        ground: "outline",
+        upright: true,
+        sn: { "Một nhà hảo tâm": [0, -28], "gift paid": [-12, 0] },
+      },
+      ph: { yaw: 6, el: 30, ground: "outline", sn: { "Một nhà hảo tâm": [0, -44] } },
     },
   },
 };
