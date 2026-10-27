@@ -182,8 +182,7 @@ export const poet: CaseStudyData = {
         "A gift appears there after it is paid and an admin publishes it.",
       ],
       shows: "A real donation can be seen on the frontend.",
-      caption:
-        "An illustration of the donor wall with two sample gifts: a donor’s name shows as “Một nhà hảo tâm” when “Ẩn danh” is ticked. No real donor data, no children.",
+      caption: "A drawing of the gift wall, in place of the screenshot. No donor data.",
     },
   ],
   limits: {
