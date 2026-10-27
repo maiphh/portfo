@@ -27,6 +27,21 @@ function audit() {
     const fs = parseFloat(getComputedStyle(el).fontSize);
     if (fs < 12) out.push(`${el.className} "${el.textContent.trim().slice(0, 24)}" ${fs}px`);
   }
+  // Shown labels stay on the plate and on screen.
+  for (const el of sec.querySelectorAll<HTMLElement>(".plate .lb")) {
+    if (!shown(el)) continue;
+    const plate = el.closest(".plate");
+    if (!plate) continue;
+    const r = el.getBoundingClientRect();
+    const P = plate.getBoundingClientRect();
+    if (r.left < Math.max(P.left, 0) - 1 || r.right > Math.min(P.right, vw) + 1)
+      out.push(
+        `lb "${el.textContent?.trim()}" spans ${r.left | 0}–${r.right | 0}, plate ${P.left | 0}–${P.right | 0}`,
+      );
+  }
+  // Scene labels are the HTML chips (HIGHLIGHTS-SPEC §5: .lb, b, i). Words printed on the drawing
+  // itself (svg text.prn, e.g. the ecom engine tiles) are artwork in an aria-hidden SVG and scale
+  // with it, as in the prototype.
   for (const el of sec.querySelectorAll<HTMLElement>("button.lb")) {
     if (!shown(el)) continue;
     const r = el.getBoundingClientRect();
@@ -44,7 +59,7 @@ function audit() {
 }
 
 for (const slug of SLUGS)
-  for (const width of [320, 390, 768, 1440])
+  for (const width of [320, 360, 390, 430, 768, 1024, 1180, 1440])
     test(`${slug} highlights: sizes and no sideways scroll at ${width}px`, async ({ page }) => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.setViewportSize({ width, height: 900 });

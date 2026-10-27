@@ -688,14 +688,15 @@ html:not(.js) .cs2-video video[data-case-video] {
   color: var(--acc);
   font-weight: 650;
 }
-@media (min-width: 900px) {
+/* prototype site.css .dv: side by side from 1000px, the figure taking 8 of 12 columns */
+@media (min-width: 1000px) {
   .cs2-dv {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: 48px;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: 56px;
     align-items: center;
   }
   .cs2-dv.flip {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
   }
   .cs2-dv.flip .cs2-dv-text {
     order: 2;

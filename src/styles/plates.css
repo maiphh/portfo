@@ -134,6 +134,12 @@ html:not(.js) .js-only {
   text-transform: none;
   color: var(--accent-hi);
   font-size: 13px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cap-bot [data-play] {
+  flex: none;
+  white-space: nowrap;
 }
 .stage {
   position: relative;
