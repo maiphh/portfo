@@ -30,7 +30,7 @@ for (const [url, titles] of Object.entries(want)) {
   await page.goto(`http://localhost:4321${url}`, { waitUntil: "domcontentloaded" });
   const h = await page.locator("#deep-dives h2").innerText();
   const rail = await page.locator('[data-rail] a[href="#deep-dives"]').innerText();
-  const got = await page.locator("[data-dive] summary h3").allTextContents();
+  const got = await page.locator("#deep-dives h3").allTextContents();
   const text = await page.locator("main").innerText();
   out[url] = {
     h,
