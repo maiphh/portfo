@@ -657,6 +657,8 @@ export const SCENES: Record<string, PlateScene> = {
           "this month’s file": [-50, -4],
           "structure changed": [0, -36],
           "map the file": [-8, 5],
+          // keep clear of the left frame edge at 320px (CI fonts run a few px wider)
+          "saved structure": [12, 0],
         },
       },
     },
