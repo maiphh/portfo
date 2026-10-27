@@ -9,6 +9,14 @@ interface Props {
   credit?: Credit | undefined;
 }
 const { base = "", credit } = Astro.props;
+// the credit text around its linked word, or null when there is no link to place
+const at = credit?.link ? credit.text.indexOf(credit.link.label) : -1;
+const cr =
+  credit?.link && at >= 0
+    ? [credit.text.slice(0, at), credit.text.slice(at + credit.link.label.length)]
+    : credit?.link
+      ? [`${credit.text} · `, ""]
+      : null;
 ---
 
 <footer>
@@ -32,14 +40,16 @@ const { base = "", credit } = Astro.props;
     </div>
     {credit && (
       <p class="foot-credit">
-        {credit.text}
-        {credit.link && (
+        {cr ? (
           <>
-            {" · "}
-            <a href={credit.link.href} rel="noopener">
-              {credit.link.label}
+            {cr[0]}
+            <a href={credit.link?.href} rel="noopener">
+              {credit.link?.label}
             </a>
+            {cr[1]}
           </>
+        ) : (
+          credit.text
         )}
       </p>
     )}

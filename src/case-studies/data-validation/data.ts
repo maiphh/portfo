@@ -376,7 +376,7 @@ export const dvp: CaseStudyData = {
           mismatch: [
             "the month’s files",
             "compared with the saved structure",
-            "a column no longer matches",
+            "the structure no longer matches",
             "map the file first · the month waits",
           ],
         },

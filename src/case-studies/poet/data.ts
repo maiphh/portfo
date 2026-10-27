@@ -201,7 +201,7 @@ export const poet: CaseStudyData = {
       ],
       shows: "A real donation can be seen on the frontend.",
       caption:
-        "The gift wall on the live site, captured on 21 Oct 2026 with two sample gifts. No real donors.",
+        "An illustration of the donor wall with two sample gifts: a donor’s name shows as “Một nhà hảo tâm” when “Ẩn danh” is ticked. No real donor data, no children.",
     },
   ],
   limits: {
