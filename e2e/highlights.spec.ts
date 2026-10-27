@@ -1,9 +1,10 @@
 /**
  * The isoglow highlights plates on every case study: no sideways scroll, readable labels and
- * reachable targets, keyboard notes, the no-JS and reduced-motion end states, and no third-party
+ * reachable targets, labels that neither collide nor leave their plate, keyboard notes, the no-JS and reduced-motion end states, and no third-party
  * scripts or styles.
  */
 import { expect, test } from "@playwright/test";
+import { labelLayout } from "./plate-labels";
 
 const SLUGS = ["document-ocr", "legal-rag", "data-validation", "openportfo", "ecom", "poet"];
 
@@ -70,6 +71,27 @@ for (const slug of SLUGS)
       });
       await page.locator("#deep-dives").scrollIntoViewIfNeeded();
       expect(await page.evaluate(audit)).toEqual([]);
+    });
+
+/**
+ * Label layout (review 2026-10-27): at phone and narrow-desktop widths, in every mode and at every
+ * story step, no two shown labels overlap by more than 3px and every label's text sits at least
+ * 4px inside its plate's frame. A failure names the plate, mode, step and labels; fix it with
+ * `lab` / `sn` / `sub` on that camera in the case's scenes.ts.
+ */
+for (const slug of SLUGS)
+  for (const width of [320, 360, 390, 430, 1000, 1024, 1100, 1440])
+    test(`${slug} highlights: labels clear of each other and the frame at ${width}px`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/work/${slug}/`);
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => {
+        for (const d of document.querySelectorAll("details")) d.open = true;
+      });
+      expect(await page.evaluate(labelLayout, [3, 4] as [number, number])).toEqual([]);
     });
 
 test("case studies load no external scripts or styles", async ({ page, baseURL }) => {
