@@ -8,8 +8,10 @@ import { examplePrefix } from "./example";
 
 export const legalRag: CaseStudyData = {
   motion: "rag",
-  signatureCaption:
-    "Illustration: an article schematic with placeholder text and a generic document number. The address is written onto the chunk when it's stored.",
+  hero_name: "Legal RAG",
+  hero_mark: "the citation",
+  hero_tag: "Điều › Khoản › Điểm",
+  hero_w: 2.92,
   overview: {
     problem:
       "Payroll consultants answer from Vietnamese legal documents and must cite the exact place: the document number, the Điều and the Khoản under it. A fixed-size split drops that path, so a passage can't say which article it came from. Documents aren't one shape either: a công văn often has no Điều at all, and pages break mid-article.",

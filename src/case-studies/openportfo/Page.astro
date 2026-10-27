@@ -12,45 +12,10 @@ interface Props {
 }
 const { entry, prev, next } = Astro.props;
 
-// Sample holdings (the same names as the home card's sample chart), no amounts.
-const book = [
-  { sym: "BTC", market: "Crypto", src: "CoinGecko" },
-  { sym: "ETH", market: "Crypto", src: "CoinGecko" },
-  { sym: "FPT", market: "HOSE", src: "vnstock" },
-  { sym: "VNM", market: "HOSE", src: "vnstock" },
-];
 const img = (name: string) => `/work/openportfo/${name}.webp`;
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={openportfo}>
-  <div slot="signature" class="op-sig" data-book>
-    <p class="mk-label">one book · sample holdings</p>
-    <div class="mk-scroll">
-      <table class="op-book">
-        <caption class="sr-only">Sample holdings and where each is priced from</caption>
-        <thead>
-          <tr>
-            <th scope="col">Holding</th>
-            <th scope="col">Market</th>
-            <th scope="col">Priced from</th>
-          </tr>
-        </thead>
-        <tbody>
-          {book.map((r) => (
-            <tr data-row>
-              <th scope="row">{r.sym}</th>
-              <td>{r.market}</td>
-              <td class="op-src">{r.src}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <p class="op-refresh" data-refresh>
-      <span aria-hidden="true">↻</span> one refresh · one batch · cached for minutes
-    </p>
-  </div>
-
   <div slot="highlight" class="op-hl">
     <img
       class="shot op-agent"

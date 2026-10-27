@@ -10,8 +10,10 @@ import type { CaseStudyData } from "~/lib/case";
 
 export const ecom: CaseStudyData = {
   motion: "ecom",
-  signatureCaption:
-    "Illustration: the engine stays put while storefronts change around it. Mirror Now is the first one built.",
+  hero_name: "Ecom",
+  hero_mark: "many storefronts",
+  hero_tag: "one engine · many fronts",
+  hero_w: 3.12,
   overview: {
     problem:
       "A small shop's code tends to tangle the money with the pages: a discount becomes a branch in checkout, a new payment provider edits the order logic, and the next client's store starts as a copy of the last one.",

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { overflowReport } from "./overflow";
+import { lumaSpread } from "./pixels";
 
 const URL = "/work/document-ocr/";
 // The 8 audit widths, plus both sides of the 6-column flow's list switch (1076px container).
@@ -22,12 +23,10 @@ for (const width of WIDTHS) {
 test.describe("Document OCR case study", () => {
   test("Phu's answers: README results, solo, no old figures", async ({ page }) => {
     await page.goto(URL);
-    const head = page.locator(".cs2-open");
+    const head = page.locator(".cs-hero-a__meta");
     await expect(head.locator(".org-badge")).toHaveText(/Enterprise\s*,?\s*Talentnet/);
-    await expect(head.locator(".meta-line > span:not(.org-badge)")).not.toContainText([
-      "Talentnet",
-    ]);
-    await expect(head.locator(".meta-line")).toContainText("Solo");
+    await expect(head.locator(".cs-hero-a__mi")).not.toContainText("Talentnet");
+    await expect(head).toContainText("Solo");
     // Verbatim from projects/ocr/README.md "## Result".
     await expect(page.locator("#overview")).toContainText(
       "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
@@ -40,7 +39,7 @@ test.describe("Document OCR case study", () => {
     await expect(page.getByText("TODO (Phu):")).toHaveCount(0);
   });
 
-  test("the promo cut: muted, no preload, poster, described; plays in view", async ({ page }) => {
+  test("the promo cut: muted, no preload, lazy poster; plays in view", async ({ page }) => {
     await page.goto(URL);
     const v = page.locator("main video[data-case-video]");
     await expect(v).toHaveCount(1);
@@ -57,15 +56,19 @@ test.describe("Document OCR case study", () => {
       muted: true,
       inline: true,
       preload: "none",
-      poster: "/work/document-ocr/motion-poster.jpg",
+      poster: null,
       autoplay: false,
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
+    // The poster="" is set only as the frame nears the viewport (in the markup it would be
+    // fetched with the page even with preload="none").
+    await expect(v).toHaveAttribute("data-poster-src", "/work/document-ocr/motion-poster.jpg");
     const res = await page.request.get("/work/document-ocr/motion.mp4");
     expect(res.status()).toBe(200);
     expect((await res.body()).length).toBeGreaterThan(500_000);
     await v.scrollIntoViewIfNeeded();
+    await expect(v).toHaveAttribute("poster", "/work/document-ocr/motion-poster.jpg");
     await expect.poll(() => v.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   });
 
@@ -174,19 +177,69 @@ test.describe("Document OCR case study", () => {
     );
   });
 
-  test("reduced motion: the proof sheet is static and complete", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(URL);
-    await expect(page.locator("[data-proof]")).not.toHaveClass(/is-anim/);
-    await expect(page.locator("[data-proof] dd").first()).toBeVisible();
-  });
+  for (const [w, h] of [
+    [1440, 900],
+    [430, 932],
+    [768, 1024],
+  ] as const)
+    test(`the poster is not fetched on first load at ${w}×${h}, only once scrolled near`, async ({
+      page,
+    }) => {
+      const seen: string[] = [];
+      page.on("request", (r) => {
+        if (r.url().includes("motion-poster")) seen.push(r.url());
+      });
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(URL);
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(800);
+      expect(seen).toEqual([]);
+      await expect(page.locator("video[data-case-video]")).not.toHaveAttribute("poster", /./);
+      // Scroll until the frame is just under 200px below the fold: the poster loads, once.
+      await page.evaluate(() => {
+        const f = document.querySelector(".cs2-video-frame");
+        if (f) scrollBy(0, f.getBoundingClientRect().top - innerHeight - 150);
+      });
+      await expect.poll(() => seen.length).toBe(1);
+      await page.locator(".cs2-video-frame").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      expect(seen).toHaveLength(1);
+    });
 
-  test("with motion, the scan line fills the workbook as the opener scrolls", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(URL);
-    await expect(page.locator("[data-proof]")).toHaveClass(/is-anim/);
-    await page.mouse.wheel(0, 900);
-    await expect(page.locator("[data-proof] [data-cell].lit")).toHaveCount(4);
+  // Native controls paint an opaque grey layer over anything under the video, so the poster has
+  // to be the video's own: the frame must show the poster's pixels, not a flat fill.
+  for (const mode of ["normal", "reduce", "nojs"] as const)
+    test(`the poster is visible in the frame (${mode})`, async ({ browser, isMobile }) => {
+      test.skip(isMobile, "sizes are set per context; runs once");
+      const ctx = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        javaScriptEnabled: mode !== "nojs",
+        reducedMotion: mode === "reduce" ? "reduce" : "no-preference",
+      });
+      const page = await ctx.newPage();
+      // Hold the video file back so "normal" shows the poster stage before any frame decodes.
+      await page.route("**/motion.mp4", () => {});
+      await page.goto(URL);
+      const v = page.locator(mode === "nojs" ? "video.cs2-video-nojs" : "video[data-case-video]");
+      await expect(v).toHaveCount(1);
+      await expect(v).toBeVisible();
+      await v.scrollIntoViewIfNeeded();
+      await expect(v).toHaveAttribute("poster", "/work/document-ocr/motion-poster.jpg");
+      await expect.poll(() => lumaSpread(browser, v), { timeout: 8000 }).toBeGreaterThan(12);
+      await ctx.close();
+    });
+
+  test("the first screen ends on the rail at the fold", async ({ page }) => {
+    for (const [w, h] of [
+      [390, 844],
+      [430, 932],
+      [1024, 768],
+      [1440, 900],
+    ] as const) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(URL);
+      const r = await page.locator("[data-rail]").boundingBox();
+      expect(Math.round((r?.y ?? 0) + (r?.height ?? 0)), `${w}×${h}`).toBeLessThanOrEqual(h);
+    }
   });
 });

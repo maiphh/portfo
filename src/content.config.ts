@@ -19,8 +19,8 @@ const work = defineCollection({
       .string()
       .regex(/^[^·]+ · [^·]+$/, 'Use "Kind · Org"')
       .optional(),
-    /** Project accent for the case-study page: the main path, the signature object and the
-     * selected flow node. Lime stays the site accent in the nav and the mascot. */
+    /** Project accent for the case-study page: the hero scan line and mark, the main path and
+     * the selected flow node. Lime stays the site accent in the nav and the mascot. */
     accent: z
       .object({
         line: z.string().regex(/^#[0-9a-f]{6}$/i),

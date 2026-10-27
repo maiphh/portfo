@@ -25,8 +25,10 @@ export const AGENT_TOOLS: { name: string; changes?: boolean }[] = [
 
 export const openportfo: CaseStudyData = {
   motion: "op",
-  signatureCaption:
-    "Illustration with sample holdings: two markets in one book, each priced from its own source when the book is refreshed.",
+  hero_name: "OpenPortfo",
+  hero_mark: "side by side",
+  hero_tag: "crypto + VN stocks · one book",
+  hero_w: 6.23,
   credit: {
     lead: "UI credit: the frontend is cloned from the dashboard of",
     label: "OpenStock by Open Dev Society",

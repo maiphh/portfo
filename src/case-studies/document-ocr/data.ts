@@ -7,8 +7,10 @@ import type { CaseStudyData } from "~/lib/case";
 
 export const ocr: CaseStudyData = {
   motion: "ocr",
-  signatureCaption:
-    "Illustration: a made-up page. Fields are boxed on the page and land in workbook cells. No client data.",
+  hero_name: "Document OCR",
+  hero_mark: "clean data out",
+  hero_tag: "page → fields → Excel",
+  hero_w: 5.67,
   overview: {
     problem:
       "Operators turn batches of PDFs and images into spreadsheet records by hand: read each page, type values into a workbook, check them again. Throughput is limited by page count and review time, and mistakes show up late.",

@@ -15,6 +15,8 @@ export function overflowReport(selector: string) {
     !el.closest("[hidden], .sr-only") &&
     // Deliberate horizontal scrollers (e.g. the case-study rail) and their contents.
     !el.parentElement?.closest("[data-scroll-x]") &&
+    // A running intro (Hero A) clips its own layers on purpose; it is audited at rest.
+    !el.closest("[data-anim]") &&
     getComputedStyle(el).visibility !== "hidden";
   const name = (el: Element) =>
     `${el.tagName.toLowerCase()}${el.getAttribute("class") ? "." + el.getAttribute("class")?.replace(/\s+/g, ".") : ""} "${(el.textContent ?? "").trim().slice(0, 32)}"`;

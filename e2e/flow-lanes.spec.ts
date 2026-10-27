@@ -403,6 +403,17 @@ test.describe("a dragged mascot on a phone-width diagram", () => {
         null,
         { timeout: 15_000 },
       );
+      // The hero fills the first screen, so the docked launcher starts tucked; scroll until it shows.
+      await expect
+        .poll(async () => {
+          const tucked = await page.evaluate(() => {
+            const l = document.querySelector("[data-chat-launcher]");
+            if (l?.classList.contains("is-tucked")) scrollBy(0, 160);
+            return l?.classList.contains("is-tucked");
+          });
+          return tucked;
+        })
+        .toBe(false);
       await dragTo(page, x, y);
       await expect(page.locator("[data-chat-launcher]")).toHaveAttribute("data-mascot", "float");
       const flow = page.locator('[data-flow="cs"]');

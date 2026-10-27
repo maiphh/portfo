@@ -4,7 +4,7 @@ headline: Paperwork in, clean data out.
 summary: A template-driven document OCR platform I built solo at Talentnet. Admins define what to extract; a vision-language model reads each page, rules check the fields, and operators review and export Excel. Two months after go-live, 8,000 pages processed, with accuracy 99.6% and about 300 hours saved.
 org: Talentnet
 org_badge: Enterprise · Talentnet
-accent: { line: "#d4f56b", tint: "#262b17" }
+accent: { line: "#ff8f33", tint: "#33210f" }
 meta: [Document OCR, Solo, In production]
 period: Sep 2025 – now
 order: 1

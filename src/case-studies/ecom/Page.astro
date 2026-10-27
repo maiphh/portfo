@@ -13,10 +13,6 @@ interface Props {
 }
 const { entry, prev, next } = Astro.props;
 
-const skins = [
-  { name: "Mirror Now", sub: "storefront + seller desk", state: "built" },
-  { name: "Next client shop", sub: "a sibling, same engine", state: "planned" },
-];
 const rules: [event: string, from: string, result: string, ok: boolean][] = [
   ["payment_received", "awaiting_payment, amount and order id match", "paid", true],
   ["payment_received", "cancelled", "rejected: unapplied", false],
@@ -38,32 +34,6 @@ const desk: [string, string][] = [
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={ecom}>
-  <div slot="signature" class="ec-sig" data-engine>
-    <ul class="ec-skins" aria-label="Storefronts on the engine">
-      {skins.map((s) => (
-        <li class:list={["ec-skin", s.state]} data-skin>
-          <b>{s.name}</b>
-          <span>{s.sub}</span>
-        </li>
-      ))}
-    </ul>
-    <div class="ec-seam" aria-hidden="true">
-      <span>@/shop/store · @/shop/desk</span>
-    </div>
-    <div class="ec-core" data-core>
-      <p class="mk-label">src/shop · createShop</p>
-      <ul class="mk-chips" aria-label="What the engine owns">
-        <li>catalog</li>
-        <li>cart</li>
-        <li>priceCart</li>
-        <li>stock</li>
-        <li>PaymentPort</li>
-        <li class="acc">orders/machine</li>
-      </ul>
-      <p class="ec-rule">no next · no react · no @/app</p>
-    </div>
-  </div>
-
   <div slot="highlight" class="mk ec-machine">
     <ul class="mk-chips" aria-label="The usual path of a paid order">
       <li class="acc">awaiting_payment</li>

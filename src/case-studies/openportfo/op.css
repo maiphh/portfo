@@ -1,48 +1,4 @@
-/* OpenPortfo: the book (signature) and the agent highlight. Static state = the final state;
-   scripts/case/op.ts animates only without reduced motion. */
-.op-sig {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-  background: var(--sheet);
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-  min-width: 0;
-}
-.op-book th,
-.op-book td {
-  padding: 9px 8px;
-}
-.op-book th[scope="row"] {
-  font: 600 15px var(--code);
-  color: var(--ink);
-}
-.op-book .op-src {
-  font: 500 13px var(--code);
-  color: var(--acc);
-}
-.op-book tr {
-  transition: opacity 0.3s;
-}
-.op-refresh {
-  justify-self: start;
-  padding: 6px 10px;
-  border: 1px solid var(--acc);
-  border-radius: 4px;
-  background: var(--acc-tint);
-  color: var(--acc);
-  font: 500 13px/1.35 var(--code);
-  max-width: 100% !important;
-}
-.op-sig.is-anim [data-row]:not(.lit) {
-  opacity: 0.3;
-}
-.op-sig.is-anim [data-refresh]:not(.lit) {
-  opacity: 0;
-}
-.op-sig [data-refresh] {
-  transition: opacity 0.4s;
-}
+/* OpenPortfo: the agent highlight. */
 .op-hl {
   display: grid;
   gap: 18px;

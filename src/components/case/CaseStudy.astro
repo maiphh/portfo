@@ -1,19 +1,19 @@
 ---
 /**
  * The shared case-study page (portfo-design case-studies/moodboards/case-study-skeleton.md):
- * opener → overview → the highlight → motion cut (flagged) → how it works (FlowDiagram) →
- * highlights → limits → next. Each project passes its data (lib/case.ts) and fills slots:
- *   signature      the opener's signature object (right of the headline)
+ * Hero A (CaseHeroTitle) → rail → overview → the short cut (flagged video) → the highlight →
+ * how it works (FlowDiagram) → highlights → limits → next. Each project passes its data
+ * (lib/case.ts) and fills slots:
  *   highlight      the one component that proves the claim
  *   dive-<id>      the artifact for each deep dive
  *   extra          the body of the optional extra section (data.extra), after the deep dives
- * The opener lists the entry's `links` (live site, repository) and an optional credit line.
+ * The hero lists the entry's `links` (live site, repository) and an optional credit line.
  * The accent comes from the work entry; the badge from its `org_badge`.
  */
 import type { CollectionEntry } from "astro:content";
+import CaseHeroTitle from "~/components/case/CaseHeroTitle.astro";
 import FlowDiagram from "~/components/flow/FlowDiagram.astro";
 import Icon from "~/components/Icon.astro";
-import OrgBadge from "~/components/OrgBadge.astro";
 import Base from "~/layouts/Base.astro";
 import type { CaseStudyData } from "~/lib/case";
 import { CASE_VIDEOS } from "~/lib/flags";
@@ -61,52 +61,27 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         <span aria-hidden="true">›</span>
         <span aria-current="page">{d.title}</span>
       </nav>
-      <header class="cs2-open cs-head" id="overview-top">
-        <div class="cs2-open-text">
-          <p class="meta-line">
-            {d.org_badge && <OrgBadge label={d.org_badge} />}
-            {d.meta.map((m) => (
-              <span>{m}</span>
-            ))}
-            {d.period && <span>{d.period}</span>}
-          </p>
-          <h1 id="cs-h">{d.headline}</h1>
-          <p class="lede">{d.summary}</p>
-          {data.credit && (
-            <p class="cs2-credit" data-credit>
-              {data.credit.lead}{" "}
-              <a class="link" href={data.credit.href} rel="noopener">
-                {data.credit.label}
-              </a>
-              {data.credit.rest}
-            </p>
-          )}
-          {d.links.length > 0 && (
-            <ul class="cs2-links" aria-label="Links">
-              {d.links.map((l) => (
-                <li>
-                  <a class="link" href={l.href} rel="noopener">
-                    {l.label}
-                    <Icon name="out" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <figure class="cs2-sig">
-          <slot name="signature" />
-          <figcaption>{data.signatureCaption}</figcaption>
-        </figure>
-      </header>
+      <CaseHeroTitle entry={entry} data={data} />
     </div>
 
     <nav class="cs2-rail" aria-label="On this page" data-rail data-sticky-top>
       <div class="wrap">
+        {/* The hero's scan line "lands" here as an accent hairline (scripts/case/hero-a.ts). */}
+        <i class="cs2-rail__ln" aria-hidden="true" />
         <ul data-scroll-x>
           {rail.map((r) => (
             <li>
-              <a href={r.href}>{r.label}</a>
+              <a href={r.href}>
+                {r.label}
+                {r.href === "#deep-dives" && (
+                  <>
+                    <span class="cs2-rail__n" aria-hidden="true">
+                      {String(dives.length).padStart(2, "0")}
+                    </span>
+                    <span class="sr-only"> ({dives.length})</span>
+                  </>
+                )}
+              </a>
             </li>
           ))}
         </ul>
@@ -141,31 +116,57 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         )}
       </section>
 
-      <section class="cs2-sec cs2-hl" aria-labelledby="hl-h">
-        <h2 id="hl-h">{data.highlight.title}</h2>
-        <figure>
-          <slot name="highlight" />
-          <figcaption>{data.highlight.caption}</figcaption>
-        </figure>
-      </section>
-
       {showVideo && (
-        <section class="cs2-sec cs2-video" aria-labelledby="vid-h">
-          <h2 id="vid-h">The short cut</h2>
+        <section class="cs2-sec cs2-video" id="video" aria-labelledby="vid-h">
+          <div class="cs2-video-head">
+            <h2 id="vid-h">The short cut</h2>
+            <p>30 s · dark mode · no sound · demo values</p>
+          </div>
           <figure>
-            {/* Muted, no preload. Without reduced motion it plays while in view (scripts/case/
-                page.ts); with reduced motion it stays on the poster until someone presses play. */}
-            <video
-              controls
-              muted
-              playsinline
-              preload="none"
-              poster={showVideo.poster}
-              aria-describedby={showVideo.description ? "vid-desc" : undefined}
-              data-case-video
-            >
-              <source src={showVideo.src} type="video/mp4" />
-            </video>
+            <div class="cs2-video-frame">
+              {/* Muted, no preload. It plays while half in view (scripts/case/page.ts) unless
+                  reduced motion or a data saver is on; then a play button sits on the poster.
+                  The poster is the video's own poster="" (Chrome's controls paint over anything
+                  underneath), but it is set by page.ts only once the frame is within 200px of the
+                  viewport: in the markup a poster="" is fetched with the page even with
+                  preload="none". Without JS the <noscript> copy carries the poster directly. */}
+              <div class="cs2-video-media">
+                <video
+                  controls
+                  muted
+                  playsinline
+                  preload="none"
+                  width="1280"
+                  height="720"
+                  aria-describedby={showVideo.description ? "vid-desc" : undefined}
+                  data-poster-src={showVideo.poster}
+                  data-case-video
+                >
+                  <source src={showVideo.src} type="video/mp4" />
+                </video>
+                <noscript>
+                  <video
+                    class="cs2-video-nojs"
+                    controls
+                    muted
+                    playsinline
+                    preload="none"
+                    width="1280"
+                    height="720"
+                    poster={showVideo.poster}
+                    aria-describedby={showVideo.description ? "vid-desc" : undefined}
+                  >
+                    <source src={showVideo.src} type="video/mp4" />
+                  </video>
+                </noscript>
+              </div>
+              <button class="cs2-video-play" type="button" hidden data-video-play>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M4 2.5v11l9-5.5z" />
+                </svg>
+                Play<span class="sr-only"> the 30-second cut, no sound</span>
+              </button>
+            </div>
             <figcaption>
               {showVideo.caption}
               {showVideo.description && (
@@ -177,6 +178,14 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           </figure>
         </section>
       )}
+
+      <section class="cs2-sec cs2-hl" aria-labelledby="hl-h">
+        <h2 id="hl-h">{data.highlight.title}</h2>
+        <figure>
+          <slot name="highlight" />
+          <figcaption>{data.highlight.caption}</figcaption>
+        </figure>
+      </section>
 
       <section class="cs2-sec cs2-how" id="how-it-works" aria-labelledby="how-h">
         <div class="cs2-how-head">

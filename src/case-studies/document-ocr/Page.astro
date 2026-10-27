@@ -11,42 +11,9 @@ interface Props {
   next?: CollectionEntry<"work"> | undefined;
 }
 const { entry, prev, next } = Astro.props;
-
-// Generic, made-up fields (the pack says demo fields are illustrative, not a client list).
-const fields = [
-  { id: "doc_no", label: "doc_no", value: "DOC-0042", y: 18 },
-  { id: "date", label: "date", value: "2026-10-02", y: 30 },
-  { id: "party", label: "party", value: "Sample Co.", y: 46 },
-  { id: "total", label: "total", value: "1,250.00", y: 78 },
-];
 ---
 
 <CaseStudy entry={entry} prev={prev} next={next} data={ocr}>
-  <div slot="signature" class="ocr-proof" data-proof>
-    <div class="ocr-page" aria-hidden="true">
-      <i class="ocr-scan" data-scan></i>
-      {fields.map((f) => (
-        <span class="ocr-box" style={`top:${f.y}%`} data-box={f.id}>
-          <em>{f.label}</em>
-        </span>
-      ))}
-      <span class="ocr-lines">
-        <i></i>
-        <i></i>
-        <i></i>
-        <i></i>
-      </span>
-    </div>
-    <dl class="ocr-cells" aria-label="Workbook row (made-up values)">
-      {fields.map((f) => (
-        <div data-cell={f.id}>
-          <dt>{f.label}</dt>
-          <dd>{f.value}</dd>
-        </div>
-      ))}
-    </dl>
-  </div>
-
   <div slot="highlight" class="ocr-tpl">
     <ul class="ocr-tpl-parts">
       <li>
