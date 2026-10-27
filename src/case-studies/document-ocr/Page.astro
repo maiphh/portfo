@@ -3,7 +3,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { ocr } from "./data";
-import { SCENES } from "./scenes";
 import "./ocr.css";
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
 const { entry, prev, next } = Astro.props;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={ocr} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={ocr}>
   <div slot="highlight" class="ocr-tpl">
     <ul class="ocr-tpl-parts">
       <li>

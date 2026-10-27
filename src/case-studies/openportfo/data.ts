@@ -257,67 +257,38 @@ export const openportfo: CaseStudyData = {
   dives: [
     {
       id: "agent",
-      flow: {
-        steps: [
-          "You ask in the chat",
-          "The agent picks a tool; it runs on the server, and the model never receives a token",
-          "The tool only sees the signed-in user’s book",
-          "Only when the tool succeeds does the agent say the book changed",
-        ],
-        chips: [
-          1,
-          [
-            "look up holdings",
-            "quotes",
-            "news",
-            "add or remove a holding",
-            "add or remove a watchlist item",
-          ],
-          "Tools",
-        ],
-      },
       title: "A chat agent that works on your portfolio",
       paragraphs: [
         "The chat can look up holdings, quotes and news, and it can add or remove a holding or a watchlist item.",
         "It only sees the signed-in user's book. A tool runs on the server. The model never receives a token.",
         "The agent does not claim the book changed unless that tool succeeded.",
       ],
+      point:
+        "You ask in chat, a server tool changes your book, and only then does the agent say it is done.",
       shows: "The chat is a way to use the portfolio, not a separate app beside it.",
       caption: "The agent calls the same book the screens use.",
     },
     {
       id: "news",
-      flow: {
-        steps: [
-          "A daily job reads the RSS feeds and stores the items",
-          "Each item is matched to the symbols on your book",
-          "The browser reads that list; it never calls the feeds",
-        ],
-      },
       title: "News is fetched from RSS",
       paragraphs: [
         "A daily job reads RSS feeds and stores the items.",
         "Each item is matched to the symbols on a person's book, so the list is about what they hold.",
         "The browser does not call the feeds. The job does.",
       ],
+      point: "Feed items that match a symbol you hold move into your list; the rest pass by.",
       shows: "News arrives on its own, matched to the book.",
       caption: "RSS in, then a list tied to the person's symbols.",
     },
     {
       id: "email",
-      flow: {
-        steps: [
-          "The daily job runs, for people who asked for the summary",
-          "One email: performance, price changes and news",
-          "Opening the site sends nothing; the scheduled job does",
-        ],
-      },
       title: "Updates go out by email",
       paragraphs: [
         "The same daily job can send a summary: performance, price changes and news.",
         "It is sent when someone has asked for it.",
         "Opening the site does not send the mail. The scheduled job does.",
       ],
+      point: "A daily job sends the summary to your inbox; you never have to open the site.",
       shows: "The book can reach you without you opening it.",
       caption: "Performance, price changes and news, in one email.",
     },

@@ -5,12 +5,11 @@
  * how it works (FlowDiagram) → highlights → limits → next. Each project passes its data
  * (lib/case.ts) and fills slots:
  *   highlight      the one component that proves the claim
- *   dive-<id>      the artifact for a deep dive without a flow drawing (data `flow` absent)
  *   extra          the body of the optional extra section (data.extra), after the deep dives
  * The hero lists the entry's `links` (live site, repository) and an optional credit line.
  * The accent comes from the work entry; the badge from its `org_badge`.
- * Highlights with `flow` copy get a flow drawing (FlowFigure) from the page's `scenes` and the step
- * list beside it (HIGHLIGHTS-SPEC v2 §3); the iso-glow credit goes in the footer of these pages only.
+ * Each highlight gets one drawing with one looping motion (FlowFigure, lib/highlights; HIGHLIGHTS-SPEC
+ * v3 §2–§3); the iso-glow credit goes in the footer of the pages with an iso drawing only.
  */
 import type { CollectionEntry } from "astro:content";
 import CaseHeroTitle from "~/components/case/CaseHeroTitle.astro";
@@ -21,38 +20,30 @@ import Base from "~/layouts/Base.astro";
 import type { CaseStudyData } from "~/lib/case";
 import { ISO_CREDIT } from "~/lib/credit";
 import { CASE_VIDEOS } from "~/lib/flags";
+import { scene } from "~/lib/highlights";
 import { plateVars } from "~/lib/iso/accent";
-import type { FlowScene } from "~/lib/iso/flow";
 import { richText } from "~/lib/flow/types";
 import { site } from "~/lib/site";
 import "~/styles/case.css";
-import "~/styles/plates.css";
+import "~/styles/highlights.css";
 
 interface Props {
   entry: CollectionEntry<"work">;
   prev?: CollectionEntry<"work"> | undefined;
   next?: CollectionEntry<"work"> | undefined;
   data: CaseStudyData;
-  /** Flow scenes by dive id, for the dives that carry `flow` copy. */
-  scenes?: Record<string, FlowScene>;
 }
-const { entry, prev, next, data, scenes = {} } = Astro.props;
+const { entry, prev, next, data } = Astro.props;
 const d = entry.data;
 const acc = d.accent ?? { line: "#d4f56b", tint: "#262b17" };
 const { overview: o, how, dives, limits, extra } = data;
 
-const dive = await Promise.all(
-  dives.map(async (x) => {
-    const scene = x.flow ? scenes[x.id] : undefined;
-    if (x.flow && !scene) throw new Error(`${entry.id}: dive "${x.id}" has flow copy but no scene`);
-    return {
-      ...x,
-      scene,
-      artifact: scene ? "" : await Astro.slots.render(`dive-${x.id}`),
-    };
-  }),
-);
-const hasPlates = dive.some((x) => x.scene);
+const dive = dives.map((x) => {
+  const sc = scene(entry.id, x.id);
+  if (!sc) throw new Error(`${entry.id}: dive "${x.id}" has no highlight drawing`);
+  return { ...x, scene: sc };
+});
+const hasIso = dive.some((x) => x.scene.iso);
 const showVideo = CASE_VIDEOS.has(entry.id) ? data.video : undefined;
 const rail = [
   { href: "#overview", label: "Overview" },
@@ -67,7 +58,7 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
 <Base
   title={`${d.title} · ${site.name}`}
   description={d.summary}
-  credit={hasPlates ? ISO_CREDIT : undefined}
+  credit={hasIso ? ISO_CREDIT : undefined}
 >
   <article
     class="cs2"
@@ -277,78 +268,26 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
 
       <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h">
         <h2 id="dd-h">Highlights</h2>
-        {dive.map((x, i) => {
-          const flow = x.scene && x.flow ? { scene: x.scene, ...x.flow } : undefined;
-          const chips = flow?.chips;
-          return (
-            <article
-              class:list={["cs2-dv", flow && "hl-dv"]}
-              id={`dive-${x.id}`}
-              aria-labelledby={`dvh-${x.id}`}
-              data-n={flow?.steps.length}
-            >
-              <div class="cs2-dv-text">
-                <p class="cs2-dv-n" aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </p>
-                <h3 id={`dvh-${x.id}`}>{x.title}</h3>
-                <p class="cs2-shows">
-                  <b>What this shows:</b> <span set:html={richText(x.shows)} />
-                </p>
+        {dive.map((x, i) => (
+          <article class="hl-dv" id={`dive-${x.id}`} aria-labelledby={`dvh-${x.id}`}>
+            <header class="hl-head">
+              <p class="hl-n" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </p>
+              <h3 id={`dvh-${x.id}`}>{x.title}</h3>
+            </header>
+            <FlowFigure scene={x.scene} point={x.point} />
+            <p class="hl-cap" set:html={richText(x.shows)} />
+            <details class="hl-more" data-dive>
+              <summary>The detail</summary>
+              <div class="hl-more-in">
+                {x.paragraphs.map((p) => (
+                  <p set:html={richText(p)} />
+                ))}
               </div>
-              {flow ? (
-                <div class="cs2-dv-body">
-                  <FlowFigure scene={flow.scene} n={flow.steps.length} caption={x.caption} />
-                  <ol class="cs2-steps">
-                    {flow.steps.map((t, k) => (
-                      <li class="st" data-s={k + 1}>
-                        <span class="mk-s" aria-hidden="true">
-                          {k + 1}
-                        </span>
-                        <p set:html={richText(t)} />
-                        {chips?.[0] === k + 1 && (
-                          <>
-                            {chips[3] && (
-                              <p class="cs2-chips-h" id={`ch-${x.id}`}>
-                                {chips[2]}
-                              </p>
-                            )}
-                            <ul
-                              class="cs2-chips"
-                              {...(chips[3]
-                                ? { "aria-labelledby": `ch-${x.id}` }
-                                : { "aria-label": chips[2] })}
-                            >
-                              {chips[1].map((c) => (
-                                <li>
-                                  <code>{c}</code>
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ) : (
-                <figure class="cs2-dv-fig" data-bleed>
-                  <Fragment set:html={x.artifact} />
-                  <figcaption>{x.caption}</figcaption>
-                </figure>
-              )}
-              <details class="cs2-dive" data-dive>
-                <summary>The detail</summary>
-                <div class="cs2-dive-in">
-                  {x.paragraphs.map((p) => (
-                    <p set:html={richText(p)} />
-                  ))}
-                  {flow && <p class="figcap">{x.caption}</p>}
-                </div>
-              </details>
-            </article>
-          );
-        })}
+            </details>
+          </article>
+        ))}
       </section>
 
       {extra && (

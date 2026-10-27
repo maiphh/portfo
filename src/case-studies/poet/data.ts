@@ -150,37 +150,26 @@ export const poet: CaseStudyData = {
   dives: [
     {
       id: "donate",
-      flow: {
-        steps: [
-          "The form asks the Worker for a PayOS payment",
-          "PayOS sends a signed notice when the payment lands",
-          "Signature checked, then the gift is marked paid",
-          "The return page is a receipt; it marks nothing paid",
-        ],
-      },
       title: "A gift is a real PayOS payment",
       paragraphs: [
         "The form asks the Worker to create a PayOS payment. The Worker stores the gift and returns the checkout link.",
         "PayOS tells the Worker when the payment lands. The signature is checked, and only then is the gift marked paid.",
         "Returning to the site does not mark it paid. That page is a receipt.",
       ],
+      point:
+        "PayOS’s signed notice arrives, the signature checks out, and the waiting gift flips to paid.",
       shows: "The donation is a real payment, recorded by the server.",
       caption: "PayOS checkout, then a signed notice that the gift was paid.",
     },
     {
       id: "wall",
-      flow: {
-        steps: [
-          "A gift is paid",
-          "An admin publishes it",
-          "It appears on the wall: the name, or “Một nhà hảo tâm”",
-        ],
-      },
       title: "A donor is shown on the site",
       paragraphs: [
         "The public wall shows the name, or “Một nhà hảo tâm” when “Ẩn danh” is ticked, with the message, the amount and when it was paid.",
         "A gift appears there after it is paid and an admin publishes it.",
       ],
+      point:
+        "Once paid and published, the gift lands on the public wall: the name, or “Một nhà hảo tâm”.",
       shows: "A real donation can be seen on the frontend.",
       caption: "A drawing of the gift wall, in place of the screenshot. No donor data.",
     },

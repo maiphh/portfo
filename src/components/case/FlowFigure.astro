@@ -1,29 +1,18 @@
 ---
 /**
- * One Highlights drawing (HIGHLIGHTS-SPEC v2 §3.1): the whole scene, drawn at build time for
- * desktop (.fig.dk) and phone (.fig.ph), with one numbered marker per step and no words inside
- * the drawing. The step sentences are the list beside it (CaseStudy.astro, ol.cs2-steps). The
- * HTML is the static picture shown without JS and with reduced motion; scripts/case/flow.ts loops
- * through the steps while the drawing is on screen.
+ * One highlight drawing (HIGHLIGHTS-SPEC v3 §2): the full static scene (lib/highlights), read out
+ * as one sentence, the dive's `point`; the svg itself is hidden from screen readers. The static
+ * scene is what shows without JS and with reduced motion; scripts/case/flow.ts plays its loop.
  */
-import { render, type FlowScene } from "~/lib/iso/flow";
+import type { Scene } from "~/lib/highlights";
 
 interface Props {
-  scene: FlowScene;
-  /** Number of steps (= markers). */
-  n: number;
-  caption: string;
+  scene: Scene;
+  point: string;
 }
-const { scene, n, caption } = Astro.props;
-const html =
-  render(scene, { ...scene.dk, kind: "dk" }, n).html +
-  render(scene, { ...scene.ph, kind: "ph" }, n).html;
+const { scene, point } = Astro.props;
 ---
 
-<figure
-  class="hl-fig"
-  role="img"
-  aria-label={`${caption} The ${n} numbered parts are listed next to the drawing.`}
->
-  <Fragment set:html={html} />
+<figure class="hl-dv-fig" role="img" aria-label={point}>
+  <Fragment set:html={scene.svg} />
 </figure>

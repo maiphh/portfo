@@ -35,26 +35,19 @@ export interface CaseFlow {
 }
 
 export interface CaseDive {
-  /** Also the name of the slot that holds the artifact: `dive-<id>`. */
+  /** The anchor (`dive-<id>`) and, with the page, the drawing's key in lib/highlights. */
   id: string;
   /** A claim, not a topic. */
   title: string;
   paragraphs: string[];
   /** The one-line "what this shows". */
   shows: string;
-  /** Caption under the artifact, naming where its pixels come from. */
+  /** Caption under the artifact, naming where its pixels come from. Not shown by the v3 highlights
+   *  (HIGHLIGHTS-SPEC v3 §11 Q1); kept until Phu decides. */
   caption: string;
-  /** Highlights flow copy (HIGHLIGHTS-SPEC v2 §2.1). Absent = the dive keeps its `dive-<id>` slot
-   *  artifact. The drawing is in `src/case-studies/<slug>/scenes.ts`, keyed by the dive id. */
-  flow?: DiveFlowCopy;
-}
-
-/** The step list beside a Highlights drawing: one numbered marker in the drawing per step. */
-export interface DiveFlowCopy {
-  /** One short sentence per step (markdown: `code` allowed), in order. */
-  steps: string[];
-  /** Optional chip row under one step: [1-based step, items, aria-label, show the label]. */
-  chips?: [step: number, items: string[], label: string, showLabel?: boolean];
+  /** The highlight's one point, read out as the drawing's label (HIGHLIGHTS-SPEC v3 §4). The drawing
+   *  is lib/highlights, keyed by page and dive id. */
+  point: string;
 }
 
 export interface CaseStackTable {

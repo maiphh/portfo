@@ -3,7 +3,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { dvp } from "./data";
-import { SCENES } from "./scenes";
 
 interface Props {
   entry: CollectionEntry<"work">;
@@ -13,7 +12,7 @@ interface Props {
 const { entry, prev, next } = Astro.props;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={dvp} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={dvp}>
   <div slot="highlight" class="mk dvp-contract">
     <pre class="mk-code"><code><span class="c"># one function, one JSON envelope · PROMPT_VERSION "v4" is in the cache key</span>
 <span class="k">def</span> calculate_&lt;rule_id&gt;(data, context):

@@ -3,7 +3,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { legalRag } from "./data";
-import { SCENES } from "./scenes";
 import { examplePrefix } from "./example";
 import "./rag.css";
 
@@ -15,7 +14,7 @@ interface Props {
 const { entry, prev, next } = Astro.props;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={legalRag} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={legalRag}>
   <div slot="highlight" class="mk rag-hl">
     <div class="rag-chunkcard">
       <code>{examplePrefix}</code>

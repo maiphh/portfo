@@ -154,7 +154,8 @@ if (page) {
     const hero = page.querySelector<HTMLElement>("[data-hero-a]");
     if (hero) void import("./hero-a").then((m) => m.default(hero));
     if (load) void load().then((m) => m.default(page));
-    // Highlights: the step loop. With reduced motion the static drawing stays, as without JS.
-    if (page.querySelector(".hl-fig")) void import("./flow").then((m) => m.default(page));
+    // Highlights: each scene's loop. With reduced motion the static scene stays, as without JS.
+    if (page.querySelector("svg.hl-fig[data-scene]"))
+      void import("./flow").then((m) => m.default(page));
   }
 }

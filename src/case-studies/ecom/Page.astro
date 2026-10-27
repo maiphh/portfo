@@ -4,7 +4,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { ecom } from "./data";
-import { SCENES } from "./scenes";
 import "./ecom.css";
 
 interface Props {
@@ -34,7 +33,7 @@ const desk: [string, string][] = [
 ];
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={ecom} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={ecom}>
   <div slot="highlight" class="mk ec-machine">
     <ul class="mk-chips" aria-label="The usual path of a paid order">
       <li class="acc">awaiting_payment</li>

@@ -4,7 +4,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { poet } from "./data";
-import { SCENES } from "./scenes";
 import "./poet.css";
 
 interface Props {
@@ -17,7 +16,7 @@ const { entry, prev, next } = Astro.props;
 const img = (name: string) => `/work/poet/${name}.webp`;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={poet} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={poet}>
   <div slot="highlight" class="shots two pt-hl">
     <img
       class="shot"

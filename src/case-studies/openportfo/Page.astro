@@ -3,7 +3,6 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { AGENT_TOOLS, openportfo } from "./data";
-import { SCENES } from "./scenes";
 import "./op.css";
 
 interface Props {
@@ -16,7 +15,7 @@ const { entry, prev, next } = Astro.props;
 const img = (name: string) => `/work/openportfo/${name}.webp`;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={openportfo} scenes={SCENES}>
+<CaseStudy entry={entry} prev={prev} next={next} data={openportfo}>
   <div slot="highlight" class="op-hl">
     <img
       class="shot op-agent"

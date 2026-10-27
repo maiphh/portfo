@@ -367,58 +367,39 @@ export const ocr: CaseStudyData = {
   dives: [
     {
       id: "template",
-      flow: {
-        steps: [
-          "One template per document type",
-          "Four parts: fields, model instructions, cleaning rules, Excel layout",
-          "One pipeline runs every template",
-          "A run keeps the template it started with",
-        ],
-      },
       title: "New document types are templates, not code changes",
       paragraphs: [
         "An admin creates a template for each kind of document. The template holds the fields to read, the instructions for the model, the rules that clean the values, and the Excel layout those values fill.",
         "Adding a document type does not require a code change. The same pipeline runs every template, so the platform grows by configuration.",
         "Each run keeps the template it started with. Editing that template later does not change a job that is already in progress.",
       ],
+      point:
+        "A new document type is a new template card; the same pipeline turns any of them into the Excel sheet.",
       shows: "A new document type is configuration. One pipeline serves all of them.",
       caption: "The four parts an admin sets on a template. Field names stay generic.",
     },
     {
       id: "queue",
-      flow: {
-        steps: [
-          "A long PDF and two short documents arrive",
-          "Render queue: PDF to page images, quickly",
-          "Extraction waits on the model, the slow step",
-          "Slots take turns, so one PDF cannot take them all",
-        ],
-      },
       title: "Two queues, because extraction is the slow step",
       paragraphs: [
         "Turning a PDF into page images is quick. Waiting on the model is the bottleneck.",
         "Render and extraction each have their own queue. Render keeps using the CPU while extraction waits on the model, instead of sitting idle behind it.",
         "When several documents are in flight, extraction takes turns. A round-robin claim picks the job with the least work already running, so one long PDF cannot take every slot.",
       ],
+      point:
+        "Rendering never waits: pages race through their own queue and pile up for the slow model step.",
       shows: "Render stays busy, and no single document crowds out the others.",
       caption: "One queue renders pages. The other runs extraction.",
     },
     {
       id: "api",
-      flow: {
-        steps: [
-          "Another system sends documents",
-          "Its key is shown once; only a hash is stored",
-          "Files and a template join the same queues as the UI",
-          "The fields and the filled Excel file come back",
-        ],
-      },
       title: "Other systems connect through a managed API",
       paragraphs: [
         "The browser is not the only way in. Other applications can send documents and receive the workbook.",
         "API management lives in the product. An admin creates a key for each system. The key is shown once, only a hash is stored, and the key acts as the user it belongs to.",
         "A caller sends files and a template, and gets back the extracted fields and the filled Excel file. The job uses the same queues as a job started in the UI.",
       ],
+      point: "The web app and an API key feed the same pipeline and get the same Excel back.",
       shows: "Integration is the same pipeline, with keys an admin can manage.",
       caption: "A key, a template, and the same workbook the UI exports.",
     },

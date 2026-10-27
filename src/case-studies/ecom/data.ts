@@ -196,56 +196,40 @@ export const ecom: CaseStudyData = {
   dives: [
     {
       id: "payment",
-      flow: {
-        steps: [
-          "Checkout charges through PayOS; cash on delivery creates no charge",
-          "PayOS confirms the payment, and the amount and the order must match",
-          "Then the order machine marks the order paid",
-          "A notice for a cancelled order is rejected; coming back to the site marks nothing paid",
-        ],
-      },
       title: "The shop takes a real payment",
       paragraphs: [
         "Checkout charges through PayOS. When PayOS confirms the payment, and the amount and the order match, the order is marked paid.",
         "A notice for a cancelled order is rejected. Coming back to the site is not what marks the order paid.",
         "Cash on delivery is a separate choice. It does not create a charge.",
       ],
+      point:
+        "The order stays pending until PayOS confirms a matching amount; only that opens the gate to paid.",
       shows: "A paid order is a real payment, not a label the page flips on its own.",
       caption: "PayOS confirms the payment. The order machine records it.",
     },
     {
       id: "admin",
-      flow: {
-        steps: [
-          "Buyers use the storefront; they do not see the desk",
-          "`/admin` sends a seller to the desk: catalog, orders and sales",
-          "Both use the same engine; there is no second copy of checkout",
-        ],
-      },
       title: "The seller runs the shop from an admin desk",
       paragraphs: [
         "The desk sits beside the storefront. The seller edits the catalog, follows orders, and manages sales.",
         "Buyers do not see it. `/admin` sends a seller to the desk.",
         "The desk uses the same engine as the store. It does not keep a second copy of checkout.",
       ],
+      point:
+        "Buyers come in through the store and the seller through /admin, and both land on the same engine.",
       shows: "Shopping and running the shop are two doors into one system.",
       caption: "Catalog, orders and sales, from the seller desk.",
     },
     {
       id: "store",
-      flow: {
-        steps: [
-          "The catalog, cart, price, stock, payment and orders live in one engine",
-          "A new shop is another set of pages that call it; Mirror Now is the first",
-          "Changing a page does not rewrite checkout",
-        ],
-      },
       title: "A new store is a new front, not a new engine",
       paragraphs: [
         "The catalog, the cart, the price, the stock, the payment and the orders live in one engine.",
         "A new shop is another set of pages that call that engine. Mirror Now is the first.",
         "Changing a page does not rewrite checkout.",
       ],
+      point:
+        "A new store is a new set of pages that plugs into the engine Mirror Now already uses.",
       shows: "The next store starts from the same engine Mirror Now uses.",
       caption: "Pages change. The engine stays.",
     },
