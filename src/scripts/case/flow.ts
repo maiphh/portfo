@@ -7,7 +7,7 @@
  * Plays only while the figure is on screen and the tab is shown. Everything is built inside a
  * reduced-motion media query, so turning reduced motion on reverts to the static scene. page.ts
  * loads this only without reduced motion.
- * e2e reads svg[data-flow] (running|paused), svg[data-loop] (L, seconds), and the master timeline
+ * e2e reads svg[data-hl] (running|paused, not data-flow: the flow diagrams own that), svg[data-loop] (L, seconds), and the master timeline
  * on the svg's non-enumerable `hlLoop` property (to seek frames and list the tweened properties).
  */
 import { gsap } from "gsap";
@@ -114,7 +114,7 @@ export default function flow(root: HTMLElement): void {
       const run = it.vis && !document.hidden;
       if (run) it.tl.play();
       else it.tl.pause();
-      it.svg.dataset.flow = run ? "running" : "paused";
+      it.svg.dataset.hl = run ? "running" : "paused";
     };
     const io = new IntersectionObserver(
       (entries) => {
@@ -137,7 +137,7 @@ export default function flow(root: HTMLElement): void {
       io.disconnect();
       document.removeEventListener("visibilitychange", vis);
       for (const it of items) {
-        delete it.svg.dataset.flow;
+        delete it.svg.dataset.hl;
         delete it.svg.dataset.loop;
         Reflect.deleteProperty(it.svg, "hlLoop");
       }

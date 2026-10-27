@@ -18,8 +18,8 @@ export function overflowReport(selector: string) {
     // A running intro (Hero A) clips its own layers on purpose; it is audited at rest.
     !el.closest("[data-anim]") &&
     // A Highlights drawing's artwork (aria-hidden SVG, overflow visible); highlights.spec audits
-    // its markers, and the page scrollWidth check still catches any sideways scroll.
-    !el.closest(".fig svg") &&
+    // its words, and the page scrollWidth check still catches any sideways scroll.
+    !el.closest("svg.hl-fig") &&
     getComputedStyle(el).visibility !== "hidden";
   const name = (el: Element) =>
     `${el.tagName.toLowerCase()}${el.getAttribute("class") ? "." + el.getAttribute("class")?.replace(/\s+/g, ".") : ""} "${(el.textContent ?? "").trim().slice(0, 32)}"`;
