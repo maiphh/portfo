@@ -1,0 +1,29 @@
+---
+/**
+ * One Highlights drawing (HIGHLIGHTS-SPEC v2 §3.1): the whole scene, drawn at build time for
+ * desktop (.fig.dk) and phone (.fig.ph), with one numbered marker per step and no words inside
+ * the drawing. The step sentences are the list beside it (CaseStudy.astro, ol.cs2-steps). The
+ * HTML is the static picture shown without JS and with reduced motion; scripts/case/flow.ts loops
+ * through the steps while the drawing is on screen.
+ */
+import { render, type FlowScene } from "~/lib/iso/flow";
+
+interface Props {
+  scene: FlowScene;
+  /** Number of steps (= markers). */
+  n: number;
+  caption: string;
+}
+const { scene, n, caption } = Astro.props;
+const html =
+  render(scene, { ...scene.dk, kind: "dk" }, n).html +
+  render(scene, { ...scene.ph, kind: "ph" }, n).html;
+---
+
+<figure
+  class="hl-fig"
+  role="img"
+  aria-label={`${caption} The ${n} numbered parts are listed next to the drawing.`}
+>
+  <Fragment set:html={html} />
+</figure>

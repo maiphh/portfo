@@ -251,18 +251,13 @@ export const legalRag: CaseStudyData = {
   dives: [
     {
       id: "repair",
-      plate: {
-        title: "REPAIR",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: [
-            "split on Điều · Phụ lục · Chương",
-            "a bare “Điều N” at a piece end",
-            "merged into the next piece",
-            "a short “Khoản 1” moves forward · level hint carried",
-            "id + title locked",
-          ],
-        },
+      flow: {
+        steps: [
+          "The coarse split prefers Điều, Phụ lục and Chương to an ordinary newline",
+          "A piece that ends on a bare “Điều N” is merged into the body after it",
+          "Each block is labelled with the previous block’s level as a hint",
+          "The first good document id and the longest title are locked",
+        ],
       },
       title: "The label survives a page break and a bad split",
       paragraphs: [
@@ -276,30 +271,13 @@ export const legalRag: CaseStudyData = {
     },
     {
       id: "fallback",
-      plate: {
-        title: "FALLBACK",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "fail",
-        modes: [
-          ["ok", "Label parses", "first try"],
-          ["fail", "Label keeps failing", "the fallback"],
+      flow: {
+        steps: [
+          "The labeller must return JSON only; each block gets 3 attempts",
+          "After the third failure, the block is split by meaning instead",
+          "Any other error keeps the raw block",
+          "Near-duplicates in the same Điều are dropped; the longer chunk stays",
         ],
-        read: {
-          ok: [
-            "a block",
-            "labeller · JSON only",
-            "valid on the first try",
-            "dedupe within one Điều · text kept",
-          ],
-          fail: [
-            "a block",
-            "labeller · JSON only",
-            "try 2 fails",
-            "try 3 fails",
-            "semantic split takes over",
-            "dedupe within one Điều · text kept",
-          ],
-        },
       },
       title: "A failed label doesn't drop the document",
       paragraphs: [
@@ -313,33 +291,18 @@ export const legalRag: CaseStudyData = {
     },
     {
       id: "refuse",
-      plate: {
-        title: "SAY NOTHING",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "miss",
-        modes: [
-          ["hit", "Something passes", "answer"],
-          ["miss", "Nothing passes", "the refusal"],
+      flow: {
+        steps: [
+          "The question is embedded and compared by cosine distance",
+          "With rerank on, scores under the threshold are dropped",
+          "Nothing left: no model call; it stores “Xin lỗi, tôi không tìm thấy thông tin cần thiết.”",
+          "With chunks, the prompt allows only that context and puts the citation line first",
         ],
-        read: {
-          hit: [
-            "a question",
-            "cosine search",
-            "scores through the threshold",
-            "the model is called",
-            "answer with its citation",
-          ],
-          miss: [
-            "a question",
-            "cosine search",
-            "scores through the threshold",
-            "nothing left",
-            "“Xin lỗi, tôi không tìm thấy thông tin cần thiết.”",
-          ],
-        },
         chips: [
-          "Config defaults (settings, not results)",
+          2,
           ["top_k 6", "rerank off by default", "threshold 0.7", "keep 2"],
+          "Config defaults (settings, not results)",
+          true,
         ],
       },
       title: "Retrieval is allowed to say nothing",

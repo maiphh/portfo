@@ -589,14 +589,15 @@ html:not(.js) .cs2-video video[data-case-video] {
   text-underline-offset: 0.2em;
 }
 
-/* 6. highlights (HIGHLIGHTS-SPEC §2.3): the plate is always shown; only "The detail" folds.
-   page.ts opens the paragraphs on ≥900px and leaves them folded on phones. */
+/* 6. highlights (HIGHLIGHTS-SPEC v2 §4.2): text, then the drawing with its step list (beside it
+   from 900px, under it on phones; plates.css), then "The detail". page.ts opens the paragraphs on
+   ≥900px, where the summary is not interactive, and leaves them folded on phones. */
 .cs2-dives > h2 {
   margin-bottom: clamp(8px, 2vw, 24px);
 }
 .cs2-dv {
   display: grid;
-  gap: 20px;
+  gap: clamp(18px, 3vw, 36px);
   padding: clamp(36px, 5vw, 80px) 0;
   border-top: 1px solid var(--rule);
 }
@@ -605,17 +606,21 @@ html:not(.js) .cs2-video video[data-case-video] {
   gap: var(--s3);
   align-content: start;
   min-width: 0;
+  max-width: 62ch;
 }
 .cs2-dv-n {
   font: 600 13px/1 var(--code);
   color: var(--acc);
 }
 .cs2-dv h3 {
-  max-width: 22ch;
+  max-width: 28ch;
 }
 .cs2-dv .cs2-shows {
   color: var(--ink-2);
-  max-width: 44ch;
+  max-width: 56ch;
+}
+.cs2-dv-body {
+  min-width: 0;
 }
 .cs2-dv-fig {
   display: grid;
@@ -627,11 +632,12 @@ html:not(.js) .cs2-video video[data-case-video] {
   font-size: 15px;
 }
 .cs2-chips {
+  grid-column: 2;
   list-style: none;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
 }
 .cs2-chips li {
@@ -641,9 +647,22 @@ html:not(.js) .cs2-video video[data-case-video] {
   border-radius: 3px;
   padding: 7px 8px;
 }
+.cs2-chips code {
+  font: inherit;
+  color: inherit;
+  background: none;
+  padding: 0;
+}
+.cs2-chips-h {
+  grid-column: 2;
+  margin: 10px 0 0;
+  font: 500 13px/1.3 var(--code);
+  color: var(--ink-2);
+}
+.cs2-chips-h + .cs2-chips {
+  margin-top: 4px;
+}
 .cs2-dive {
-  margin-top: 6px;
-  max-width: 56ch;
   border-top: 1px solid var(--rule);
 }
 .cs2-dive summary {
@@ -674,9 +693,18 @@ html:not(.js) .cs2-video video[data-case-video] {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+.cs2-dive-in {
+  display: grid;
+  gap: 12px;
+}
 .cs2-dive p {
   color: var(--ink-2);
-  margin: 0 0 12px;
+  margin: 0;
+  max-width: 62ch;
+}
+.cs2-dive .figcap {
+  color: var(--muted);
+  font-size: 15px;
 }
 .cs2-dive-text {
   display: grid;
@@ -688,18 +716,25 @@ html:not(.js) .cs2-video video[data-case-video] {
   color: var(--acc);
   font-weight: 650;
 }
-/* prototype site.css .dv: side by side from 1000px, the figure taking 8 of 12 columns */
-@media (min-width: 1000px) {
-  .cs2-dv {
-    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    column-gap: 56px;
+/* wide (the same 900px as page.ts): drawing left, step list right; the paragraphs in columns */
+@media (min-width: 900px) {
+  .cs2-dv-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
+    gap: clamp(28px, 4vw, 72px);
     align-items: center;
   }
-  .cs2-dv.flip {
-    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  .cs2-dive-in {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px 36px;
   }
-  .cs2-dv.flip .cs2-dv-text {
-    order: 2;
+  /* page.ts keeps them open here; without JS the summary still works */
+  .js .cs2-dive summary {
+    pointer-events: none;
+    cursor: default;
+  }
+  .js .cs2-dive summary::before {
+    content: none;
   }
 }
 

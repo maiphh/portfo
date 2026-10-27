@@ -150,27 +150,13 @@ export const poet: CaseStudyData = {
   dives: [
     {
       id: "donate",
-      plate: {
-        title: "PAID",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "hook",
-        modes: [
-          ["hook", "Signed webhook", "writes paid"],
-          ["ret", "Return page", "receipt"],
+      flow: {
+        steps: [
+          "The form asks the Worker for a PayOS payment",
+          "PayOS sends a signed notice when the payment lands",
+          "Signature checked, then the gift is marked paid",
+          "The return page is a receipt; it marks nothing paid",
         ],
-        read: {
-          hook: [
-            "PayOS: the payment landed",
-            "a signed notice to the Worker",
-            "the signature is checked",
-            "only then is the gift marked paid",
-          ],
-          ret: [
-            "the donor comes back to the site",
-            "that page is a receipt",
-            "it does not mark the gift paid",
-          ],
-        },
       },
       title: "A gift is a real PayOS payment",
       paragraphs: [
@@ -183,15 +169,11 @@ export const poet: CaseStudyData = {
     },
     {
       id: "wall",
-      plate: {
-        title: "THE WALL",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: ["a gift is paid", "an admin publishes it", "it appears on the wall · sample gifts"],
-        },
-        chips: [
-          "What the wall shows",
-          ["the name, or “Một nhà hảo tâm”", "the message", "the amount", "when it was paid"],
+      flow: {
+        steps: [
+          "A gift is paid",
+          "An admin publishes it",
+          "It appears on the wall: the name, or “Một nhà hảo tâm”",
         ],
       },
       title: "A donor is shown on the site",

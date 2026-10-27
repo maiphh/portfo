@@ -257,32 +257,15 @@ export const openportfo: CaseStudyData = {
   dives: [
     {
       id: "agent",
-      plate: {
-        title: "TOOLS",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "ok",
-        modes: [
-          ["ok", "Tool succeeds", "changed"],
-          ["fail", "Tool fails", "no claim"],
+      flow: {
+        steps: [
+          "You ask in the chat",
+          "The agent picks a tool; it runs on the server, and the model never receives a token",
+          "The tool only sees the signed-in user’s book",
+          "Only when the tool succeeds does the agent say the book changed",
         ],
-        read: {
-          ok: [
-            "ask in the chat",
-            "the agent picks a tool",
-            "the tool runs on the server · no token to the model",
-            "the signed-in user’s book changes",
-            "only then: “it changed”",
-          ],
-          fail: [
-            "ask in the chat",
-            "the agent picks a tool",
-            "the tool runs on the server",
-            "the tool fails · the book is unchanged",
-            "no change is claimed",
-          ],
-        },
         chips: [
-          "What the chat can do",
+          1,
           [
             "look up holdings",
             "quotes",
@@ -290,6 +273,7 @@ export const openportfo: CaseStudyData = {
             "add or remove a holding",
             "add or remove a watchlist item",
           ],
+          "Tools",
         ],
       },
       title: "A chat agent that works on your portfolio",
@@ -303,17 +287,12 @@ export const openportfo: CaseStudyData = {
     },
     {
       id: "news",
-      plate: {
-        title: "NEWS",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: [
-            "RSS feeds",
-            "a daily job reads them",
-            "the items are stored",
-            "matched to the symbols you hold · the browser reads the list",
-          ],
-        },
+      flow: {
+        steps: [
+          "A daily job reads the RSS feeds and stores the items",
+          "Each item is matched to the symbols on your book",
+          "The browser reads that list; it never calls the feeds",
+        ],
       },
       title: "News is fetched from RSS",
       paragraphs: [
@@ -326,23 +305,12 @@ export const openportfo: CaseStudyData = {
     },
     {
       id: "email",
-      plate: {
-        title: "EMAIL",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "job",
-        modes: [
-          ["job", "Scheduled job", "sends"],
-          ["open", "Site opened", "no mail"],
+      flow: {
+        steps: [
+          "The daily job runs, for people who asked for the summary",
+          "One email: performance, price changes and news",
+          "Opening the site sends nothing; the scheduled job does",
         ],
-        read: {
-          job: [
-            "the daily job runs",
-            "the person asked for it",
-            "one summary email",
-            "performance · price changes · news",
-          ],
-          open: ["someone opens the site", "that is not the job", "no email from that"],
-        },
       },
       title: "Updates go out by email",
       paragraphs: [

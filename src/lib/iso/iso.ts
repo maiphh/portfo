@@ -8,41 +8,49 @@
  * cam = { yaw, el } in degrees (yaw 0..90 turns the world about z, el 0 = elevation, 90 = plan).
  * The defaults (yaw 45, el 35.26) reproduce the original projection exactly.
  * Faces drawn are always +x (SIDE), +y (FRONT) and top, which stay visible for yaw 0..90, el 0..90.
- * Runs at build time only (components/case/IsoPlate.astro); the client gets the SVG it returns.
+ * Also a Portfo addition: cam = { proj: "obl", a, k } is an oblique (cabinet) front view, and
+ * `frame()` with aspect 0 hugs the drawing (natural fit). Neither is in the isoglow kernel.
+ * Runs at build time only (lib/iso/flow.ts); the client gets the SVG it returns.
  */
 export type V2 = [number, number];
 export type V3 = [number, number, number];
 
-/** A camera for one figure. Only yaw/el feed the projection; the rest is read by scene.ts. */
-export interface Cam {
-  yaw?: number;
-  el?: number;
-  /** Where the story runs on screen: "x" | "up" | "scr" | "down" or an angle in degrees. */
-  flow?: "x" | "up" | "scr" | "down" | number;
-  A?: number;
-  B?: number;
-  Amax?: number;
-  mirror?: boolean;
-  ground?: "slab" | "grid" | "outline" | "none";
-  gridStep?: number;
-  crop?: [number, number, number, number, number?];
-  /** Label anchor overrides, by label text. */
-  lab?: Record<string, string>;
-  /** Flow-space nudges for a label's anchor point [du, dv, dz?], by label text. */
-  nudge?: Record<string, [number, number, number?]>;
-  /** Screen-space label nudges in stage px [dx, dy], by label text. */
-  sn?: Record<string, [number, number]>;
-  cutaway?: number;
-  upright?: boolean;
-  explode?: number;
-  shift?: string;
-}
+/**
+ * A camera: axonometric `{ yaw, el }` in degrees, or an oblique (cabinet) front view
+ * `{ proj: "obl", a, k }` (a Portfo addition, see proj()).
+ */
+export type Cam = { yaw?: number; el?: number } | { proj: "obl"; a?: number; k?: number };
 
 const DEG = Math.PI / 180;
 const f = (n: number) => +n.toFixed(2);
 export const ISO_EL = Math.atan(1 / Math.SQRT2) / DEG;
 
-export function proj(cam: Cam = {}) {
+/** Equivalent viewing direction of any camera, in degrees: yaw = atan2(Vx, Vy), el = asin(Vz). */
+export function look(cam: Cam = {}) {
+  const V = proj(cam).V;
+  return { yaw: Math.atan2(V[0], V[1]) / DEG, el: Math.asin(V[2]) / DEG };
+}
+
+export function proj(cam: Cam = {}): {
+  D: (x: number, y: number, z: number) => V2;
+  V: V3;
+  sp: number;
+} {
+  if ("proj" in cam) {
+    // Oblique (cabinet), a Portfo addition: the +y face is drawn undistorted (a flat front view),
+    // depth recedes up and to the right at angle `a` with foreshortening `k`. The same faces
+    // (+x, +y, top) stay visible, so culling and shading don't change.
+    const a = (cam.a ?? 40) * DEG,
+      k = cam.k ?? 0.5,
+      s = Math.sqrt(1.5),
+      ca = Math.cos(a),
+      sa = Math.sin(a);
+    const D = (x: number, y: number, z: number): V2 => [s * (x - k * y * ca), s * (k * y * sa - z)];
+    const v = [k * ca, 1, k * sa],
+      n = Math.hypot(...v);
+    const V = v.map((c) => c / n) as V3;
+    return { D, V, sp: V[2] };
+  }
   const th = Math.min(90, Math.max(0, cam.yaw ?? 45)) * DEG;
   const ph = Math.min(90, Math.max(0, cam.el ?? ISO_EL)) * DEG;
   const s = Math.sqrt(1.5);
@@ -55,7 +63,7 @@ export function proj(cam: Cam = {}) {
     s * ((x * st + y * ct) * sp - z * cp),
   ];
   const V: V3 = [st * cp, ct * cp, sp];
-  return { D, V, ct, st, sp, cp, s };
+  return { D, V, sp };
 }
 
 export type Kernel = ReturnType<typeof kernel>;
@@ -221,7 +229,9 @@ export function frame(
     h = y1 - y0 + 2 * m;
   let ox = m - x0,
     oy = m - y0;
-  if (w / h < aspect) {
+  if (!aspect) {
+    /* natural fit: the viewBox hugs the drawing (flow highlights) */
+  } else if (w / h < aspect) {
     const nw = h * aspect;
     ox += (nw - w) / 2;
     w = nw;

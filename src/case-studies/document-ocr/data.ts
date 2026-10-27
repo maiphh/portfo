@@ -367,19 +367,13 @@ export const ocr: CaseStudyData = {
   dives: [
     {
       id: "template",
-      plate: {
-        title: "TEMPLATE",
-        hint: "PICK A DOCUMENT · CLICK A LAYER",
-        read: {
-          d: [
-            "a new document type",
-            "schema",
-            "prompts",
-            "rules",
-            "workbook",
-            "run started · template kept",
-          ],
-        },
+      flow: {
+        steps: [
+          "One template per document type",
+          "Four parts: fields, model instructions, cleaning rules, Excel layout",
+          "One pipeline runs every template",
+          "A run keeps the template it started with",
+        ],
       },
       title: "New document types are templates, not code changes",
       paragraphs: [
@@ -392,32 +386,13 @@ export const ocr: CaseStudyData = {
     },
     {
       id: "queue",
-      plate: {
-        title: "TWO QUEUES",
-        hint: "SWITCH CLAIM · CLICK A PART",
-        mode: "rr",
-        modes: [
-          ["rr", "Take turns", "what ships"],
-          ["fifo", "Without turns", "for contrast"],
+      flow: {
+        steps: [
+          "A long PDF and two short documents arrive",
+          "Render queue: PDF to page images, quickly",
+          "Extraction waits on the model, the slow step",
+          "Slots take turns, so one PDF cannot take them all",
         ],
-        read: {
-          rr: [
-            "A, B, C arrive",
-            "render keeps going",
-            "pages wait to extract",
-            "slots: A · B · C",
-            "slots: A · B · C · A · B · C",
-            "model reads · render still busy",
-          ],
-          fifo: [
-            "A, B, C arrive",
-            "render keeps going",
-            "pages wait to extract",
-            "slots: A · A · A",
-            "every slot is A · B and C wait",
-            "model reads A only",
-          ],
-        },
       },
       title: "Two queues, because extraction is the slow step",
       paragraphs: [
@@ -430,18 +405,13 @@ export const ocr: CaseStudyData = {
     },
     {
       id: "api",
-      plate: {
-        title: "MANAGED API",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: [
-            "admin creates a key · shown once",
-            "only a hash is stored",
-            "files + template in",
-            "same queues as the UI",
-            "fields + filled Excel back",
-          ],
-        },
+      flow: {
+        steps: [
+          "Another system sends documents",
+          "Its key is shown once; only a hash is stored",
+          "Files and a template join the same queues as the UI",
+          "The fields and the filled Excel file come back",
+        ],
       },
       title: "Other systems connect through a managed API",
       paragraphs: [

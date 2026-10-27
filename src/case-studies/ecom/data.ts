@@ -196,32 +196,13 @@ export const ecom: CaseStudyData = {
   dives: [
     {
       id: "payment",
-      plate: {
-        title: "PAYMENT",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "paid",
-        modes: [
-          ["paid", "Paid", "PayOS"],
-          ["cancel", "Cancelled order", "rejected"],
-          ["cod", "Cash on delivery", "no charge"],
+      flow: {
+        steps: [
+          "Checkout charges through PayOS; cash on delivery creates no charge",
+          "PayOS confirms the payment, and the amount and the order must match",
+          "Then the order machine marks the order paid",
+          "A notice for a cancelled order is rejected; coming back to the site marks nothing paid",
         ],
-        read: {
-          paid: [
-            "checkout",
-            "PayOS charges",
-            "PayOS confirms the payment",
-            "the amount and the order match",
-            "the order machine marks it paid",
-          ],
-          cancel: [
-            "checkout",
-            "PayOS charges",
-            "a notice arrives",
-            "the order was cancelled",
-            "the notice is rejected",
-          ],
-          cod: ["checkout · cash on delivery", "a separate choice", "no charge is created"],
-        },
       },
       title: "The shop takes a real payment",
       paragraphs: [
@@ -234,16 +215,12 @@ export const ecom: CaseStudyData = {
     },
     {
       id: "admin",
-      plate: {
-        title: "TWO DOORS",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: [
-            "buyers use the storefront",
-            "/admin sends a seller to the desk",
-            "one engine · no second checkout",
-          ],
-        },
+      flow: {
+        steps: [
+          "Buyers use the storefront; they do not see the desk",
+          "`/admin` sends a seller to the desk: catalog, orders and sales",
+          "Both use the same engine; there is no second copy of checkout",
+        ],
       },
       title: "The seller runs the shop from an admin desk",
       paragraphs: [
@@ -256,26 +233,12 @@ export const ecom: CaseStudyData = {
     },
     {
       id: "store",
-      plate: {
-        title: "NEW FRONT",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "next",
-        modes: [
-          ["mirror", "Mirror Now", "first"],
-          ["next", "Next store", "planned"],
+      flow: {
+        steps: [
+          "The catalog, cart, price, stock, payment and orders live in one engine",
+          "A new shop is another set of pages that call it; Mirror Now is the first",
+          "Changing a page does not rewrite checkout",
         ],
-        read: {
-          mirror: [
-            "Mirror Now’s pages",
-            "they call the engine",
-            "catalog to orders live in the engine",
-          ],
-          next: [
-            "a new set of pages",
-            "they call the same engine",
-            "changing a page does not rewrite checkout",
-          ],
-        },
       },
       title: "A new store is a new front, not a new engine",
       paragraphs: [

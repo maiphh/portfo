@@ -358,28 +358,12 @@ export const dvp: CaseStudyData = {
   dives: [
     {
       id: "validate",
-      plate: {
-        title: "STRUCTURE CHECK",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "mismatch",
-        modes: [
-          ["match", "Layout matches", "month runs"],
-          ["mismatch", "Layout changed", "map first"],
+      flow: {
+        steps: [
+          "This month’s files meet the structure saved for the client",
+          "Structure check: a sheet, column or field no longer matches",
+          "The user maps the file first; the month does not run",
         ],
-        read: {
-          match: [
-            "the month’s files",
-            "compared with the saved structure",
-            "the structure matches",
-            "the month runs",
-          ],
-          mismatch: [
-            "the month’s files",
-            "compared with the saved structure",
-            "the structure no longer matches",
-            "map the file first · the month waits",
-          ],
-        },
       },
       title: "Files are checked against the structure the client was taught",
       paragraphs: [
@@ -392,31 +376,13 @@ export const dvp: CaseStudyData = {
     },
     {
       id: "translate",
-      plate: {
-        title: "RETRY",
-        hint: "SWITCH CASE · CLICK A PART",
-        mode: "never",
-        modes: [
-          ["ok", "Fixed on retry", "kept"],
-          ["never", "Never translates", "stub"],
+      flow: {
+        steps: [
+          "One rule becomes one Python function",
+          "It is checked; on failure, retry with the code and the error",
+          "Capped: 5 tries inside 180 s",
+          "Past the cap, a stub that returns nothing; the other rules still translate",
         ],
-        read: {
-          ok: [
-            "one rule",
-            "translated · try 1",
-            "the check fails",
-            "retry with the code + the error",
-            "passes · function kept",
-          ],
-          never: [
-            "one rule",
-            "try 1 fails",
-            "retry with the error · fails again",
-            "5 tries inside 180 s used up",
-            "the rule becomes a stub",
-            "the other rules still translate",
-          ],
-        },
       },
       title: "The translator retries when the code does not run",
       paragraphs: [
@@ -429,21 +395,14 @@ export const dvp: CaseStudyData = {
     },
     {
       id: "sandbox",
-      plate: {
-        title: "SANDBOX",
-        hint: "STEP THROUGH · CLICK A PART",
-        read: {
-          d: [
-            "three callers, one sandbox",
-            "the rule runs with a fixed set of modules",
-            "open and setattr rejected",
-            "a helper beside it is never run as the rule",
-          ],
-        },
-        chips: [
-          "Modules a rule may use (projects/dvp/highlights.md)",
-          ["re", "math", "datetime", "decimal", "statistics", "collections"],
+      flow: {
+        steps: [
+          "Three callers, one sandbox",
+          "A fixed set of modules",
+          "`open` and `setattr` are rejected",
+          "Only the requested function runs; a helper beside it never does",
         ],
+        chips: [2, ["re", "math", "datetime", "decimal", "statistics", "collections"], "Modules"],
       },
       title: "Generated rules run in a sandbox",
       paragraphs: [
