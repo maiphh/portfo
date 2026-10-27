@@ -2,7 +2,8 @@
  * Case-study page behaviour (components/case/CaseStudy.astro):
  * - ?dev shows the TODO slots;
  * - the depth rail marks the section in view;
- * - deep dives are open on wide screens and an accordion on narrow ones;
+ * - highlights: "The detail" is open on wide screens and folded on narrow ones; the isoglow
+ *   plates (plates.ts) load with or without reduced motion (only their tweens are gated);
  * - "Full stack with versions" opens the stack table;
  * - the short cut (OCR, DVP) autoplays muted while half in view, unless reduced motion or a
  *   data saver is on: then a play button sits on its poster;
@@ -48,7 +49,7 @@ if (page) {
   );
   for (const t of targets) io.observe(t);
 
-  // Highlights: open on wide screens.
+  // Highlights: the paragraphs are open on wide screens.
   const wide = matchMedia("(min-width: 900px)");
   const dives = [...page.querySelectorAll<HTMLDetailsElement>("[data-dive]")];
   const syncDives = () => {
@@ -130,6 +131,9 @@ if (page) {
       { threshold: 0.5 },
     ).observe(video);
   }
+
+  // The plates need their step, mode and tip controls under reduced motion too.
+  if (page.querySelector(".plate")) void import("./plates").then((m) => m.default(page));
 
   const key = page.dataset.motion;
   const load = key ? motions[key] : undefined;

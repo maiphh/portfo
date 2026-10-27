@@ -92,7 +92,7 @@ export const poet: CaseStudyData = {
           details: {
             does: "The `donations` table: order code, amount, display name, message, anonymous flag, status, PayOS ids, created and paid times. Admin users and sessions are separate tables.",
             tech: ["Cloudflare D1", "Index on `(status, paid_at)` for the wall"],
-            why: "The wall reads published, paid gifts only. A name becomes “Ẩn danh” in one place, `mask.js`.",
+            why: "The wall reads published, paid gifts only. A donor who ticks “Ẩn danh” is stored and shown as “Một nhà hảo tâm”.",
           },
         },
         {
@@ -150,6 +150,28 @@ export const poet: CaseStudyData = {
   dives: [
     {
       id: "donate",
+      plate: {
+        title: "PAID",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "hook",
+        modes: [
+          ["hook", "Signed webhook", "writes paid"],
+          ["ret", "Return page", "receipt"],
+        ],
+        read: {
+          hook: [
+            "PayOS: the payment landed",
+            "a signed notice to the Worker",
+            "the signature is checked",
+            "only then is the gift marked paid",
+          ],
+          ret: [
+            "the donor comes back to the site",
+            "that page is a receipt",
+            "it does not mark the gift paid",
+          ],
+        },
+      },
       title: "A gift is a real PayOS payment",
       paragraphs: [
         "The form asks the Worker to create a PayOS payment. The Worker stores the gift and returns the checkout link.",
@@ -161,9 +183,20 @@ export const poet: CaseStudyData = {
     },
     {
       id: "wall",
+      plate: {
+        title: "THE WALL",
+        hint: "STEP THROUGH · CLICK A PART",
+        read: {
+          d: ["a gift is paid", "an admin publishes it", "it appears on the wall · sample gifts"],
+        },
+        chips: [
+          "What the wall shows",
+          ["the name, or “Một nhà hảo tâm”", "the message", "the amount", "when it was paid"],
+        ],
+      },
       title: "A donor is shown on the site",
       paragraphs: [
-        "The public wall shows the name, or “Ẩn danh” when the donor stays unnamed, with the message, the amount and when it was paid.",
+        "The public wall shows the name, or “Một nhà hảo tâm” when “Ẩn danh” is ticked, with the message, the amount and when it was paid.",
         "A gift appears there after it is paid and an admin publishes it.",
       ],
       shows: "A real donation can be seen on the frontend.",

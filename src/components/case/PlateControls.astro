@@ -1,0 +1,48 @@
+---
+/**
+ * The controls beside a Highlights plate (HIGHLIGHTS-SPEC §2.3, §4.4): compare buttons, the OCR
+ * document buttons, and ← / → story steps. All JS-only: without a script the plate already shows the
+ * end of the default story.
+ */
+import type { DivePlateCopy } from "~/lib/case";
+import { DOC_TYPES } from "~/case-studies/document-ocr/scenes";
+
+interface Props {
+  /** The plate's id (`data-fig`), so the buttons find their plate. */
+  id: string;
+  plate: DivePlateCopy;
+  ctrl?: "docs" | undefined;
+}
+const { id, plate, ctrl } = Astro.props;
+const mode = plate.mode ?? "d";
+const cap = (s: string) => s[0]?.toUpperCase() + s.slice(1);
+---
+
+<div class="cs2-ctrl js-only" data-ctrl={id}>
+  {plate.modes && (
+    <div class="seg" role="group" aria-label="Compare">
+      {plate.modes.map(([k, label, sub]) => (
+        <button type="button" data-mode={k} aria-pressed={k === mode ? "true" : "false"}>
+          {label} <span class="def">{sub}</span>
+        </button>
+      ))}
+    </div>
+  )}
+  {ctrl === "docs" && (
+    <div class="seg" role="group" aria-label="Document">
+      {DOC_TYPES.map((d, j) => (
+        <button type="button" data-doc={d} aria-pressed={j === 0 ? "true" : "false"}>
+          {cap(d)}
+        </button>
+      ))}
+    </div>
+  )}
+  <div class="steps" role="group" aria-label="Story steps">
+    <button class="btn" type="button" data-step="-1" aria-label="Previous step">
+      ←
+    </button>
+    <button class="btn" type="button" data-step="1" aria-label="Next step">
+      →
+    </button>
+  </div>
+</div>

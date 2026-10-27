@@ -5,36 +5,56 @@
  * how it works (FlowDiagram) → highlights → limits → next. Each project passes its data
  * (lib/case.ts) and fills slots:
  *   highlight      the one component that proves the claim
- *   dive-<id>      the artifact for each deep dive
+ *   dive-<id>      the artifact for a deep dive without an isoglow plate (data `plate` absent)
  *   extra          the body of the optional extra section (data.extra), after the deep dives
  * The hero lists the entry's `links` (live site, repository) and an optional credit line.
  * The accent comes from the work entry; the badge from its `org_badge`.
+ * Highlights with `plate` copy get an isoglow plate (IsoPlate) drawn from the page's `scenes`
+ * (HIGHLIGHTS-SPEC §2.3); the iso-glow credit goes in the footer of these pages only.
  */
 import type { CollectionEntry } from "astro:content";
 import CaseHeroTitle from "~/components/case/CaseHeroTitle.astro";
 import FlowDiagram from "~/components/flow/FlowDiagram.astro";
 import Icon from "~/components/Icon.astro";
+import IsoPlate from "~/components/case/IsoPlate.astro";
+import PlateControls from "~/components/case/PlateControls.astro";
 import Base from "~/layouts/Base.astro";
 import type { CaseStudyData } from "~/lib/case";
+import { ISO_CREDIT } from "~/lib/credit";
 import { CASE_VIDEOS } from "~/lib/flags";
+import { IGF, plateVars } from "~/lib/iso/accent";
+import type { PlateScene } from "~/lib/iso/scene";
 import { richText } from "~/lib/flow/types";
 import { site } from "~/lib/site";
 import "~/styles/case.css";
+import "~/styles/plates.css";
 
 interface Props {
   entry: CollectionEntry<"work">;
   prev?: CollectionEntry<"work"> | undefined;
   next?: CollectionEntry<"work"> | undefined;
   data: CaseStudyData;
+  /** Isoglow scenes by dive id, for the dives that carry `plate` copy. */
+  scenes?: Record<string, PlateScene>;
 }
-const { entry, prev, next, data } = Astro.props;
+const { entry, prev, next, data, scenes = {} } = Astro.props;
 const d = entry.data;
 const acc = d.accent ?? { line: "#d4f56b", tint: "#262b17" };
 const { overview: o, how, dives, limits, extra } = data;
 
 const dive = await Promise.all(
-  dives.map(async (x) => ({ ...x, artifact: await Astro.slots.render(`dive-${x.id}`) })),
+  dives.map(async (x) => {
+    const scene = x.plate ? scenes[x.id] : undefined;
+    if (x.plate && !scene)
+      throw new Error(`${entry.id}: dive "${x.id}" has plate copy but no scene`);
+    return {
+      ...x,
+      scene,
+      artifact: scene ? "" : await Astro.slots.render(`dive-${x.id}`),
+    };
+  }),
 );
+const hasPlates = dive.some((x) => x.scene);
 const showVideo = CASE_VIDEOS.has(entry.id) ? data.video : undefined;
 const rail = [
   { href: "#overview", label: "Overview" },
@@ -46,14 +66,18 @@ const rail = [
 const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."]), ...d.todo];
 ---
 
-<Base title={`${d.title} · ${site.name}`} description={d.summary}>
+<Base
+  title={`${d.title} · ${site.name}`}
+  description={d.summary}
+  credit={hasPlates ? ISO_CREDIT : undefined}
+>
   <article
     class="cs2"
     aria-labelledby="cs-h"
     data-view-slug={entry.id}
     data-case
     data-motion={data.motion}
-    style={`--acc:${acc.line};--acc-tint:${acc.tint}`}
+    style={`--acc:${acc.line};--acc-tint:${acc.tint};${plateVars(acc.line)}`}
   >
     <div class="wrap">
       <nav class="cs2-crumbs" aria-label="Breadcrumb">
@@ -255,27 +279,54 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
 
       <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h">
         <h2 id="dd-h">Highlights</h2>
-        {dive.map((x) => (
-          <details class="cs2-dive" id={`dive-${x.id}`} data-dive>
-            <summary>
-              <h3>{x.title}</h3>
-            </summary>
-            <div class="cs2-dive-in">
-              <div class="cs2-dive-text">
-                {x.paragraphs.map((p) => (
-                  <p set:html={richText(p)} />
-                ))}
+        {hasPlates && <Fragment set:html={IGF} />}
+        {dive.map((x, i) => {
+          const fid = `${entry.id}-${x.id}`;
+          return (
+            <article
+              class:list={["cs2-dv", i % 2 === 1 && "flip"]}
+              id={`dive-${x.id}`}
+              aria-labelledby={`dvh-${x.id}`}
+            >
+              <div class="cs2-dv-text">
+                <p class="cs2-dv-n" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 id={`dvh-${x.id}`}>{x.title}</h3>
                 <p class="cs2-shows">
                   <b>What this shows:</b> <span set:html={richText(x.shows)} />
                 </p>
+                {x.plate && x.scene && (
+                  <PlateControls id={fid} plate={x.plate} ctrl={x.scene.ctrl} />
+                )}
+                <details class="cs2-dive" data-dive>
+                  <summary>The detail</summary>
+                  {x.paragraphs.map((p) => (
+                    <p set:html={richText(p)} />
+                  ))}
+                </details>
               </div>
-              <figure>
-                <Fragment set:html={x.artifact} />
+              <figure
+                class="cs2-dv-fig"
+                aria-describedby={x.plate && x.scene ? `${fid}-desc` : undefined}
+              >
+                {x.plate && x.scene ? (
+                  <IsoPlate id={fid} scene={x.scene} plate={x.plate} caption={x.caption} />
+                ) : (
+                  <Fragment set:html={x.artifact} />
+                )}
                 <figcaption>{x.caption}</figcaption>
+                {x.plate?.chips && (
+                  <ul class="cs2-chips" aria-label={x.plate.chips[0]}>
+                    {x.plate.chips[1].map((c) => (
+                      <li>{c}</li>
+                    ))}
+                  </ul>
+                )}
               </figure>
-            </div>
-          </details>
-        ))}
+            </article>
+          );
+        })}
       </section>
 
       {extra && (

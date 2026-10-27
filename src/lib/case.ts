@@ -44,6 +44,26 @@ export interface CaseDive {
   shows: string;
   /** Caption under the artifact, naming where its pixels come from. */
   caption: string;
+  /** Isoglow plate copy. Absent = the dive keeps its `dive-<id>` slot artifact. */
+  plate?: DivePlateCopy;
+}
+
+/** Copy for one Highlights plate (HIGHLIGHTS-SPEC Appendix A). The geometry, labels and tips are
+ *  in `src/case-studies/<slug>/scenes.ts`, next to the shapes they point at. */
+export interface DivePlateCopy {
+  /** Mono caption at the top-left of the plate, upper case. */
+  title: string;
+  /** Mono hint at the top-right, e.g. "SWITCH CASE · CLICK A PART". */
+  hint: string;
+  /** Compare buttons: [mode id, label, small sub-label]. Omit for a single story. */
+  modes?: [id: string, label: string, sub: string][];
+  /** Mode shown first and baked into the static HTML. Defaults to "d" (no modes). */
+  mode?: string;
+  /** One short sentence per story step, per mode ("d" when there are no modes). Drives the live
+   *  read-out, the screen-reader list and the static end state (the last string). */
+  read: Record<string, string[]>;
+  /** Optional chip row under the caption: [aria-label, chips]. */
+  chips?: [label: string, items: string[]];
 }
 
 export interface CaseStackTable {

@@ -1,4 +1,4 @@
-/* Legal RAG: the chunk card (highlight) and the deep-dive artifacts. */
+/* Legal RAG: the chunk card (highlight). The deep dives are isoglow plates (styles/plates.css). */
 
 /* highlight */
 .rag-chunkcard {
@@ -38,76 +38,4 @@
   .rag-paths {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* dives */
-.rag-blocks {
-  display: grid;
-  gap: 10px;
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
-}
-.rag-blocks li {
-  padding: 12px 14px;
-  border: 1px dashed var(--rule-2);
-  border-radius: 4px;
-  font: 500 13.5px/1.45 var(--code);
-  max-width: none;
-}
-.rag-blocks li.bad {
-  border-color: #ff9d8a;
-}
-.rag-blocks li.dim {
-  color: var(--muted);
-}
-.rag-blocks li.ok {
-  border-style: solid;
-  border-color: var(--acc);
-}
-.rag-small {
-  margin-top: 12px;
-  font-size: 14.5px;
-  color: var(--ink-2);
-}
-.rag-chain ol {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: s;
-}
-.rag-chain li {
-  counter-increment: s;
-  display: grid;
-  grid-template-columns: 2em minmax(0, 1fr);
-  gap: 4px 10px;
-  max-width: none;
-}
-.rag-chain li::before {
-  content: counter(s);
-  grid-row: span 2;
-  font: 500 13px var(--code);
-  color: var(--acc);
-}
-.rag-chain code {
-  justify-self: start;
-  color: var(--acc) !important;
-  font-size: 13.5px !important;
-}
-.rag-chain span {
-  font-size: 15px;
-  color: var(--ink-2);
-}
-.rag-q {
-  padding: 16px 18px;
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-  display: grid;
-  gap: 8px;
-}
-.rag-fallback {
-  font-size: clamp(16px, 2vw, 19px);
-  color: var(--ink);
 }

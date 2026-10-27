@@ -257,6 +257,41 @@ export const openportfo: CaseStudyData = {
   dives: [
     {
       id: "agent",
+      plate: {
+        title: "TOOLS",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "ok",
+        modes: [
+          ["ok", "Tool succeeds", "changed"],
+          ["fail", "Tool fails", "no claim"],
+        ],
+        read: {
+          ok: [
+            "ask in the chat",
+            "the agent picks a tool",
+            "the tool runs on the server · no token to the model",
+            "the signed-in user’s book changes",
+            "only then: “it changed”",
+          ],
+          fail: [
+            "ask in the chat",
+            "the agent picks a tool",
+            "the tool runs on the server",
+            "the tool fails · the book is unchanged",
+            "no change is claimed",
+          ],
+        },
+        chips: [
+          "What the chat can do",
+          [
+            "look up holdings",
+            "quotes",
+            "news",
+            "add or remove a holding",
+            "add or remove a watchlist item",
+          ],
+        ],
+      },
       title: "A chat agent that works on your portfolio",
       paragraphs: [
         "The chat can look up holdings, quotes and news, and it can add or remove a holding or a watchlist item.",
@@ -268,6 +303,18 @@ export const openportfo: CaseStudyData = {
     },
     {
       id: "news",
+      plate: {
+        title: "NEWS",
+        hint: "STEP THROUGH · CLICK A PART",
+        read: {
+          d: [
+            "RSS feeds",
+            "a daily job reads them",
+            "the items are stored",
+            "matched to the symbols you hold · the browser reads the list",
+          ],
+        },
+      },
       title: "News is fetched from RSS",
       paragraphs: [
         "A daily job reads RSS feeds and stores the items.",
@@ -279,6 +326,24 @@ export const openportfo: CaseStudyData = {
     },
     {
       id: "email",
+      plate: {
+        title: "EMAIL",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "job",
+        modes: [
+          ["job", "Scheduled job", "sends"],
+          ["open", "Site opened", "no mail"],
+        ],
+        read: {
+          job: [
+            "the daily job runs",
+            "the person asked for it",
+            "one summary email",
+            "performance · price changes · news",
+          ],
+          open: ["someone opens the site", "that is not the job", "no email from that"],
+        },
+      },
       title: "Updates go out by email",
       paragraphs: [
         "The same daily job can send a summary: performance, price changes and news.",

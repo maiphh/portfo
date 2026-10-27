@@ -458,7 +458,7 @@ html:not(.js) .cs2-rail__ln {
 /* 3. highlight, 4. video */
 .cs2-hl figure,
 .cs2-video figure,
-.cs2-dive figure {
+.cs2-dv-fig {
   margin: 0;
   min-width: 0;
 }
@@ -589,40 +589,94 @@ html:not(.js) .cs2-video video[data-case-video] {
   text-underline-offset: 0.2em;
 }
 
-/* 6. deep dives */
+/* 6. highlights (HIGHLIGHTS-SPEC §2.3): the plate is always shown; only "The detail" folds.
+   page.ts opens the paragraphs on ≥900px and leaves them folded on phones. */
+.cs2-dives > h2 {
+  margin-bottom: clamp(8px, 2vw, 24px);
+}
+.cs2-dv {
+  display: grid;
+  gap: 20px;
+  padding: clamp(36px, 5vw, 80px) 0;
+  border-top: 1px solid var(--rule);
+}
+.cs2-dv-text {
+  display: grid;
+  gap: var(--s3);
+  align-content: start;
+  min-width: 0;
+}
+.cs2-dv-n {
+  font: 600 13px/1 var(--code);
+  color: var(--acc);
+}
+.cs2-dv h3 {
+  max-width: 22ch;
+}
+.cs2-dv .cs2-shows {
+  color: var(--ink-2);
+  max-width: 44ch;
+}
+.cs2-dv-fig {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.cs2-dv-fig figcaption {
+  color: var(--muted);
+  font-size: 15px;
+}
+.cs2-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.cs2-chips li {
+  font: 500 12.5px/1 var(--code);
+  color: var(--ink-2);
+  border: 1px solid var(--rule-2);
+  border-radius: 3px;
+  padding: 7px 8px;
+}
 .cs2-dive {
+  margin-top: 6px;
+  max-width: 56ch;
   border-top: 1px solid var(--rule);
 }
 .cs2-dive summary {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 56px;
-  padding: 12px 0;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 0;
   list-style: none;
   cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-2);
 }
 .cs2-dive summary::-webkit-details-marker {
   display: none;
 }
-.cs2-dive summary::after {
+.cs2-dive summary::before {
   content: "+";
   flex: none;
-  font: 400 24px/1 var(--text);
-  color: var(--muted);
+  width: 16px;
+  font: 600 16px/1 var(--code);
+  color: var(--acc);
 }
-.cs2-dive[open] summary::after {
+.cs2-dive[open] summary::before {
   content: "–";
 }
 .cs2-dive summary:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
-.cs2-dive-in {
-  display: grid;
-  gap: var(--s5);
-  padding: 4px 0 var(--s6);
+.cs2-dive p {
+  color: var(--ink-2);
+  margin: 0 0 12px;
 }
 .cs2-dive-text {
   display: grid;
@@ -635,17 +689,16 @@ html:not(.js) .cs2-video video[data-case-video] {
   font-weight: 650;
 }
 @media (min-width: 900px) {
-  .cs2-dive summary {
-    cursor: default;
-    pointer-events: none;
-    padding-top: var(--s6);
-  }
-  .cs2-dive summary::after {
-    display: none;
-  }
-  .cs2-dive-in {
+  .cs2-dv {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 48px;
+    column-gap: 48px;
+    align-items: center;
+  }
+  .cs2-dv.flip {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+  .cs2-dv.flip .cs2-dv-text {
+    order: 2;
   }
 }
 

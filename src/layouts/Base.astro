@@ -10,6 +10,7 @@ import Footer from "~/components/Footer.astro";
 import GsapTransitions from "~/components/GsapTransitions.astro";
 import Icons from "~/components/Icons.astro";
 import Nav from "~/components/Nav.astro";
+import type { Credit } from "~/lib/credit";
 import { site } from "~/lib/site";
 
 interface Props {
@@ -18,12 +19,15 @@ interface Props {
   /** "" on the home page (in-page anchors), "/" elsewhere. */
   base?: "" | "/";
   noindex?: boolean;
+  /** Footer credit line (case studies with iso-glow plates). */
+  credit?: Credit | undefined;
 }
 const {
   title = site.title,
   description = site.description,
   base = "/",
   noindex = false,
+  credit,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -81,7 +85,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <main id="main">
       <slot />
     </main>
-    <Footer base={base} />
+    <Footer base={base} credit={credit} />
     <Chat />
     <slot name="after" />
   </body>

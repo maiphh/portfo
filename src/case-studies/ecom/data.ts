@@ -196,6 +196,33 @@ export const ecom: CaseStudyData = {
   dives: [
     {
       id: "payment",
+      plate: {
+        title: "PAYMENT",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "paid",
+        modes: [
+          ["paid", "Paid", "PayOS"],
+          ["cancel", "Cancelled order", "rejected"],
+          ["cod", "Cash on delivery", "no charge"],
+        ],
+        read: {
+          paid: [
+            "checkout",
+            "PayOS charges",
+            "PayOS confirms the payment",
+            "the amount and the order match",
+            "the order machine marks it paid",
+          ],
+          cancel: [
+            "checkout",
+            "PayOS charges",
+            "a notice arrives",
+            "the order was cancelled",
+            "the notice is rejected",
+          ],
+          cod: ["checkout · cash on delivery", "a separate choice", "no charge is created"],
+        },
+      },
       title: "The shop takes a real payment",
       paragraphs: [
         "Checkout charges through PayOS. When PayOS confirms the payment, and the amount and the order match, the order is marked paid.",
@@ -207,6 +234,17 @@ export const ecom: CaseStudyData = {
     },
     {
       id: "admin",
+      plate: {
+        title: "TWO DOORS",
+        hint: "STEP THROUGH · CLICK A PART",
+        read: {
+          d: [
+            "buyers use the storefront",
+            "/admin sends a seller to the desk",
+            "one engine · no second checkout",
+          ],
+        },
+      },
       title: "The seller runs the shop from an admin desk",
       paragraphs: [
         "The desk sits beside the storefront. The seller edits the catalog, follows orders, and manages sales.",
@@ -218,6 +256,27 @@ export const ecom: CaseStudyData = {
     },
     {
       id: "store",
+      plate: {
+        title: "NEW FRONT",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "next",
+        modes: [
+          ["mirror", "Mirror Now", "first"],
+          ["next", "Next store", "planned"],
+        ],
+        read: {
+          mirror: [
+            "Mirror Now’s pages",
+            "they call the engine",
+            "catalog to orders live in the engine",
+          ],
+          next: [
+            "a new set of pages",
+            "they call the same engine",
+            "changing a page does not rewrite checkout",
+          ],
+        },
+      },
       title: "A new store is a new front, not a new engine",
       paragraphs: [
         "The catalog, the cart, the price, the stock, the payment and the orders live in one engine.",

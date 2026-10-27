@@ -19,7 +19,7 @@ import {
   type V2,
 } from "~/lib/iso/scene";
 
-/** What the public wall shows for a gift whose donor ticked "Ẩn danh" (worker/src/mask.js). */
+/** What the public wall shows for a gift whose donor ticked "Ẩn danh" (maiphh/poet worker/src/validation.js). */
 export const ANON = "Một nhà hảo tâm";
 const WALL_TIP = `The public wall shows the name, or “${ANON}” when “Ẩn danh” is ticked, with the message, the amount and when it was paid. These two are sample gifts.`;
 const ANON_LAB = {

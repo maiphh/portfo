@@ -3,6 +3,7 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { legalRag } from "./data";
+import { SCENES } from "./scenes";
 import { examplePrefix } from "./example";
 import "./rag.css";
 
@@ -14,7 +15,7 @@ interface Props {
 const { entry, prev, next } = Astro.props;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={legalRag}>
+<CaseStudy entry={entry} prev={prev} next={next} data={legalRag} scenes={SCENES}>
   <div slot="highlight" class="mk rag-hl">
     <div class="rag-chunkcard">
       <code>{examplePrefix}</code>
@@ -45,63 +46,5 @@ const { entry, prev, next } = Astro.props;
       HTML splits only on the page's own <code>&lt;a name="dieu_N"&gt;</code>. A công văn is not
       given a made-up Điều.
     </p>
-  </div>
-
-  <div slot="dive-repair" class="mk mk-two rag-repair">
-    <div>
-      <p class="mk-label">coarse split</p>
-      <ul class="rag-blocks">
-        <li class="bad">… ends on a bare “Điều N”</li>
-        <li class="dim">body that follows</li>
-        <li class="bad">“Khoản 1” alone, under 50 chars</li>
-      </ul>
-    </div>
-    <div>
-      <p class="mk-label">after the repair pass</p>
-      <ul class="rag-blocks">
-        <li class="ok">header merged into its body</li>
-        <li class="ok">“Khoản 1” merged forward</li>
-      </ul>
-      <p class="rag-small">
-        The next block is told the previous level, so “3.” stays under that article.
-      </p>
-    </div>
-  </div>
-
-  <div slot="dive-fallback" class="mk rag-chain">
-    <ol>
-      <li>
-        <code>label</code>
-        <span>JSON only, verbatim text, the previous level as a hint</span>
-      </li>
-      <li>
-        <code>retry × 3</code>
-        <span>fences stripped, the brace-matched object kept</span>
-      </li>
-      <li>
-        <code>semantic split</code>
-        <span>break where sentence similarity drops, instead of dropping the block</span>
-      </li>
-      <li>
-        <code>dedupe</code>
-        <span>near-copies inside one Điều collapse; the longer chunk stays</span>
-      </li>
-    </ol>
-  </div>
-
-  <div slot="dive-refuse" class="mk rag-refuse" data-refuse>
-    <div class="rag-q">
-      <p class="mk-label">a question with no qualifying chunk</p>
-      <p class="rag-fallback" lang="vi">
-        Xin lỗi, tôi không tìm thấy thông tin cần thiết.
-      </p>
-    </div>
-    <ul class="mk-chips" aria-label="Retrieval defaults">
-      <li>top_k 6</li>
-      <li>rerank off by default</li>
-      <li>threshold 0.7</li>
-      <li>keep 2</li>
-      <li>pgvector cosine</li>
-    </ul>
   </div>
 </CaseStudy>

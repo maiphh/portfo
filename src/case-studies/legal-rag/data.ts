@@ -251,6 +251,19 @@ export const legalRag: CaseStudyData = {
   dives: [
     {
       id: "repair",
+      plate: {
+        title: "REPAIR",
+        hint: "STEP THROUGH · CLICK A PART",
+        read: {
+          d: [
+            "split on Điều · Phụ lục · Chương",
+            "a bare “Điều N” at a piece end",
+            "merged into the next piece",
+            "a short “Khoản 1” moves forward · level hint carried",
+            "id + title locked",
+          ],
+        },
+      },
       title: "The label survives a page break and a bad split",
       paragraphs: [
         "The coarse split prefers legal boundaries: markdown headers and the words Điều, Phụ lục and Chương come before any ordinary newline, in 4,000-character pieces.",
@@ -263,6 +276,31 @@ export const legalRag: CaseStudyData = {
     },
     {
       id: "fallback",
+      plate: {
+        title: "FALLBACK",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "fail",
+        modes: [
+          ["ok", "Label parses", "first try"],
+          ["fail", "Label keeps failing", "the fallback"],
+        ],
+        read: {
+          ok: [
+            "a block",
+            "labeller · JSON only",
+            "valid on the first try",
+            "dedupe within one Điều · text kept",
+          ],
+          fail: [
+            "a block",
+            "labeller · JSON only",
+            "try 2 fails",
+            "try 3 fails",
+            "semantic split takes over",
+            "dedupe within one Điều · text kept",
+          ],
+        },
+      },
       title: "A failed label doesn't drop the document",
       paragraphs: [
         "The labeller must return JSON only. The parser strips code fences and keeps only the brace-matched object if the model adds anything after it. Each block gets 3 attempts.",
@@ -275,6 +313,35 @@ export const legalRag: CaseStudyData = {
     },
     {
       id: "refuse",
+      plate: {
+        title: "SAY NOTHING",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "miss",
+        modes: [
+          ["hit", "Something passes", "answer"],
+          ["miss", "Nothing passes", "the refusal"],
+        ],
+        read: {
+          hit: [
+            "a question",
+            "cosine search",
+            "scores through the threshold",
+            "the model is called",
+            "answer with its citation",
+          ],
+          miss: [
+            "a question",
+            "cosine search",
+            "scores through the threshold",
+            "nothing left",
+            "“Xin lỗi, tôi không tìm thấy thông tin cần thiết.”",
+          ],
+        },
+        chips: [
+          "Config defaults (settings, not results)",
+          ["top_k 6", "rerank off by default", "threshold 0.7", "keep 2"],
+        ],
+      },
       title: "Retrieval is allowed to say nothing",
       paragraphs: [
         "The question is embedded and compared by cosine distance; there is no keyword index in this service. With rerank on, scores pass through a sigmoid and anything under the threshold is dropped.",

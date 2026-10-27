@@ -24,6 +24,7 @@ import {
   type V2,
   type V3,
 } from "./iso";
+import { inR } from "./range";
 
 export { esc, slits };
 export type { Cam, Kernel, V2, V3 };
@@ -36,16 +37,7 @@ export interface Spec {
   [k: string]: string | Record<string, string> | undefined;
 }
 
-export const inR = (s: number, rs: string) =>
-  String(rs)
-    .split(",")
-    .some((r) => {
-      if (!r) return false;
-      const [a = "", b] = r.split("-");
-      const lo = +a;
-      const hi = b === undefined ? lo : b === "" ? 1e9 : +b;
-      return s >= lo && s <= hi;
-    });
+export { inR };
 
 export interface Lab {
   /** anchor on desktop: n | s | e | w | c */

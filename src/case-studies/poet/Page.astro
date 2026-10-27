@@ -4,6 +4,7 @@
 import type { CollectionEntry } from "astro:content";
 import CaseStudy from "~/components/case/CaseStudy.astro";
 import { poet } from "./data";
+import { SCENES } from "./scenes";
 import "./poet.css";
 
 interface Props {
@@ -16,7 +17,7 @@ const { entry, prev, next } = Astro.props;
 const img = (name: string) => `/work/poet/${name}.webp`;
 ---
 
-<CaseStudy entry={entry} prev={prev} next={next} data={poet}>
+<CaseStudy entry={entry} prev={prev} next={next} data={poet} scenes={SCENES}>
   <div slot="highlight" class="shots two pt-hl">
     <img
       class="shot"
@@ -37,29 +38,4 @@ const img = (name: string) => `/work/poet/${name}.webp`;
       alt="The thank-you letter (Thư cảm ơn · POET) addressed to the sample donor, for 200.000 đ, with their message and the date."
     />
   </div>
-
-  <div slot="dive-donate" class="mk">
-    <ul class="mk-chips" aria-label="A real donation">
-      <li>Ủng hộ form</li>
-      <li class="sep" aria-hidden="true">
-        →
-      </li>
-      <li>PayOS checkout</li>
-      <li class="sep" aria-hidden="true">
-        →
-      </li>
-      <li class="acc">gift paid</li>
-    </ul>
-  </div>
-
-  <img
-    slot="dive-wall"
-    class="shot"
-    src={img("wall")}
-    width="1240"
-    height="660"
-    loading="lazy"
-    decoding="async"
-    alt="The gift wall: a top-three podium and a searchable list with two sample gifts, one named and one shown as 'Một nhà hảo tâm'."
-  />
 </CaseStudy>

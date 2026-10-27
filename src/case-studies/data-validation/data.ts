@@ -358,6 +358,29 @@ export const dvp: CaseStudyData = {
   dives: [
     {
       id: "validate",
+      plate: {
+        title: "STRUCTURE CHECK",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "mismatch",
+        modes: [
+          ["match", "Layout matches", "month runs"],
+          ["mismatch", "Layout changed", "map first"],
+        ],
+        read: {
+          match: [
+            "the month’s files",
+            "compared with the saved structure",
+            "the structure matches",
+            "the month runs",
+          ],
+          mismatch: [
+            "the month’s files",
+            "compared with the saved structure",
+            "a column no longer matches",
+            "map the file first · the month waits",
+          ],
+        },
+      },
       title: "Files are checked against the structure the client was taught",
       paragraphs: [
         "Before a pay month runs, the uploaded files are compared with the sheet structure stored for that client.",
@@ -369,6 +392,32 @@ export const dvp: CaseStudyData = {
     },
     {
       id: "translate",
+      plate: {
+        title: "RETRY",
+        hint: "SWITCH CASE · CLICK A PART",
+        mode: "never",
+        modes: [
+          ["ok", "Fixed on retry", "kept"],
+          ["never", "Never translates", "stub"],
+        ],
+        read: {
+          ok: [
+            "one rule",
+            "translated · try 1",
+            "the check fails",
+            "retry with the code + the error",
+            "passes · function kept",
+          ],
+          never: [
+            "one rule",
+            "try 1 fails",
+            "retry with the error · fails again",
+            "5 tries inside 180 s used up",
+            "the rule becomes a stub",
+            "the other rules still translate",
+          ],
+        },
+      },
       title: "The translator retries when the code does not run",
       paragraphs: [
         "Each plain-language rule is translated into one Python function.",
@@ -380,6 +429,22 @@ export const dvp: CaseStudyData = {
     },
     {
       id: "sandbox",
+      plate: {
+        title: "SANDBOX",
+        hint: "STEP THROUGH · CLICK A PART",
+        read: {
+          d: [
+            "three callers, one sandbox",
+            "the rule runs with a fixed set of modules",
+            "open and setattr rejected",
+            "a helper beside it is never run as the rule",
+          ],
+        },
+        chips: [
+          "Modules a rule may use (projects/dvp/highlights.md)",
+          ["re", "math", "datetime", "decimal", "statistics", "collections"],
+        ],
+      },
       title: "Generated rules run in a sandbox",
       paragraphs: [
         "Calculation, the check that runs during translation, and the monthly validation all use one sandbox.",
