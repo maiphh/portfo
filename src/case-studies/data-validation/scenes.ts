@@ -656,7 +656,8 @@ export const SCENES: Record<string, PlateScene> = {
     draw: translate,
     asp: ASP,
     cam: {
-      dk: { yaw: 70, el: 50, flow: "up", ground: "none" },
+      // "stub" sits on the right edge: keep it clear of the plate when the font runs wide.
+      dk: { yaw: 70, el: 50, flow: "up", ground: "none", sn: { stub: [-84, -26] } },
       ph: {
         yaw: 66,
         el: 50,
