@@ -17,11 +17,29 @@ export function overflowReport(selector: string) {
     !el.parentElement?.closest("[data-scroll-x]") &&
     // A running intro (Hero A) clips its own layers on purpose; it is audited at rest.
     !el.closest("[data-anim]") &&
+    // A Highlights drawing's artwork (aria-hidden SVG, overflow visible); highlights.spec audits
+    // its words, and the page scrollWidth check still catches any sideways scroll.
+    !el.closest("svg.hl-fig") &&
     getComputedStyle(el).visibility !== "hidden";
   const name = (el: Element) =>
     `${el.tagName.toLowerCase()}${el.getAttribute("class") ? "." + el.getAttribute("class")?.replace(/\s+/g, ".") : ""} "${(el.textContent ?? "").trim().slice(0, 32)}"`;
 
-  if (sec.scrollWidth > sec.clientWidth)
+  // Deliberate bleeds (e.g. phone artifacts reach the screen edge): the overhang they add to their
+  // ancestors is allowed while they stay inside the viewport.
+  const bleeds = [...sec.querySelectorAll("[data-bleed]")].filter(
+    (b) => b.getClientRects().length > 0,
+  );
+  const overhang = (el: Element) => {
+    const E = el.getBoundingClientRect();
+    let px = 0;
+    for (const b of bleeds) {
+      const B = b.getBoundingClientRect();
+      if (el.contains(b) && B.left >= -0.5 && B.right <= vw + 0.5)
+        px = Math.max(px, B.right - E.right + parseFloat(getComputedStyle(el).paddingRight));
+    }
+    return px;
+  };
+  if (sec.scrollWidth > sec.clientWidth + overhang(sec))
     out.push(`section scrollWidth ${sec.scrollWidth} > ${sec.clientWidth}`);
   if (document.documentElement.scrollWidth > vw)
     out.push(`page scrollWidth ${document.documentElement.scrollWidth} > ${vw}`);
@@ -29,7 +47,8 @@ export function overflowReport(selector: string) {
     if (!shown(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) continue;
-    if (r.right > right || r.left < left)
+    const bleed = el.closest("[data-bleed]");
+    if ((r.right > right || r.left < left) && !(bleed && r.left >= -0.5 && r.right <= vw + 0.5))
       out.push(
         `${name(el)} spans ${Math.round(r.left)}–${Math.round(r.right)}, section ${Math.round(left)}–${Math.round(right)}`,
       );
@@ -37,7 +56,7 @@ export function overflowReport(selector: string) {
       el instanceof HTMLElement &&
       !el.hasAttribute("data-scroll-x") &&
       el.clientWidth > 0 &&
-      el.scrollWidth > el.clientWidth + 1
+      el.scrollWidth > el.clientWidth + 1 + overhang(el)
     )
       out.push(`${name(el)} scrollWidth ${el.scrollWidth} > clientWidth ${el.clientWidth}`);
   }

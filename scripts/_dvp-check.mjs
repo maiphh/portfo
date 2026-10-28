@@ -47,7 +47,7 @@ await page.evaluate(() => document.fonts.ready);
 
 const headings = await page.locator("#how-it-works .cs2-how-sub > h3").allTextContents();
 const videoDesc = await page.locator("#vid-desc").count();
-const dives = await page.locator("[data-dive] summary h3").allTextContents();
+const dives = await page.locator("#deep-dives h3").allTextContents();
 await page.locator('[data-flow="app"]').scrollIntoViewIfNeeded();
 await page.waitForFunction(
   () => document.querySelector('[data-flow="app"]')?.getAttribute("data-auto") === "running",

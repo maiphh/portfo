@@ -35,15 +35,19 @@ export interface CaseFlow {
 }
 
 export interface CaseDive {
-  /** Also the name of the slot that holds the artifact: `dive-<id>`. */
+  /** The anchor (`dive-<id>`) and, with the page, the drawing's key in lib/highlights. */
   id: string;
   /** A claim, not a topic. */
   title: string;
   paragraphs: string[];
   /** The one-line "what this shows". */
   shows: string;
-  /** Caption under the artifact, naming where its pixels come from. */
+  /** Caption under the artifact, naming where its pixels come from. Not shown by the v3 highlights
+   *  (HIGHLIGHTS-SPEC v3 §11 Q1); kept until Phu decides. */
   caption: string;
+  /** The highlight's one point, read out as the drawing's label (HIGHLIGHTS-SPEC v3 §4). The drawing
+   *  is lib/highlights, keyed by page and dive id. */
+  point: string;
 }
 
 export interface CaseStackTable {

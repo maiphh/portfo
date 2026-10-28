@@ -423,7 +423,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
     const srcs = await page
       .locator("main img")
       .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
-    expect(srcs).toEqual(["form", "letter", "wall"].map((n) => `/work/poet/${n}.webp`));
+    expect(srcs).toEqual(["form", "letter"].map((n) => `/work/poet/${n}.webp`));
   });
 
   for (const slug of ["openportfo", "poet"])
@@ -431,7 +431,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
       page,
     }) => {
       await page.goto(`/work/${slug}/`);
-      // Deep dives are an accordion on narrow screens.
+      // The deep-dive text folds on phones; open it so nothing is hidden.
       await page.evaluate(() => {
         for (const d of document.querySelectorAll("details")) d.open = true;
       });

@@ -159,6 +159,9 @@ test.describe("Document OCR case study", () => {
     } else {
       for (const d of await dives.all()) await expect(d).toHaveAttribute("open", "");
     }
+    // The drawing and its caption sit outside the fold, so they show on every width.
+    await expect(page.locator("figure.hl-dv-fig svg:visible")).toHaveCount(3);
+    await expect(page.locator(".hl-cap:visible")).toHaveCount(3);
   });
 
   test("rail links are 44px targets and mark the section in view", async ({ page }) => {

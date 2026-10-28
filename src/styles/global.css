@@ -1825,6 +1825,21 @@ footer {
   text-decoration: underline;
 }
 
+.foot-credit {
+  margin: var(--s3) 0 0;
+  color: var(--faint);
+  font-size: 0.85rem;
+}
+.foot-credit a {
+  color: var(--muted);
+  text-underline-offset: 0.2em;
+  display: inline-block;
+  padding-block: 12px;
+}
+.foot-credit a:hover {
+  color: var(--ink);
+}
+
 /* ---------- dev panel (?dev, mocks on) ---------- */
 .dev {
   position: fixed;
