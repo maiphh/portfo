@@ -1,4 +1,4 @@
-/* Document OCR: the template highlight and the deep-dive artifacts. */
+/* Document OCR: the template highlight. The highlights are in styles/highlights.css. */
 
 /* highlight: the template package */
 .ocr-tpl {
@@ -55,32 +55,4 @@
 }
 .ocr-tpl-note {
   font-size: 15.5px !important;
-}
-
-/* deep dive cards */
-.ocr-api {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-  gap: 12px;
-  padding: clamp(16px, 2.5vw, 24px);
-  background: var(--sheet);
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-}
-.ocr-api div {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-}
-.ocr-api div > code {
-  color: var(--acc) !important;
-  font-size: 13.5px !important;
-}
-.ocr-api p {
-  font-size: 14.5px !important;
-  line-height: 1.5 !important;
 }

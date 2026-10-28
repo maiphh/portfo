@@ -2,11 +2,12 @@
  * Case-study page behaviour (components/case/CaseStudy.astro):
  * - ?dev shows the TODO slots;
  * - the depth rail marks the section in view;
- * - deep dives are open on wide screens and an accordion on narrow ones;
+ * - highlights: "The detail" is open on wide screens and folded on narrow ones;
  * - "Full stack with versions" opens the stack table;
  * - the short cut (OCR, DVP) autoplays muted while half in view, unless reduced motion or a
  *   data saver is on: then a play button sits on its poster;
- * - without reduced motion: the Hero A intro (hero-a.ts) and the page's flow select effect.
+ * - without reduced motion: the Hero A intro (hero-a.ts), the page's flow select effect, and the
+ *   highlights' step loop (flow.ts). With reduced motion the static drawings stay, as without JS.
  */
 const page = document.querySelector<HTMLElement>("[data-case]");
 
@@ -48,12 +49,28 @@ if (page) {
   );
   for (const t of targets) io.observe(t);
 
-  // Highlights: open on wide screens.
+  // Highlights: "The detail" is open on wide screens, where its summary leaves the tab order and
+  // ignores clicks; on phones it is folded until the reader opens it.
   const wide = matchMedia("(min-width: 900px)");
   const dives = [...page.querySelectorAll<HTMLDetailsElement>("[data-dive]")];
+  const touched = new WeakSet<HTMLDetailsElement>();
   const syncDives = () => {
-    for (const d of dives) d.open = wide.matches;
+    for (const d of dives) {
+      const s = d.querySelector("summary");
+      if (wide.matches) {
+        d.open = true;
+        if (s) s.tabIndex = -1;
+      } else {
+        s?.removeAttribute("tabindex");
+        if (!touched.has(d)) d.open = false;
+      }
+    }
   };
+  for (const d of dives)
+    d.querySelector("summary")?.addEventListener("click", (e) => {
+      if (wide.matches) e.preventDefault();
+      else touched.add(d);
+    });
   syncDives();
   wide.addEventListener("change", syncDives);
 
@@ -137,5 +154,8 @@ if (page) {
     const hero = page.querySelector<HTMLElement>("[data-hero-a]");
     if (hero) void import("./hero-a").then((m) => m.default(hero));
     if (load) void load().then((m) => m.default(page));
+    // Highlights: each scene's loop. With reduced motion the static scene stays, as without JS.
+    if (page.querySelector("svg.hl-fig[data-scene]"))
+      void import("./flow").then((m) => m.default(page));
   }
 }

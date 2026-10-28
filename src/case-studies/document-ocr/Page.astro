@@ -48,49 +48,4 @@ const { entry, prev, next } = Astro.props;
       filters) is chosen when a run starts; it isn't inside the portable template file yet.
     </p>
   </div>
-
-  <div slot="dive-template" class="ocr-api">
-    <div>
-      <code>schema</code>
-      <p>The fields to read, and the workbook column each one fills.</p>
-    </div>
-    <div>
-      <code>prompts</code>
-      <p>What the model is asked. A missing value stays empty.</p>
-    </div>
-    <div>
-      <code>rules</code>
-      <p>How values are cleaned before anyone reviews them.</p>
-    </div>
-    <div>
-      <code>workbook</code>
-      <p>The Excel layout the export fills.</p>
-    </div>
-  </div>
-
-  <div slot="dive-queue" class="ocr-api">
-    <div>
-      <code>render queue</code>
-      <p>Page images. It keeps running while extraction waits on the model.</p>
-    </div>
-    <div>
-      <code>extract queue</code>
-      <p>The slow step. Jobs take turns, so one document cannot fill it.</p>
-    </div>
-  </div>
-
-  <div slot="dive-api" class="ocr-api">
-    <div>
-      <code>keys</code>
-      <p>Created for each connected system. Shown once, stored as a hash.</p>
-    </div>
-    <div>
-      <code>call</code>
-      <p>Files and a template, the same inputs as the upload screen.</p>
-    </div>
-    <div>
-      <code>result</code>
-      <p>The fields and the filled workbook.</p>
-    </div>
-  </div>
 </CaseStudy>

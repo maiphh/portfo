@@ -1,11 +1,22 @@
 ---
+import type { Credit } from "~/lib/credit";
 import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
 
 interface Props {
   base?: "" | "/";
+  /** A one-line credit under the footer row (the case studies' iso-glow figures). */
+  credit?: Credit | undefined;
 }
-const { base = "" } = Astro.props;
+const { base = "", credit } = Astro.props;
+// the credit text around its linked word, or null when there is no link to place
+const at = credit?.link ? credit.text.indexOf(credit.link.label) : -1;
+const cr =
+  credit?.link && at >= 0
+    ? [credit.text.slice(0, at), credit.text.slice(at + credit.link.label.length)]
+    : credit?.link
+      ? [`${credit.text} · `, ""]
+      : null;
 ---
 
 <footer>
@@ -27,5 +38,20 @@ const { base = "" } = Astro.props;
         <a href={base ? "/" : "#top"}>Back to top</a>
       </nav>
     </div>
+    {credit && (
+      <p class="foot-credit">
+        {cr ? (
+          <>
+            {cr[0]}
+            <a href={credit.link?.href} rel="noopener">
+              {credit.link?.label}
+            </a>
+            {cr[1]}
+          </>
+        ) : (
+          credit.text
+        )}
+      </p>
+    )}
   </div>
 </footer>

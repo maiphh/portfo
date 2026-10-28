@@ -373,6 +373,8 @@ export const ocr: CaseStudyData = {
         "Adding a document type does not require a code change. The same pipeline runs every template, so the platform grows by configuration.",
         "Each run keeps the template it started with. Editing that template later does not change a job that is already in progress.",
       ],
+      point:
+        "A new document type is a new template card; the same pipeline turns any of them into the Excel sheet.",
       shows: "A new document type is configuration. One pipeline serves all of them.",
       caption: "The four parts an admin sets on a template. Field names stay generic.",
     },
@@ -384,6 +386,8 @@ export const ocr: CaseStudyData = {
         "Render and extraction each have their own queue. Render keeps using the CPU while extraction waits on the model, instead of sitting idle behind it.",
         "When several documents are in flight, extraction takes turns. A round-robin claim picks the job with the least work already running, so one long PDF cannot take every slot.",
       ],
+      point:
+        "Rendering never waits: pages race through their own queue and pile up for the slow model step.",
       shows: "Render stays busy, and no single document crowds out the others.",
       caption: "One queue renders pages. The other runs extraction.",
     },
@@ -395,6 +399,7 @@ export const ocr: CaseStudyData = {
         "API management lives in the product. An admin creates a key for each system. The key is shown once, only a hash is stored, and the key acts as the user it belongs to.",
         "A caller sends files and a template, and gets back the extracted fields and the filled Excel file. The job uses the same queues as a job started in the UI.",
       ],
+      point: "The web app and an API key feed the same pipeline and get the same Excel back.",
       shows: "Integration is the same pipeline, with keys an admin can manage.",
       caption: "A key, a template, and the same workbook the UI exports.",
     },

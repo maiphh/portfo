@@ -1,0 +1,474 @@
+/*
+ * Highlights v3 (HIGHLIGHTS-SPEC v3 §2–§3): one drawing per highlight, one point, one looping motion.
+ * Layout from the prototype's css/hl.css; the drawing vocabulary (fig.css) and each scene's rest
+ * values (scenes.css) lifted from prototype-highlights-v3/handoff with every class namespaced `hl-`,
+ * so nothing here can match site markup and no site rule reaches into a drawing.
+ * The article sets --acc and, from lib/iso/accent.ts, --acc-hi / --acc-glass / --hl-tint.
+ * The SVG is the full static scene (no JS, reduced motion); scripts/case/flow.ts plays the loop
+ * with GSAP (transform and opacity only, no CSS animations).
+ * Iso scenes: iso-glow kernel and look, MIT, see src/lib/iso/LICENSE-iso-glow.
+ */
+
+/* layout: title, drawing, caption, "The detail" in one column; from 900px the drawing gets its own
+   column, alternating sides. page.ts opens "The detail" from 900px, where its summary is inert. */
+.hl-dv {
+  display: grid;
+  gap: 18px;
+  padding: clamp(28px, 5vw, 56px) 0;
+  border-top: 1px solid var(--rule);
+}
+.hl-head {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  min-width: 0;
+}
+.hl-n {
+  flex: none;
+  margin: 0;
+  font: 600 14px/1 var(--code);
+  color: var(--acc);
+}
+.hl-head h3 {
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  line-height: 1.18;
+  font-weight: 650;
+  max-width: 28ch;
+  min-width: 0;
+}
+.hl-dv-fig {
+  width: 100%;
+  max-width: 460px;
+  margin: 0;
+  min-width: 0;
+}
+.hl-dv-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.hl-cap {
+  margin: 0;
+  font-size: clamp(17px, 1.4vw, 20px);
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+.hl-cap::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--acc);
+  margin-right: 10px;
+  vertical-align: 1px;
+}
+.hl-more summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 44px;
+  padding: 10px 0;
+  list-style: none;
+  cursor: pointer;
+  font: 500 13px var(--code);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.hl-more summary::-webkit-details-marker {
+  display: none;
+}
+.hl-more summary::before {
+  content: "+";
+}
+.hl-more[open] summary::before {
+  content: "−";
+}
+.hl-more summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.hl-more-in {
+  display: grid;
+  gap: 10px;
+  max-width: 62ch;
+}
+.hl-more-in p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+@media (min-width: 900px) {
+  .hl-dv {
+    grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+    column-gap: clamp(40px, 6vw, 104px);
+    row-gap: 14px;
+    align-items: center;
+  }
+  .hl-dv-fig {
+    grid-row: 1 / 4;
+    grid-column: 1;
+  }
+  .hl-head,
+  .hl-cap,
+  .hl-more {
+    grid-column: 2;
+  }
+  .hl-dv:nth-of-type(even) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  }
+  .hl-dv:nth-of-type(even) .hl-dv-fig {
+    grid-column: 2;
+  }
+  .hl-dv:nth-of-type(even) .hl-head,
+  .hl-dv:nth-of-type(even) .hl-cap,
+  .hl-dv:nth-of-type(even) .hl-more {
+    grid-column: 1;
+  }
+  .hl-head {
+    align-self: end;
+  }
+  .hl-more {
+    align-self: start;
+  }
+  /* page.ts keeps it open here; without JS the summary still works */
+  .js .hl-more summary {
+    pointer-events: none;
+    cursor: default;
+  }
+  .js .hl-more summary::before {
+    content: none;
+  }
+}
+
+/* drawing vocabulary (handoff/fig.css) */
+
+.hl-fig text {
+  font-family: var(--text);
+  fill: var(--ink-2);
+  font-size: 14px;
+}
+.hl-fig .hl-l {
+  font-size: 14px;
+}
+.hl-fig .hl-lm {
+  font-family: var(--code);
+  font-size: 14px;
+}
+.hl-fig .hl-k {
+  font-size: 15px;
+  fill: var(--ink);
+}
+.hl-fig .hl-m {
+  fill: var(--muted);
+}
+.hl-fig .hl-a {
+  fill: var(--acc-hi);
+}
+.hl-fig .hl-b {
+  font-weight: 700;
+}
+.hl-fig .hl-dk {
+  fill: var(--ground);
+  font-weight: 700;
+}
+.hl-fig .hl-bx {
+  fill: var(--sheet);
+  stroke: var(--rule-2);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-ba {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-fa {
+  fill: var(--acc);
+}
+.hl-fig .hl-fa2 {
+  fill: var(--hl-tint);
+  stroke: var(--acc);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-dsh {
+  stroke-dasharray: 5 4;
+}
+.hl-fig .hl-dim {
+  opacity: 0.6;
+}
+.hl-fig .hl-frame {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-bar {
+  fill: var(--rule-2);
+}
+.hl-fig .hl-bar2 {
+  fill: var(--hl-tint);
+  stroke: var(--acc);
+  stroke-width: 1;
+}
+.hl-fig .hl-ln,
+.hl-fig .hl-la-ln,
+.hl-fig .hl-cut,
+.hl-fig .hl-thr,
+.hl-fig .hl-tk,
+.hl-fig .hl-tkd,
+.hl-fig .hl-xx,
+.hl-fig .hl-xa {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hl-fig .hl-ln {
+  stroke: var(--rule-2);
+}
+.hl-fig .hl-la-ln {
+  stroke: var(--acc);
+}
+.hl-fig .hl-cut {
+  stroke: var(--muted);
+  stroke-dasharray: 3 5;
+}
+.hl-fig .hl-thr {
+  stroke: var(--ink);
+  stroke-dasharray: 6 5;
+}
+.hl-fig .hl-tk {
+  stroke: var(--acc);
+}
+.hl-fig .hl-tkd {
+  stroke: var(--ground);
+  stroke-width: 3;
+}
+.hl-fig .hl-xx {
+  stroke: var(--muted);
+}
+.hl-fig .hl-xa {
+  stroke: var(--acc);
+  stroke-width: 3;
+}
+.hl-fig .hl-ring {
+  fill: var(--sheet);
+  stroke: var(--rule-2);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-ring2 {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+  stroke-width: 1.5;
+}
+.hl-fig .hl-dfa {
+  fill: var(--acc);
+}
+.hl-fig .hl-dt {
+  fill: var(--muted);
+}
+.hl-fig .hl-wd {
+  fill: var(--ink);
+}
+.hl-fig .hl-gate {
+  fill: var(--ink);
+}
+.hl-fig .hl-seal {
+  fill: var(--acc);
+}
+.hl-fig .hl-it {
+  fill: #2a2a27;
+  stroke: var(--rule-2);
+}
+.hl-fig .hl-is1 {
+  fill: #20201e;
+  stroke: var(--rule-2);
+}
+.hl-fig .hl-is2 {
+  fill: #191918;
+  stroke: var(--rule-2);
+}
+.hl-fig .hl-ita {
+  fill: var(--hl-tint);
+  stroke: var(--acc);
+}
+.hl-fig .hl-is1a {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+}
+.hl-fig .hl-is2a {
+  fill: #120c06;
+  stroke: var(--acc);
+}
+.hl-fig .hl-pg {
+  fill: var(--ink-2);
+}
+.hl-fig .hl-pg1 {
+  fill: #9c9c95;
+}
+.hl-fig .hl-pg2 {
+  fill: #7d7d77;
+}
+.hl-fig .hl-pga {
+  fill: var(--acc-hi);
+}
+.hl-fig .hl-pg1a {
+  fill: var(--acc);
+}
+.hl-fig .hl-pg2a {
+  fill: #b8641f;
+}
+.hl-fig .hl-floor {
+  fill: #1d1d1b;
+  stroke: var(--rule-2);
+}
+.hl-fig .hl-wallb {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+  stroke-opacity: 0.6;
+  opacity: 0.7;
+}
+.hl-fig .hl-glass {
+  fill: var(--acc);
+  fill-opacity: 0.08;
+  stroke: var(--acc);
+  stroke-width: 1.5;
+}
+
+.hl-fig .hl-face {
+  fill: #181817;
+  stroke: rgba(241, 241, 236, 0.34);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.hl-fig .hl-face.hl-top {
+  fill: #1f1f1d;
+}
+.hl-fig .hl-gnd .hl-face {
+  fill: #151514;
+  stroke: rgba(241, 241, 236, 0.08);
+}
+.hl-fig .hl-lit .hl-face {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+  stroke-width: 1.3;
+}
+.hl-fig .hl-lit .hl-face.hl-top {
+  fill: var(--hl-tint);
+}
+.hl-fig .hl-face.hl-pg {
+  fill: #7d7d77;
+  stroke: rgba(241, 241, 236, 0.5);
+}
+.hl-fig .hl-face.hl-top.hl-pg {
+  fill: var(--ink-2);
+}
+.hl-fig .hl-face.hl-pga {
+  fill: #b8641f;
+  stroke: var(--acc);
+}
+.hl-fig .hl-face.hl-top.hl-pga {
+  fill: var(--acc-hi);
+}
+.hl-fig .hl-mglow .hl-face.hl-top {
+  fill: var(--acc);
+  stroke: none;
+}
+.hl-fig .hl-wall .hl-face {
+  fill: var(--acc-glass);
+  stroke: var(--acc);
+  stroke-opacity: 0.6;
+  opacity: 0.7;
+}
+.hl-fig .hl-glass .hl-face {
+  fill: var(--acc);
+  fill-opacity: 0.08;
+  stroke: var(--acc);
+  stroke-width: 1.5;
+}
+
+/* each scene's rest values (handoff/scenes.css) */
+
+.hl-s-ocr-template .hl-tok {
+  opacity: 0;
+}
+.hl-s-ocr-template .hl-glow {
+  opacity: 0.15;
+}
+.hl-s-ocr-template .hl-cell {
+  fill: var(--acc);
+  opacity: 0.6;
+}
+
+.hl-s-ocr-queue .hl-mglow {
+  opacity: 0.25;
+}
+
+.hl-s-ocr-api .hl-d1,
+.hl-s-ocr-api .hl-d2 {
+  opacity: 0;
+}
+.hl-s-ocr-api .hl-glow {
+  opacity: 0.12;
+}
+.hl-s-ocr-api .hl-cell {
+  fill: var(--acc);
+  opacity: 0.6;
+}
+
+.hl-s-rag-repair .hl-rule {
+  opacity: 1;
+}
+.hl-s-rag-repair .hl-ghost {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+
+.hl-s-dvp-sandbox .hl-probe {
+  opacity: 0;
+}
+
+.hl-s-openportfo-news .hl-fd {
+  opacity: 0.55;
+}
+.hl-s-openportfo-news .hl-fd.hl-miss {
+  opacity: 0.2;
+}
+
+.hl-s-openportfo-email .hl-env {
+  opacity: 0;
+}
+
+.hl-s-ecom-payment .hl-gate {
+  opacity: 0;
+}
+.hl-s-ecom-payment .hl-ord {
+  opacity: 0;
+}
+
+.hl-s-ecom-admin .hl-b {
+  opacity: 0;
+}
+.hl-s-ecom-admin .hl-s {
+  opacity: 0;
+}
+.hl-s-ecom-admin .hl-eg {
+  opacity: 0.15;
+}
+
+.hl-s-ecom-store .hl-eg {
+  opacity: 0.15;
+}
+
+.hl-s-poet-donate .hl-drop {
+  opacity: 0;
+}
+.hl-s-poet-donate .hl-pend {
+  opacity: 0;
+}
+.hl-s-poet-donate .hl-rowon {
+  opacity: 0.9;
+}

@@ -1,0 +1,18 @@
+---
+/**
+ * One highlight drawing (HIGHLIGHTS-SPEC v3 §2): the full static scene (lib/highlights), read out
+ * as one sentence, the dive's `point`; the svg itself is hidden from screen readers. The static
+ * scene is what shows without JS and with reduced motion; scripts/case/flow.ts plays its loop.
+ */
+import type { Scene } from "~/lib/highlights";
+
+interface Props {
+  scene: Scene;
+  point: string;
+}
+const { scene, point } = Astro.props;
+---
+
+<figure class="hl-dv-fig" role="img" aria-label={point}>
+  <Fragment set:html={scene.svg} />
+</figure>

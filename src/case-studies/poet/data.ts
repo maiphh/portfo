@@ -92,7 +92,7 @@ export const poet: CaseStudyData = {
           details: {
             does: "The `donations` table: order code, amount, display name, message, anonymous flag, status, PayOS ids, created and paid times. Admin users and sessions are separate tables.",
             tech: ["Cloudflare D1", "Index on `(status, paid_at)` for the wall"],
-            why: "The wall reads published, paid gifts only. A name becomes “Ẩn danh” in one place, `mask.js`.",
+            why: "The wall reads published, paid gifts only. A donor who ticks “Ẩn danh” is stored and shown as “Một nhà hảo tâm”.",
           },
         },
         {
@@ -156,6 +156,8 @@ export const poet: CaseStudyData = {
         "PayOS tells the Worker when the payment lands. The signature is checked, and only then is the gift marked paid.",
         "Returning to the site does not mark it paid. That page is a receipt.",
       ],
+      point:
+        "PayOS’s signed notice arrives, the signature checks out, and the waiting gift flips to paid.",
       shows: "The donation is a real payment, recorded by the server.",
       caption: "PayOS checkout, then a signed notice that the gift was paid.",
     },
@@ -163,12 +165,13 @@ export const poet: CaseStudyData = {
       id: "wall",
       title: "A donor is shown on the site",
       paragraphs: [
-        "The public wall shows the name, or “Ẩn danh” when the donor stays unnamed, with the message, the amount and when it was paid.",
+        "The public wall shows the name, or “Một nhà hảo tâm” when “Ẩn danh” is ticked, with the message, the amount and when it was paid.",
         "A gift appears there after it is paid and an admin publishes it.",
       ],
+      point:
+        "Once paid and published, the gift lands on the public wall: the name, or “Một nhà hảo tâm”.",
       shows: "A real donation can be seen on the frontend.",
-      caption:
-        "The gift wall on the live site, captured on 21 Oct 2026 with two sample gifts. No real donors.",
+      caption: "A drawing of the gift wall, in place of the screenshot. No donor data.",
     },
   ],
   limits: {

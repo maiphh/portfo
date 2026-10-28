@@ -457,8 +457,7 @@ html:not(.js) .cs2-rail__ln {
 
 /* 3. highlight, 4. video */
 .cs2-hl figure,
-.cs2-video figure,
-.cs2-dive figure {
+.cs2-video figure {
   margin: 0;
   min-width: 0;
 }
@@ -589,64 +588,16 @@ html:not(.js) .cs2-video video[data-case-video] {
   text-underline-offset: 0.2em;
 }
 
-/* 6. deep dives */
-.cs2-dive {
-  border-top: 1px solid var(--rule);
+/* 6. highlights: the articles and drawings are in highlights.css (HIGHLIGHTS-SPEC v3) */
+.cs2-dives > h2 {
+  margin-bottom: clamp(8px, 2vw, 24px);
 }
-.cs2-dive summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 56px;
-  padding: 12px 0;
-  list-style: none;
-  cursor: pointer;
-}
-.cs2-dive summary::-webkit-details-marker {
-  display: none;
-}
-.cs2-dive summary::after {
-  content: "+";
-  flex: none;
-  font: 400 24px/1 var(--text);
-  color: var(--muted);
-}
-.cs2-dive[open] summary::after {
-  content: "–";
-}
-.cs2-dive summary:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.cs2-dive-in {
-  display: grid;
-  gap: var(--s5);
-  padding: 4px 0 var(--s6);
-}
+/* the extra section's paragraphs (data.extra) */
 .cs2-dive-text {
   display: grid;
   gap: var(--s3);
   align-content: start;
   min-width: 0;
-}
-.cs2-shows b {
-  color: var(--acc);
-  font-weight: 650;
-}
-@media (min-width: 900px) {
-  .cs2-dive summary {
-    cursor: default;
-    pointer-events: none;
-    padding-top: var(--s6);
-  }
-  .cs2-dive summary::after {
-    display: none;
-  }
-  .cs2-dive-in {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 48px;
-  }
 }
 
 /* 7. limits */

@@ -202,6 +202,8 @@ export const ecom: CaseStudyData = {
         "A notice for a cancelled order is rejected. Coming back to the site is not what marks the order paid.",
         "Cash on delivery is a separate choice. It does not create a charge.",
       ],
+      point:
+        "The order stays pending until PayOS confirms a matching amount; only that opens the gate to paid.",
       shows: "A paid order is a real payment, not a label the page flips on its own.",
       caption: "PayOS confirms the payment. The order machine records it.",
     },
@@ -213,6 +215,8 @@ export const ecom: CaseStudyData = {
         "Buyers do not see it. `/admin` sends a seller to the desk.",
         "The desk uses the same engine as the store. It does not keep a second copy of checkout.",
       ],
+      point:
+        "Buyers come in through the store and the seller through /admin, and both land on the same engine.",
       shows: "Shopping and running the shop are two doors into one system.",
       caption: "Catalog, orders and sales, from the seller desk.",
     },
@@ -224,6 +228,8 @@ export const ecom: CaseStudyData = {
         "A new shop is another set of pages that call that engine. Mirror Now is the first.",
         "Changing a page does not rewrite checkout.",
       ],
+      point:
+        "A new store is a new set of pages that plugs into the engine Mirror Now already uses.",
       shows: "The next store starts from the same engine Mirror Now uses.",
       caption: "Pages change. The engine stays.",
     },

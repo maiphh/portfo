@@ -257,6 +257,8 @@ export const legalRag: CaseStudyData = {
         "Then a regex pass repairs what it can see, before any model does: a piece that ends on a bare 'Điều N' is merged into the body that follows, a sentence cut mid-line is joined, and a lone 'Khoản 1' under 50 characters moves forward.",
         "Each block is then labelled with the previous block's level as a hint, so a block that opens with '3.' or 'c)' stays under that article. The first good document id and the longest complete title are locked, so a middle page can't wipe the citation header.",
       ],
+      point:
+        "When a split strands “Điều 5” at the end of a piece, a rule moves it back onto its body before any model sees it.",
       shows: "The model is never asked to fix a split that a rule can see.",
       caption:
         "Schematic of the repair rules in projects/chatbot-pyr/highlights.md. No document content.",
@@ -269,6 +271,8 @@ export const legalRag: CaseStudyData = {
         "After the third failure, that block is split by meaning instead (a Vietnamese bi-encoder, breaking where sentence similarity drops) rather than discarded. Any other error keeps the raw block.",
         "Last, near-duplicates are removed: a chunk that closely matches the one before it, or that is contained in it within the same Điều, is dropped and the longer one stays.",
       ],
+      point:
+        "A block the labeller fails on three times is split by meaning instead, so it still lands in the index.",
       shows: "Each step degrades to a simpler method instead of losing text.",
       caption:
         "Illustration of the documented fallback chain (projects/chatbot-pyr/highlights.md).",
@@ -280,6 +284,8 @@ export const legalRag: CaseStudyData = {
         "The question is embedded and compared by cosine distance; there is no keyword index in this service. With rerank on, scores pass through a sigmoid and anything under the threshold is dropped.",
         "If nothing is left, the assistant never calls the model. It stores the fallback sentence, 'Xin lỗi, tôi không tìm thấy thông tin cần thiết.' ('Sorry, I couldn't find the information needed.'). With chunks, the prompt allows only the retrieved context and requires the citation line first.",
       ],
+      point:
+        "Every score stays under the threshold, so the answer is the fixed “not found” sentence, not a guess.",
       shows: "A miss is an explicit answer, not a fluent guess.",
       caption: "The default fallback sentence and config defaults. Settings, not results.",
     },

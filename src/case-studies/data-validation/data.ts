@@ -364,6 +364,8 @@ export const dvp: CaseStudyData = {
         "The check looks for a structure change: a sheet, a column, or a field that no longer matches what initialization learned.",
         "When the structure does not match, the user is asked to map the file. The month does not run on a layout the client was not taught.",
       ],
+      point:
+        "This month’s columns are laid on the taught ones; one does not match, so mapping comes before any rule runs.",
       shows: "A changed layout becomes a mapping task before any rule runs.",
       caption: "The month's files against the structure saved on the client.",
     },
@@ -375,6 +377,8 @@ export const dvp: CaseStudyData = {
         "That function is checked. If it fails, translation tries again with the previous code and the error, instead of starting from a blank prompt.",
         "Attempts and time are capped: 5 tries inside 180 seconds. Past that, the rule becomes a stub that returns nothing, and the other rules still translate.",
       ],
+      point:
+        "Rules translate on their own; one that keeps failing burns its 5 tries and becomes an empty stub while the rest pass.",
       shows: "A rule that never translates costs that rule, not the whole client.",
       caption: "Try, check, retry with the error, or skip that one rule.",
     },
@@ -386,6 +390,8 @@ export const dvp: CaseStudyData = {
         "A rule cannot import arbitrary code or open files. Only a fixed set of modules is available. `open` and `setattr` are rejected.",
         "The function has to be the one the translator was asked for. A helper written beside it is never run as the rule.",
       ],
+      point:
+        "The rule runs inside a closed box: when it reaches for files on the server, it hits the wall.",
       shows: "Payroll rows are checked by code that cannot reach the rest of the server.",
       caption: "What a rule may use, and what is rejected.",
     },
