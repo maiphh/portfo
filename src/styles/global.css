@@ -62,10 +62,13 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
   font-kerning: normal;
+  /* The grain spans the whole document, not one viewport: a fixed layer left a hard edge in
+     tall captures and on browsers that paint fixed layers once per viewport. */
+  position: relative;
 }
 body::after {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 90;
