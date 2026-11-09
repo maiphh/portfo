@@ -302,3 +302,57 @@ test("without IntersectionObserver visibility is measured and rows remain readab
   await playing(page, true);
   await expect(page.locator(".sw-row").last()).toHaveCSS("opacity", "1");
 });
+
+/** Selected work text lines under the docked chat launcher / mascot while it is on screen. */
+const mascotOverText = () => {
+  const launcher = document.querySelector<HTMLElement>(".chat-launcher");
+  if (!launcher) return ["no launcher"];
+  const L = launcher.getBoundingClientRect();
+  const left = Math.max(L.left, 0);
+  const right = Math.min(L.right, document.documentElement.clientWidth);
+  const top = Math.max(L.top, 0);
+  const bottom = Math.min(L.bottom, innerHeight);
+  if (right <= left || bottom <= top || getComputedStyle(launcher).visibility === "hidden")
+    return [];
+  const hits: string[] = [];
+  const walk = document.createTreeWalker(
+    document.querySelector("#work") ?? document.body,
+    NodeFilter.SHOW_TEXT,
+  );
+  const range = document.createRange();
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    if (!n.textContent?.trim() || n.parentElement?.closest(".sr-only, [hidden]")) continue;
+    range.selectNodeContents(n);
+    for (const r of range.getClientRects())
+      if (r.left < right && r.right > left && r.top < bottom && r.bottom > top)
+        hits.push(n.textContent.trim().slice(0, 40));
+  }
+  return hits;
+};
+
+for (const width of [320, 360, 390, 414]) {
+  test(`the mascot never rests on Selected work text at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    // Wait for the ink-dot mascot to replace the placeholder launcher.
+    await expect(page.locator(".chat-launcher.has-mascot")).toBeAttached({ timeout: 8000 });
+    for (const target of [
+      ".sw-featured-index",
+      ".sw-featured-role",
+      ".sw-demo-description",
+      ".sw-results",
+      ".sw-explore",
+      ".sw-list-heading",
+      "#work-rag",
+      "#work-craftland",
+      "#work-poet",
+    ]) {
+      // Put the target where the docked launcher sits (bottom right), then let it settle.
+      await page
+        .locator(target)
+        .evaluate((el) => scrollBy(0, el.getBoundingClientRect().bottom - innerHeight + 40));
+      await expect.poll(() => page.evaluate(mascotOverText), { message: target }).toEqual([]);
+    }
+  });
+}
