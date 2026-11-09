@@ -37,7 +37,7 @@ function dash<T extends SVGGeometryElement>(paths: T[]): T[] {
   return paths;
 }
 
-export function initMotion(redrawOcrLeaders: () => void) {
+export function initMotion() {
   gsap.defaults({ ease: "expo.out", duration: 0.9 });
 
   // Navigation feedback (not decoration): always on, created top-to-bottom.
@@ -69,8 +69,6 @@ export function initMotion(redrawOcrLeaders: () => void) {
   mm.add(
     {
       desktop: "(min-width: 1024px)",
-      // Pin the OCR/RAG chapters only when the whole chapter fits on screen.
-      pin: "(min-width: 1024px) and (min-height: 900px)",
       mobile: "(max-width: 1023px)",
       reduce: "(prefers-reduced-motion: reduce)",
       hover: "(hover: hover) and (pointer: fine)",
@@ -314,171 +312,6 @@ export function initMotion(redrawOcrLeaders: () => void) {
         cleanups.push(() => s.revert());
       });
 
-      /* ----- Chapter helpers ----- */
-      const stepsFollow = (ch: HTMLElement, marks: number[]) => {
-        const steps = $$(".step", ch);
-        ch.classList.add("live");
-        return (p: number) => {
-          let cur = 0;
-          marks.forEach((m, i) => {
-            if (p >= m) cur = i;
-          });
-          steps.forEach((s, i) => s.classList.toggle("on", i === cur));
-        };
-      };
-      const chapterST = (
-        ch: HTMLElement,
-        tl: gsap.core.Timeline,
-        follow: (p: number) => void,
-      ): ScrollTrigger.StaticVars =>
-        c.pin
-          ? {
-              trigger: ch,
-              start: "top top",
-              end: "+=170%",
-              pin: true,
-              scrub: 0.6,
-              anticipatePin: 1,
-              animation: tl,
-              onUpdate: (s) => follow(s.progress),
-            }
-          : {
-              trigger: $(".stage", ch),
-              start: "top 72%",
-              toggleActions: "play none none none",
-              animation: tl,
-            };
-
-      /* ----- OCR chapter (pinned, scrubbed) ----- */
-      const ocr = $("[data-chapter='ocr']");
-      const oSt = ocr && $("[data-ocr-stage]", ocr);
-      const paper = oSt && $(".paper", oSt);
-      const ocrSvg = oSt && $<SVGSVGElement>("[data-ocr-leaders]", oSt);
-      if (ocr && oSt && paper && ocrSvg) {
-        redrawOcrLeaders();
-        const oFollow = stepsFollow(ocr, [0, 0.28, 0.55, 0.78]);
-        const oTl = gsap.timeline({
-          defaults: { ease: c.pin ? "none" : "expo.out", duration: 1 },
-        });
-        oTl
-          .fromTo(
-            $(".ocr-scan", oSt),
-            { opacity: 1, y: 0 },
-            { y: () => paper.offsetHeight, duration: 2, ease: "power1.inOut" },
-          )
-          .to($(".ocr-scan", oSt), { opacity: 0, duration: 0.2 })
-          .from(
-            $$(".pbox", oSt),
-            { opacity: 0, scale: 1.25, stagger: 0.35, ease: c.pin ? "power3.out" : "expo.out" },
-            0.6,
-          )
-          .from($(".rule", oSt), { opacity: 0, y: 20 }, "+=0.2")
-          .addLabel("out", "+=0.2")
-          .from($$(".field", oSt), { opacity: 0, x: -48, stagger: 0.3, ease: "power3.out" }, "out")
-          .fromTo(
-            dash($$<SVGPathElement>("path", ocrSvg)),
-            { opacity: 1 },
-            { strokeDashoffset: 0, stagger: 0.3, ease: "power2.inOut" },
-            "out+=0.15",
-          )
-          .from($$("circle", ocrSvg), { opacity: 0, stagger: 0.3, duration: 0.2 }, "out")
-          .call(() => undefined, undefined, "+=0.4");
-        oTl.eventCallback("onUpdate", () => {
-          if (!c.pin) oFollow(oTl.progress());
-        });
-        $$(".facts [data-count]", ocr).forEach((el) =>
-          ScrollTrigger.create({
-            trigger: ocr,
-            start: "top 60%",
-            once: true,
-            onEnter: () => countUp(el),
-          }),
-        );
-        if (!c.pin) oTl.timeScale(1.8);
-        ScrollTrigger.create(chapterST(ocr, oTl, oFollow));
-        oFollow(0);
-      }
-
-      /* ----- RAG chapter (pinned, scrubbed) ----- */
-      const rag = $("[data-chapter='rag']");
-      const rSt = rag && $("[data-rag-stage]", rag);
-      const tree = rSt && $(".tree", rSt);
-      if (rag && rSt && tree) {
-        tree.classList.add("dim");
-        const rFollow0 = stepsFollow(rag, [0, 0.3, 0.55, 0.78]);
-        const rFollow = (p: number) => {
-          rFollow0(p);
-          tree.classList.toggle("dim", p < 0.8);
-        };
-        const rTl = gsap.timeline({
-          defaults: { ease: c.pin ? "power2.out" : "expo.out", duration: 1 },
-        });
-        rTl
-          .from($$(".nd", tree), { opacity: 0, y: -8, stagger: 0.15 })
-          .to(
-            dash($$<SVGPathElement>(".edge", tree)),
-            { strokeDashoffset: 0, stagger: 0.08, ease: "power1.inOut" },
-            0.3,
-          )
-          .from($('[data-c="cut"]', rSt), { opacity: 0, x: 40 }, "+=0.2")
-          .from($('[data-c="tag"]', rSt), { opacity: 0, x: 40 }, "+=0.4")
-          .to($('[data-c="cut"]', rSt), { opacity: 0.38 }, "<")
-          .from($('[data-c="ans"]', rSt), { opacity: 0, y: 24 }, "+=0.4")
-          .call(() => undefined, undefined, "+=0.5");
-        rTl.eventCallback("onUpdate", () => {
-          if (!c.pin) rFollow(rTl.progress());
-        });
-        if (!c.pin) rTl.timeScale(1.8);
-        ScrollTrigger.create(chapterST(rag, rTl, rFollow));
-        rFollow(0);
-        cleanups.push(() => {
-          tree.classList.remove("dim");
-          [ocr, rag].forEach((ch) => ch?.classList.remove("live"));
-          $$(".step").forEach((s) => s.classList.remove("on"));
-        });
-      }
-
-      /* ----- Craftland: tiles drop into place ----- */
-      const island = $("[data-island]");
-      if (island) {
-        gsap
-          .timeline({ scrollTrigger: { trigger: island, start: "top 75%", once: true } })
-          .from($$(".drop", island), {
-            y: -60,
-            opacity: 0,
-            duration: 0.9,
-            stagger: { each: 0.06, from: "random" },
-          })
-          .from($$(".flagg", island), { opacity: 0, y: 12, stagger: 0.15, duration: 0.6 }, "-=0.2");
-      }
-      const craftBig = $("#work-craftland .big");
-      if (craftBig)
-        ScrollTrigger.create({
-          trigger: craftBig,
-          start: "top 85%",
-          once: true,
-          onEnter: () => countUp(craftBig),
-        });
-      $$("#work-craftland .facts [data-count]").forEach((el) =>
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 90%",
-          once: true,
-          onEnter: () => countUp(el),
-        }),
-      );
-
-      /* ----- Ecom: the template first, then a storefront (Mirror Now) built on it (scrubbed) ----- */
-      const store = $("[data-store]");
-      if (store) {
-        gsap
-          .timeline({
-            scrollTrigger: { trigger: store, start: "top 80%", end: "center 40%", scrub: 0.6 },
-          })
-          .fromTo($("[data-real]", store), { opacity: 0 }, { opacity: 1, ease: "none" })
-          .to($("[data-tmpl]", store), { opacity: 0.35, ease: "none" }, "<0.3");
-      }
-
       /* ----- Timeline bars grow along time ----- */
       const tlEl = $("[data-tl]");
       if (tlEl) {
@@ -550,11 +383,10 @@ export function initMotion(redrawOcrLeaders: () => void) {
 
   // Reveals never trap content: anything focused becomes visible.
   document.addEventListener("focusin", (e) => {
-    const t = (e.target as HTMLElement | null)?.closest(".bar, .field, .chunk");
+    const t = (e.target as HTMLElement | null)?.closest(".bar");
     if (t) gsap.set(t, { opacity: 1 });
   });
   window.addEventListener("resize", () => {
-    redrawOcrLeaders();
     ScrollTrigger.refresh();
   });
   if (document.fonts?.ready) void document.fonts.ready.then(() => ScrollTrigger.refresh());

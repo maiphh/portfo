@@ -1,0 +1,237 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import OrgBadge from "./OrgBadge.astro";
+import { pick } from "~/lib/work";
+import "~/styles/selected-work.css";
+
+interface Props {
+  work: CollectionEntry<"work">[];
+}
+const { work } = Astro.props;
+const ocr = pick(work, "document-ocr");
+const { Content: CraftlandBody } = await render(pick(work, "craftland"));
+type Presentation = {
+  title: string;
+  purpose: string;
+  context: string;
+  contribution: string;
+  proof: string;
+} & (
+  | { kind: "case"; slug: "legal-rag" | "data-validation" | "openportfo" | "ecom" | "poet" }
+  | { kind: "disclosure"; slug: "craftland" }
+);
+const rows: Presentation[] = [
+  {
+    kind: "case",
+    slug: "legal-rag",
+    title: "Legal RAG",
+    purpose: "Legal answers with their sources.",
+    context: "Enterprise · Talentnet",
+    contribution: "Solo build · retrieval + citations",
+    proof: "In production · source paths preserved",
+  },
+  {
+    kind: "case",
+    slug: "data-validation",
+    title: "Payroll validation",
+    purpose: "Client rules become automated checks.",
+    context: "Enterprise · Talentnet",
+    contribution: "Rules-to-code + payroll validation",
+    proof: "In production · checks run with payroll",
+  },
+  {
+    kind: "disclosure",
+    slug: "craftland",
+    title: "Craftland",
+    purpose: "Game modes for Free Fire players.",
+    context: "Garena Free Fire",
+    contribution: "Game Developer · 14 modes shipped",
+    proof: "2 officially featured · ~6.2M positive interactions",
+  },
+  {
+    kind: "case",
+    slug: "openportfo",
+    title: "OpenPortfo",
+    purpose: "Crypto and Vietnamese stocks, together.",
+    context: "Personal project",
+    contribution: "Portfolio tracker + scoped AI agent",
+    proof: "Public repository",
+  },
+  {
+    kind: "case",
+    slug: "ecom",
+    title: "Ecom / Mirror Now",
+    purpose: "One shop engine, many storefronts.",
+    context: "E-commerce template",
+    contribution: "Shop engine + buyer and seller UI",
+    proof: "Mirror Now is the first shop on the engine",
+  },
+  {
+    kind: "case",
+    slug: "poet",
+    title: "POET",
+    purpose: "A youth charity, ready for donations.",
+    context: "Charity project",
+    contribution: "Website + PayOS donation flow",
+    proof: "Public site · donations confirmed by PayOS",
+  },
+];
+---
+
+<div class="sw-inner">
+  <header class="sw-heading">
+    <p class="sw-eyebrow">Selected / 01—07</p>
+    <h2 id="work-h">
+      Selected work
+      <span class="sw-title-dot" aria-hidden="true">
+        .
+      </span>
+    </h2>
+    <p class="sw-section-purpose">Systems I’ve shipped. Products I’ve built.</p>
+  </header>
+  <article
+    class="sw-featured"
+    id={ocr.data.anchor}
+    data-slug={ocr.id}
+    style={`--project:${ocr.data.accent?.line}`}
+    aria-labelledby="sw-ocr-title"
+  >
+    <figure class="sw-demo">
+      <div class="sw-video-frame">
+        <video
+          id="sw-ocr-video"
+          src="/work/document-ocr/motion.mp4"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          controls
+          poster="/work/document-ocr/motion-poster.jpg"
+          aria-label="Document OCR product demo, using synthetic data"
+          aria-describedby="sw-demo-content sw-demo-description"
+        >
+          Your browser cannot play the demo.
+        </video>
+        <img class="sw-motion-poster" src="/work/document-ocr/motion-poster.jpg" alt="" hidden />
+        <span class="sw-feedback" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5v14M16 5v14"></path>
+          </svg>
+        </span>
+        <span class="sw-paused-cue" aria-hidden="true" hidden>
+          <svg viewBox="0 0 24 24">
+            <path d="m8 5 11 7-11 7Z"></path>
+          </svg>
+        </span>
+      </div>
+      <p class="sr-only" id="sw-demo-content">
+        The silent demo shows document upload, extraction, field review and export, with a source
+        page beside structured fields.
+      </p>
+    </figure>
+    <div class="sw-featured-copy">
+      <p class="sw-featured-index">
+        <span>01</span> Featured project
+      </p>
+      {ocr.data.org_badge && <OrgBadge label={ocr.data.org_badge} />}
+      <h3 id="sw-ocr-title">Document OCR</h3>
+      <p class="sw-featured-purpose">
+        Paperwork in,
+        <br class="sw-desktop-break" /> clean data out.
+      </p>
+      <p class="sw-featured-role">
+        <span class="sw-field-label">My contribution</span>Built solo · extraction + review
+      </p>
+      <p id="sw-demo-description" class="sw-demo-description">
+        Demo uses synthetic values.
+      </p>
+      <p class="sw-video-message" role="status"></p>
+      <a class="sw-native-link" href="/work/document-ocr/motion.mp4">
+        Open demo video
+      </a>
+      <div class="sw-result-block">
+        <p class="sw-result-timeframe">Two months after go-live</p>
+        <dl class="sw-results">
+          {ocr.data.facts.map((fact) => (
+            <div>
+              <dt>{fact.label}</dt>
+              <dd>
+                {fact.value.startsWith("About ") ? (
+                  <>
+                    <span class="sw-about">About</span> {fact.value.slice(6)}
+                  </>
+                ) : (
+                  fact.value
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <a class="sw-explore" href="/work/document-ocr">
+        Explore project{" "}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 19 19 5M6 5h13v13"></path>
+        </svg>
+      </a>
+    </div>
+  </article>
+  <section class="sw-more" aria-labelledby="sw-more-title">
+    <div class="sw-list-heading">
+      <h3 id="sw-more-title">More work</h3>
+      <p>Different projects. The same care.</p>
+    </div>
+    <ul class="sw-list">
+      {rows.map((row, index) => {
+        const entry = pick(work, row.slug);
+        const Container = row.kind === "disclosure" ? "details" : "article";
+        const Row = row.kind === "disclosure" ? "summary" : "a";
+        return (
+          <li>
+            <Container
+              id={entry.data.anchor}
+              data-slug={entry.id}
+              style={`--project:${entry.data.accent?.line ?? "#c4c8c2"}`}
+            >
+              <Row class="sw-row" href={row.kind === "case" ? `/work/${row.slug}` : undefined}>
+                <span class="sw-row-index" aria-hidden="true">
+                  <i></i>
+                  {String(index + 2).padStart(2, "0")}
+                </span>
+                <div class="sw-row-project">
+                  <h3>{row.title}</h3>
+                  <p class="sw-row-purpose">{row.purpose}</p>
+                </div>
+                <div class="sw-row-context">
+                  <span class="sw-context">
+                    {entry.data.org_badge ? <OrgBadge label={entry.data.org_badge} /> : row.context}
+                  </span>
+                  <span class="sw-row-role">{row.contribution}</span>
+                </div>
+                <p class="sw-row-proof">
+                  <span class="sw-field-label">Proof</span>
+                  <span>{row.proof}</span>
+                </p>
+                <span class="sw-row-arrow">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d={row.kind === "disclosure" ? "m6 9 6 6 6-6" : "M5 19 19 5M6 5h13v13"}
+                    ></path>
+                  </svg>
+                  <span class="sr-only">
+                    {row.kind === "disclosure" ? "Project details" : "Explore project"}
+                  </span>
+                </span>
+              </Row>
+              {row.kind === "disclosure" && (
+                <div class="sw-craftland-body">
+                  <CraftlandBody />
+                </div>
+              )}
+            </Container>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+</div>
