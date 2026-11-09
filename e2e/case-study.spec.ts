@@ -84,10 +84,10 @@ test.describe("Document OCR case study", () => {
     ]);
   });
 
-  test("home cards carry the badge on the three Talentnet chapters", async ({ page }) => {
+  test("home selected work carries the three Talentnet badges", async ({ page }) => {
     await page.goto("/");
     for (const id of ["#work-ocr", "#work-rag", "#work-validation"])
-      await expect(page.locator(`${id} .meta-line .org-badge`)).toHaveCount(1);
+      await expect(page.locator(`${id} .org-badge`)).toHaveCount(1);
     await expect(page.locator(".org-badge")).toHaveCount(3);
   });
 

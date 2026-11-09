@@ -44,10 +44,45 @@ createServer((req, res) => {
     res.end("Not found (rebuilding?)");
     return;
   }
-  res.writeHead(file ? 200 : 404, {
+  const size = statSync(target).size;
+  const headers = {
     "Content-Type": types[extname(target)] ?? "application/octet-stream",
-  });
-  const stream = createReadStream(target);
+    "Accept-Ranges": "bytes",
+    "Content-Length": size,
+  };
+  let start = 0;
+  let end = size - 1;
+  let status = file ? 200 : 404;
+  if (file && req.headers.range && (req.method === "GET" || req.method === "HEAD")) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+    let valid = Boolean(match && (match[1] || match[2]) && size > 0);
+    if (valid) {
+      if (match[1]) {
+        start = Number(match[1]);
+        end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+        valid =
+          Number.isSafeInteger(start) && Number.isSafeInteger(end) && start <= end && start < size;
+      } else {
+        const suffix = Number(match[2]);
+        valid = Number.isSafeInteger(suffix) && suffix > 0;
+        start = Math.max(0, size - suffix);
+      }
+    }
+    if (!valid) {
+      res.writeHead(416, { ...headers, "Content-Range": `bytes */${size}`, "Content-Length": 0 });
+      res.end();
+      return;
+    }
+    status = 206;
+    headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
+    headers["Content-Length"] = end - start + 1;
+  }
+  res.writeHead(status, headers);
+  if (req.method === "HEAD" || size === 0) {
+    res.end();
+    return;
+  }
+  const stream = createReadStream(target, { start, end });
   stream.pipe(res);
   let done = false;
   res.on("close", () => {
