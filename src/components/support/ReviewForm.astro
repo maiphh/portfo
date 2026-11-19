@@ -1,0 +1,29 @@
+<div class="b-form" id="review">
+  <h3>Leave a note</h3>
+  <p class="help">Anyone can. It doesn’t involve paying.</p>
+  <form data-review-form>
+    <div class="fld">
+      <label for="review-text">Your note</label>
+      <textarea id="review-text" maxlength="240" rows="4" required></textarea>
+    </div>
+    <div class="fld">
+      <label for="review-name">
+        Name <span class="opt">· optional</span>
+      </label>
+      <input id="review-name" maxlength="40" autocomplete="given-name" />
+    </div>
+    <p data-badge hidden>
+      Supporter · Your note will carry this badge.
+    </p>
+    <div id="review-challenge"></div>
+    <button class="b-button b-outline" type="submit" data-review-submit disabled>
+      Send note
+    </button>
+    <p class="help">Notes appear after a quick check. No links, please.</p>
+    <p role="status" data-review-status></p>
+    <button class="b-button b-outline" type="button" data-without-badge hidden>
+      Submit without badge
+    </button>
+    <noscript>JavaScript is needed to submit a note securely.</noscript>
+  </form>
+</div>
