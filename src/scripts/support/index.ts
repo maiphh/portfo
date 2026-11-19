@@ -120,8 +120,13 @@ function init(root: HTMLElement) {
         selection === "custom" ? "CUSTOM SUPPORT" : `${selection} × CLAUDE`;
       el("[data-via]").textContent = rail === "payos" ? "VIETQR" : "CARD · POLAR";
     }
-    el("[data-name]").textContent = name.value || "—";
-    el("[data-message]").textContent = message.value ? "PRIVATE" : "—";
+    const receiptFields = busy && paymentPayload ? paymentPayload : null;
+    el("[data-name]").textContent = (receiptFields ? receiptFields.displayName : name.value) || "—";
+    el("[data-message]").textContent = (
+      receiptFields ? receiptFields.privateMessage : message.value
+    )
+      ? "PRIVATE"
+      : "—";
     pay.textContent = `Pay ${quote ? money(quote.amountMinor, quote.currency) : ""} with ${rail === "payos" ? "VietQR" : "card"} →`;
     el("[data-pay-help]").textContent =
       rail === "payos"
@@ -447,8 +452,8 @@ function init(root: HTMLElement) {
         paymentPayload = {
           rail,
           selection: amount(),
-          displayName: name.value || undefined,
-          privateMessage: message.value || undefined,
+          displayName: name.value.trim() || undefined,
+          privateMessage: message.value.trim() || undefined,
         };
         attempt = { id: crypto.randomUUID(), key: secret() };
         store(attempt);
@@ -685,8 +690,20 @@ function init(root: HTMLElement) {
     }
   }
   el("[data-wall-retry]").addEventListener("click", () => void wall());
+  const reviewText = el<HTMLTextAreaElement>("#review-text");
+  const reviewTextError = el("#review-text-error");
+  reviewText.addEventListener("input", () => {
+    reviewText.removeAttribute("aria-invalid");
+    reviewTextError.textContent = "";
+  });
   el<HTMLFormElement>("[data-review-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (reviewText.value.replace(/\r\n?/g, "\n").trim().length < 10) {
+      reviewTextError.textContent = "Please write at least 10 characters.";
+      reviewText.setAttribute("aria-invalid", "true");
+      reviewText.focus();
+      return;
+    }
     reviewSubmit.disabled = true;
     try {
       await request(base, "review", {

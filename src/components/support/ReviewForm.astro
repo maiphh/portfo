@@ -4,7 +4,14 @@
   <form data-review-form>
     <div class="fld">
       <label for="review-text">Your note</label>
-      <textarea id="review-text" maxlength="240" rows="4" required></textarea>
+      <textarea
+        id="review-text"
+        maxlength="240"
+        rows="4"
+        required
+        aria-describedby="review-text-error"
+      ></textarea>
+      <p id="review-text-error" class="help" aria-live="polite"></p>
     </div>
     <div class="fld">
       <label for="review-name">

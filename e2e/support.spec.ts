@@ -256,12 +256,52 @@ test("invalid payment fields stay editable and review success clears the draft",
   expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(0);
   await page.locator("#support-name").fill("Valid name");
   await start(page);
-  await page.locator("#review-text").fill("A note");
+  await page.locator("#review-text").fill("A longer note");
   await page.locator("[data-review-submit]").click();
   await expect(page.locator("[data-review-status]")).toContainText("after a quick check");
   await expect(page.locator("#review-text")).toBeEmpty();
   await page.locator("[data-review-submit]").click();
   expect(f.requests.filter((r) => r.path === "review")).toHaveLength(1);
+});
+test("checkout receipt retains the submitted name and message during a delayed request", async ({
+  page,
+}) => {
+  const f = await setup(page);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/support/pay", async (route) => {
+    await gate;
+    await route.fallback();
+  });
+  await open(page);
+  await page.locator(".b-more summary").click();
+  await page.locator("#support-name").fill("Original name");
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-pay-error]")).toContainText("Creating");
+  await page.locator("#support-name").fill("Edited name");
+  await page.locator("#support-message").fill("Added later");
+  release();
+  await expect(page.locator("[data-qr]")).toBeVisible();
+  await expect(page.locator("[data-name]")).toHaveText("Original name");
+  await expect(page.locator("[data-message]")).toHaveText("—");
+  expect(f.requests.find((r) => r.path === "pay")?.body).toMatchObject({
+    displayName: "Original name",
+  });
+  expect(f.requests.find((r) => r.path === "pay")?.body.privateMessage).toBeUndefined();
+});
+test("short review gives an inline error and remains editable", async ({ page }) => {
+  const f = await setup(page);
+  await open(page);
+  await page.locator("#review-text").fill("  Nice site  ");
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("#review-text-error")).toContainText("at least 10 characters");
+  await expect(page.locator("#review-text")).toBeFocused();
+  await expect(page.locator("#review-text")).toHaveAttribute("aria-invalid", "true");
+  expect(f.requests.filter((r) => r.path === "review")).toHaveLength(0);
+  await page.locator("#review-text").fill("Nice site indeed");
+  await expect(page.locator("#review-text-error")).toBeEmpty();
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("[data-review-status]")).toContainText("after a quick check");
 });
 test("stalled checkout times out and rechecks the same receipt", async ({ page }) => {
   const f = await setup(page);
