@@ -15,3 +15,9 @@ export function printReceipt(root: HTMLElement, stamped: boolean) {
   if (stamped && stamp)
     animation.fromTo(stamp, { scale: 1.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2 });
 }
+
+export function feedReceipt(root: HTMLElement) {
+  if (document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const receipt = root.querySelector(".receipt");
+  if (receipt) gsap.fromTo(receipt, { y: -7 }, { y: 0, duration: 0.3, overwrite: "auto" });
+}

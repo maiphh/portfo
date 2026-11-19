@@ -139,6 +139,11 @@ export async function cleanupSupport(db: D1Database, now = Date.now()): Promise<
   await db.batch([
     db
       .prepare(
+        "UPDATE support_donations SET checkout_url=NULL, qr_code=NULL WHERE id IN (SELECT id FROM support_donations WHERE expires_at IS NOT NULL AND expires_at <= ? AND (checkout_url IS NOT NULL OR qr_code IS NOT NULL) LIMIT 500)",
+      )
+      .bind(new Date(now).toISOString()),
+    db
+      .prepare(
         "UPDATE support_donations SET private_message=NULL, checkout_url=NULL, qr_code=NULL WHERE id IN (SELECT id FROM support_donations WHERE (CASE WHEN paid_at IS NOT NULL AND paid_at > created_at THEN paid_at ELSE created_at END) < ? AND (private_message IS NOT NULL OR checkout_url IS NOT NULL OR qr_code IS NOT NULL) LIMIT 500)",
       )
       .bind(cutoff(30)),

@@ -402,6 +402,70 @@ test("checkout retry refreshes the challenge and keeps the receipt", async ({ pa
   expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBe(previous);
   expect(f.requests.find((r) => r.path === "pay")?.body.turnstileToken).toBe("fixture-token-2");
 });
+test("a delayed retry cannot replace a new attempt", async ({ page }) => {
+  await setup(page, { lost: true });
+  await page.route("**/api/support/status/**", (route) =>
+    route.fulfill({
+      status: 404,
+      json: { error: "not_found" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-retry-create]")).toBeEnabled();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  let started!: () => void;
+  const received = new Promise<void>((resolve) => (started = resolve));
+  await page.route("**/api/support/pay", async (route) => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  await page.locator("[data-retry-create]").click();
+  await received;
+  await page.locator("[data-new]").click();
+  await page.locator('[data-amount="1"]').click();
+  const response = page.waitForResponse((res) => res.url().endsWith("/pay"));
+  release();
+  await response;
+  await page.waitForTimeout(300);
+  await expect(page.locator("[data-order]")).toBeVisible();
+  await expect(page.locator("[data-qr]")).toBeHidden();
+  await expect(page.locator("[data-total]").first()).toContainText("25.000");
+});
+test("receipt animates amount changes and automatic payment stamps", async ({ page }) => {
+  const f = await setup(page);
+  await open(page);
+  await page.locator('[data-amount="1"]').click();
+  await expect
+    .poll(() => page.locator(".receipt").evaluate((el) => getComputedStyle(el).transform))
+    .not.toBe("none");
+  await start(page);
+  f.state = "paid";
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received", {
+    timeout: 5000,
+  });
+  await expect
+    .poll(() => page.locator("[data-stamp]").evaluate((el) => Number(getComputedStyle(el).opacity)))
+    .toBeLessThan(1);
+  await expect
+    .poll(() => page.locator("[data-stamp]").evaluate((el) => Number(getComputedStyle(el).opacity)))
+    .toBe(1);
+});
+test("automatic expiry animates the void stamp", async ({ page }) => {
+  await setup(page, { expiresAt: new Date(Date.now() + 3000).toISOString() });
+  await open(page);
+  await start(page);
+  await expect(page.locator("[data-status-heading]")).toHaveText("That QR expired", {
+    timeout: 6000,
+  });
+  await expect
+    .poll(() => page.locator("[data-stamp]").evaluate((el) => Number(getComputedStyle(el).opacity)))
+    .toBeLessThan(1);
+  await expect(page.locator("[data-stamp]")).toContainText("VOID");
+});
 test("validation during a retry preserves the uncertain receipt", async ({ page }) => {
   await setup(page, { lost: true });
   await page.route("**/api/support/status/**", (route) =>

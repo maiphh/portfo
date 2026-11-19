@@ -169,4 +169,33 @@ describe("review queue and moderation", () => {
       await env.DB.prepare("SELECT status,private_message FROM support_donations").first(),
     ).toMatchObject({ status: "paid", private_message: null });
   });
+  it("removes expired checkout artifacts while retaining active recovery and private messages", async () => {
+    await paid();
+    const now = Date.now();
+    await env.DB.prepare(
+      "UPDATE support_donations SET status='pending', expires_at=?, checkout_url='https://example.test', qr_code='qr' WHERE id=?",
+    )
+      .bind(new Date(now + 1000).toISOString(), donationId)
+      .run();
+    await cleanupSupport(env.DB, now);
+    expect(
+      await env.DB.prepare(
+        "SELECT checkout_url, qr_code, private_message FROM support_donations WHERE id=?",
+      )
+        .bind(donationId)
+        .first(),
+    ).toMatchObject({
+      checkout_url: "https://example.test",
+      qr_code: "qr",
+      private_message: "private words",
+    });
+    await cleanupSupport(env.DB, now + 1000);
+    expect(
+      await env.DB.prepare(
+        "SELECT checkout_url, qr_code, private_message FROM support_donations WHERE id=?",
+      )
+        .bind(donationId)
+        .first(),
+    ).toMatchObject({ checkout_url: null, qr_code: null, private_message: "private words" });
+  });
 });

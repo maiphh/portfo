@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { printReceipt } from "./motion";
+import { feedReceipt, printReceipt } from "./motion";
 import { PRICING, quoteDonation, type Rail, type Selection } from "~/lib/support/pricing";
 import { request, secret } from "./api";
 import type { Attempt, Checkout, Status } from "./state";
@@ -46,6 +46,8 @@ function init(root: HTMLElement) {
   let badgeChoiceRequired = false;
   let deadlinePassed = false;
   let statusSequence = 0;
+  let paymentSequence = 0;
+  let renderedStatus: Status["status"] | null = null;
   let pollFailures = 0;
   let pollTimer: ReturnType<typeof setTimeout> | undefined;
   let reviewAttempt = { id: crypto.randomUUID(), key: secret() };
@@ -129,8 +131,10 @@ function init(root: HTMLElement) {
   }
   const amounts = all<HTMLButtonElement>("[data-amount]");
   function chooseAmount(button: HTMLButtonElement) {
+    const previous = selection;
     selection = button.dataset.amount as typeof selection;
     preview();
+    if (!current && previous !== selection) feedReceipt(root);
   }
   amounts.forEach((button, i) => {
     button.addEventListener("click", () => chooseAmount(button));
@@ -170,6 +174,9 @@ function init(root: HTMLElement) {
     });
   });
   [custom, name, message].forEach((input) => input.addEventListener("input", preview));
+  custom.addEventListener("input", () => {
+    if (!current && selection === "custom") feedReceipt(root);
+  });
   async function geo() {
     try {
       const res = await fetch("/api/support/default-rail", { signal: AbortSignal.timeout(1800) });
@@ -247,6 +254,9 @@ function init(root: HTMLElement) {
       expired = status.status === "expired",
       failed = ["failed", "cancelled"].includes(status.status),
       unknown = status.status === "creation_unknown";
+    const stampChanged = (paid || expired || failed) && renderedStatus !== status.status;
+    const statusChanged = renderedStatus !== status.status;
+    renderedStatus = status.status;
     if (status.status !== "pending") el("[data-receipt-detail]").textContent = "";
     const heading = el("[data-status-heading]");
     heading.textContent = paid
@@ -299,10 +309,8 @@ function init(root: HTMLElement) {
       checkout?.qrCode && !paid && !expired && !failed
         ? "On a phone? Save the QR, then pick it from your banking app’s scan screen."
         : "";
-    if (focus) {
-      heading.focus();
-      printReceipt(root, paid || expired || failed);
-    }
+    if (focus) heading.focus();
+    if (statusChanged && (focus || stampChanged)) printReceipt(root, stampChanged);
     if (paid) void claim();
   }
   function updateReviewSubmit() {
@@ -453,6 +461,8 @@ function init(root: HTMLElement) {
       return;
     }
     busy = true;
+    const requestedAttempt = attempt;
+    const sequence = ++paymentSequence;
     canRetryCreate = true;
     preview();
     el("[data-retry-create]").hidden = true;
@@ -466,22 +476,48 @@ function init(root: HTMLElement) {
           turnstileToken: payToken,
         },
       });
-      canRetryCreate = false;
-      el("[data-pay-error]").textContent = "";
+      if (
+        sequence !== paymentSequence ||
+        attempt !== requestedAttempt ||
+        current?.status === "paid"
+      )
+        return;
       if ("checkoutUrl" in result) {
+        const qr = result.qrCode
+          ? await QRCode.toDataURL(result.qrCode, {
+              margin: 4,
+              width: 600,
+              errorCorrectionLevel: "M",
+            })
+          : null;
+        if (
+          sequence !== paymentSequence ||
+          attempt !== requestedAttempt ||
+          current?.status === "paid"
+        )
+          return;
+        statusSequence++;
+        canRetryCreate = false;
+        el("[data-pay-error]").textContent = "";
         checkout = result;
         current = result.status;
-        if (result.qrCode)
-          el<HTMLImageElement>("[data-qr]").src = await QRCode.toDataURL(result.qrCode, {
-            margin: 4,
-            width: 600,
-            errorCorrectionLevel: "M",
-          });
+        if (qr) el<HTMLImageElement>("[data-qr]").src = qr;
         showStatus(result.status);
         const destination = safeCheckout(result.checkoutUrl);
         if (rail === "polar" && destination) location.assign(destination);
-      } else showStatus(result);
+      } else {
+        statusSequence++;
+        canRetryCreate = false;
+        el("[data-pay-error]").textContent = "";
+        showStatus(result);
+      }
     } catch (error) {
+      if (
+        sequence !== paymentSequence ||
+        attempt !== requestedAttempt ||
+        current?.status === "paid"
+      )
+        return;
       payToken = "";
       if (error instanceof Error && error.message === "invalid_fields") {
         busy = false;
@@ -527,6 +563,7 @@ function init(root: HTMLElement) {
       /* unavailable */
     }
     statusSequence++;
+    paymentSequence++;
     history.replaceState(
       { ...history.state, supportReturn: null },
       "",
@@ -543,6 +580,7 @@ function init(root: HTMLElement) {
     el("[data-review-status]").textContent = "";
     updateReviewSubmit();
     current = null;
+    renderedStatus = null;
     checkout = null;
     deadlinePassed = false;
     busy = false;
