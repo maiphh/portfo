@@ -9,7 +9,7 @@ export function secret(): string {
 export async function request<T>(
   base: string,
   path: string,
-  options: { body?: unknown; attempt?: Attempt } = {},
+  options: { body?: unknown; attempt?: Attempt; timeout?: number } = {},
 ): Promise<T> {
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -19,6 +19,7 @@ export async function request<T>(
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     cache: "no-store",
+    signal: AbortSignal.timeout(options.timeout ?? 10000),
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "unavailable");

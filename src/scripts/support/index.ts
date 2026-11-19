@@ -36,6 +36,7 @@ function init(root: HTMLElement) {
     reviewChallenge = "";
   let payWidget: string | undefined, reviewWidget: string | undefined;
   let canRetryCreate = false;
+  let deadlinePassed = false;
   let statusSequence = 0;
   let pollFailures = 0;
   let pollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -177,6 +178,26 @@ function init(root: HTMLElement) {
     sessionStorage.setItem(`support-attempt:${a.id}`, JSON.stringify(a));
     sessionStorage.setItem("support-attempt", JSON.stringify(a));
   }
+  function previousReceipts() {
+    const links = el("[data-receipt-links]");
+    links.replaceChildren();
+    try {
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (!key?.startsWith("support-attempt:")) continue;
+        const id = key.slice("support-attempt:".length);
+        if (id === attempt?.id) continue;
+        const link = document.createElement("a");
+        link.className = "b-button b-outline";
+        link.href = `/support/return/?id=${encodeURIComponent(id)}`;
+        link.textContent = `Receipt ${id.slice(0, 8)}`;
+        links.append(link);
+      }
+    } catch {
+      /* Storage may be unavailable. */
+    }
+    el("[data-previous-receipts]").hidden = !links.childElementCount;
+  }
   function safeCheckout(value: string | null): string | null {
     if (!value) return null;
     try {
@@ -193,6 +214,14 @@ function init(root: HTMLElement) {
     }
   }
   function showStatus(status: Status, focus = true) {
+    if (
+      status.status === "pending" &&
+      status.expiresAt &&
+      Date.parse(status.expiresAt) <= Date.now()
+    )
+      deadlinePassed = true;
+    if (status.status === "expired") deadlinePassed = true;
+    if (status.status === "pending" && deadlinePassed) status = { ...status, status: "expired" };
     current = status;
     rail = status.rail;
     busy = true;
@@ -210,6 +239,7 @@ function init(root: HTMLElement) {
       expired = status.status === "expired",
       failed = ["failed", "cancelled"].includes(status.status),
       unknown = status.status === "creation_unknown";
+    if (status.status !== "pending") el("[data-receipt-detail]").textContent = "";
     const heading = el("[data-status-heading]");
     heading.textContent = paid
       ? "Payment received"
@@ -347,10 +377,33 @@ function init(root: HTMLElement) {
       custom.focus();
       return;
     }
+    const invalidText = (value: string, multiline: boolean) => {
+      const normalized = value.replace(/\r\n?/g, "\n");
+      return (
+        /[<>]|https?:\/\/|www\./i.test(normalized) ||
+        [...normalized].some((char) => {
+          const code = char.charCodeAt(0);
+          return (code < 32 && !(multiline && code === 10)) || (code >= 127 && code <= 159);
+        })
+      );
+    };
+    const invalid = invalidText(name.value, false)
+      ? name
+      : invalidText(message.value, true)
+        ? message
+        : null;
+    if (invalid) {
+      el<HTMLDetailsElement>(".b-more").open = true;
+      el("[data-pay-error]").textContent =
+        `Please remove links, angle brackets, and control characters from the ${invalid === name ? "name" : "message"}.`;
+      invalid.focus();
+      return;
+    }
     try {
       if (!retry) {
         attempt = { id: crypto.randomUUID(), key: secret() };
         store(attempt);
+        previousReceipts();
       }
       if (!attempt) throw new Error("Missing receipt");
     } catch {
@@ -376,6 +429,7 @@ function init(root: HTMLElement) {
         },
       });
       canRetryCreate = false;
+      el("[data-pay-error]").textContent = "";
       if ("checkoutUrl" in result) {
         checkout = result;
         current = result.status;
@@ -389,8 +443,32 @@ function init(root: HTMLElement) {
         const destination = safeCheckout(result.checkoutUrl);
         if (rail === "polar" && destination) location.assign(destination);
       } else showStatus(result);
-    } catch {
+    } catch (error) {
       payToken = "";
+      if (error instanceof Error && error.message === "invalid_fields") {
+        busy = false;
+        canRetryCreate = false;
+        try {
+          if (!retry && attempt) sessionStorage.removeItem(`support-attempt:${attempt.id}`);
+          sessionStorage.removeItem("support-attempt");
+        } catch {
+          /* Storage may be unavailable. */
+        }
+        attempt = null;
+        previousReceipts();
+        el("[data-order]").hidden = false;
+        el("[data-status-panel]").hidden = true;
+        el(".b-go").hidden = false;
+        pay.hidden = false;
+        el("[data-pay-help]").hidden = false;
+        el<HTMLDetailsElement>(".b-more").open = true;
+        el("[data-pay-error]").textContent =
+          "Check the amount, name and message, then try again. Names and messages cannot contain links or angle brackets.";
+        if (payWidget) turnstile()?.reset(payWidget);
+        preview();
+        name.focus();
+        return;
+      }
       el(".b-go").hidden = false;
       pay.hidden = true;
       el("[data-pay-help]").hidden = true;
@@ -420,6 +498,7 @@ function init(root: HTMLElement) {
     canRetryCreate = false;
     current = null;
     checkout = null;
+    deadlinePassed = false;
     busy = false;
     el("[data-order]").hidden = false;
     el(".b-go").hidden = false;
@@ -430,6 +509,9 @@ function init(root: HTMLElement) {
     el("[data-qr]").hidden = true;
     el("[data-stamp]").hidden = true;
     el("[data-receipt-status]").textContent = "PREVIEW · NOTHING IS CHARGED YET";
+    el("[data-receipt-detail]").textContent = "";
+    el("[data-pay-error]").textContent = "";
+    previousReceipts();
     if (payWidget) turnstile()?.reset(payWidget);
     payToken = "";
     preview();
@@ -534,6 +616,8 @@ function init(root: HTMLElement) {
         },
       });
       el("[data-review-status]").textContent = "Thanks. Your note will appear after a quick check.";
+      el<HTMLTextAreaElement>("#review-text").value = "";
+      el<HTMLInputElement>("#review-name").value = "";
       reviewToken = "";
       el("[data-badge]").hidden = true;
       reviewAttempt = { id: crypto.randomUUID(), key: secret() };
@@ -570,7 +654,8 @@ function init(root: HTMLElement) {
         callback: (token: string) => {
           payToken = token;
           el<HTMLButtonElement>("[data-retry-create]").disabled = false;
-          el("[data-pay-error]").textContent = "";
+          if (el("[data-pay-error]").textContent?.trim() === "Preparing secure payment…")
+            el("[data-pay-error]").textContent = "";
           preview();
         },
         "expired-callback": () => {
@@ -648,6 +733,7 @@ function init(root: HTMLElement) {
     }
   });
   schedulePoll();
+  previousReceipts();
   setInterval(() => {
     if (current?.expiresAt && current.status === "pending") {
       const seconds = Math.max(0, Math.ceil((Date.parse(current.expiresAt) - Date.now()) / 1000));

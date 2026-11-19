@@ -220,11 +220,77 @@ test("late geo response preserves the verified receipt", async ({ page }) => {
   await expect(page.locator("[data-total]").first()).toContainText("25.000");
 });
 test("countdown hides payment tools immediately on expiry", async ({ page }) => {
-  await setup(page, { expiresAt: new Date(Date.now() + 2500).toISOString() });
+  const f = await setup(page, { expiresAt: new Date(Date.now() + 2500).toISOString() });
   await open(page);
   await start(page);
   await expect(page.locator("[data-save]")).toBeHidden({ timeout: 5000 });
   await expect(page.locator("[data-copy]")).toBeHidden();
+  await page.route("**/api/support/status/**", (route) =>
+    route.fulfill({
+      json: { ...status(f), status: "pending" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-status-heading]")).toHaveText("That QR expired");
+  await expect(page.locator("[data-qr]")).toBeHidden();
+  await expect(page.locator("[data-receipt-detail]")).toBeEmpty();
+  await page.unroute("**/api/support/status/**");
+  f.state = "paid";
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  await expect(page.locator("[data-receipt-detail]")).toBeEmpty();
+  await page.locator("[data-new]").click();
+  await expect(page.locator("[data-receipt-detail]")).toBeEmpty();
+});
+test("invalid payment fields stay editable and review success clears the draft", async ({
+  page,
+}) => {
+  const f = await setup(page);
+  await open(page);
+  await page.locator(".b-more summary").click();
+  await page.locator("#support-name").fill("<invalid>");
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("#support-name")).toBeFocused();
+  await expect(page.locator("[data-pay-error]")).toContainText("name");
+  expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(0);
+  await page.locator("#support-name").fill("Valid name");
+  await start(page);
+  await page.locator("#review-text").fill("A note");
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("[data-review-status]")).toContainText("after a quick check");
+  await expect(page.locator("#review-text")).toBeEmpty();
+  await page.locator("[data-review-submit]").click();
+  expect(f.requests.filter((r) => r.path === "review")).toHaveLength(1);
+});
+test("stalled checkout times out and rechecks the same receipt", async ({ page }) => {
+  const f = await setup(page);
+  await page.route("**/api/support/pay", async () => {
+    await new Promise((resolve) => setTimeout(resolve, 12000));
+  });
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-recheck]")).toBeVisible({ timeout: 15000 });
+  const saved = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("support-attempt") || "null"),
+  );
+  expect(f.requests.some((r) => r.path === `status/${saved.id}`)).toBe(true);
+});
+test("server validation keeps the payment form editable", async ({ page }) => {
+  await setup(page);
+  await page.route("**/api/support/pay", (route) =>
+    route.fulfill({
+      status: 422,
+      json: { error: "invalid_fields" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-order]")).toBeVisible();
+  await expect(page.locator("#support-name")).toBeFocused();
+  await expect(page.locator("[data-pay-error]")).toContainText("name and message");
+  expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBeNull();
 });
 test("outage stays unconfirmed and free and badged notes await moderation", async ({ page }) => {
   const f = await setup(page);
@@ -305,7 +371,7 @@ test("new attempt survives return-page reload and preserves prior receipt", asyn
   await page.reload();
   await expect(page.locator("[data-qr]")).toBeVisible();
   f.state = "paid";
-  await page.goto(`/support/return/?id=${old.id}`);
+  await page.locator(`[data-receipt-links] a[href*="${old.id}"]`).click();
   await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
   expect(f.requests.some((r) => r.path === `status/${old.id}`)).toBe(true);
 });
@@ -335,6 +401,35 @@ test("checkout retry refreshes the challenge and keeps the receipt", async ({ pa
   await expect(page.locator("[data-qr]")).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBe(previous);
   expect(f.requests.find((r) => r.path === "pay")?.body.turnstileToken).toBe("fixture-token-2");
+});
+test("validation during a retry preserves the uncertain receipt", async ({ page }) => {
+  await setup(page, { lost: true });
+  await page.route("**/api/support/status/**", (route) =>
+    route.fulfill({
+      status: 404,
+      json: { error: "not_found" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-retry-create]")).toBeEnabled();
+  const saved = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("support-attempt") || "null"),
+  );
+  await page.route("**/api/support/pay", (route) =>
+    route.fulfill({
+      status: 422,
+      json: { error: "invalid_fields" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await page.locator("[data-retry-create]").click();
+  await expect(page.locator("[data-order]")).toBeVisible();
+  await expect(page.locator(`[data-receipt-links] a[href*="${saved.id}"]`)).toBeVisible();
+  expect(
+    await page.evaluate((id) => sessionStorage.getItem(`support-attempt:${id}`), saved.id),
+  ).toBeTruthy();
 });
 
 test("polls for payment within three seconds", async ({ page }) => {
@@ -405,6 +500,9 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
     await page.locator("[data-recheck]").click();
     await expect(page.locator("[data-status-heading]")).toHaveText("Payment unconfirmed");
     await shot(page, width, "failed");
+    await page.locator("[data-new]").click();
+    await expect(page.locator("[data-receipt-links] a")).toBeVisible();
+    await shot(page, width, "previous-receipt");
     expect(await page.locator(".receipt").evaluate((el) => getComputedStyle(el).transform)).toBe(
       "none",
     );
