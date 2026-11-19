@@ -25,6 +25,7 @@ import { createGraphqlProvider } from "./github/provider";
 import { runGithubSync } from "./github/sync";
 import { corsHeaders, error, withHeaders } from "./http";
 import { tools } from "./tools";
+import { handleSupport } from "./support/routes";
 import { knownSlugs, workList } from "./work";
 
 export { Quota } from "./quota";
@@ -95,6 +96,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const url = new URL(request.url);
   const cfg = config(env);
   const origin = request.headers.get("Origin");
+  if (url.pathname.startsWith("/api/support/webhooks/")) return handleSupport(request, env);
   const cors = corsHeaders(origin, cfg);
 
   if (cors === false) {
@@ -103,7 +105,25 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const headers = cors;
 
   if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: headers ?? undefined });
+    return new Response(null, {
+      status: 204,
+      headers:
+        headers && url.pathname.startsWith("/api/support/")
+          ? {
+              ...headers,
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+              "Cache-Control": "no-store",
+            }
+          : (headers ?? undefined),
+    });
+  }
+
+  if (url.pathname.startsWith("/api/support/")) {
+    if (!headers) return error(403, "forbidden_origin", "Origin not allowed.");
+    return withHeaders(await handleSupport(request, env), {
+      ...headers,
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    });
   }
 
   switch (url.pathname) {

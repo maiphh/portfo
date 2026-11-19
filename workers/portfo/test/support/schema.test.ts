@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultRailForCountry } from "../../../../src/lib/support/pricing";
 import { reserveDonation } from "../../src/support/store";
-import { validateQuote } from "../../src/support/validation";
+import { normalizeSupportText, validateQuote } from "../../src/support/validation";
 import { env } from "../env";
 
 describe("support foundation", () => {
@@ -42,5 +42,50 @@ describe("support foundation", () => {
       Array.from({ length: 5 }, () => reserveDonation(env.DB, donation)),
     );
     expect(results.filter(Boolean)).toHaveLength(1);
+    expect(await reserveDonation(env.DB, { ...donation, payosOrderCode: 987654321 })).toBe(false);
+    expect(await reserveDonation(env.DB, { ...donation, id: crypto.randomUUID() })).toBe(false);
+    expect(
+      await reserveDonation(env.DB, {
+        ...donation,
+        id: crypto.randomUUID(),
+        payosOrderCode: 987654321,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects null primary keys and non-integer rate counters", async () => {
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO support_donations (id, receipt_key_hash, request_fingerprint, rail, currency,
+          amount_minor, status, created_at, updated_at) VALUES (NULL, 'h', 'f', 'polar', 'USD', 300, 'creating', 'now', 'now')`,
+      ).run(),
+    ).rejects.toThrow(/NOT NULL/i);
+    await expect(
+      env.DB.prepare(
+        "INSERT INTO support_review_tokens (id, donation_id, issued_at, expires_at) VALUES (NULL, 'missing', 'now', 'later')",
+      ).run(),
+    ).rejects.toThrow(/NOT NULL/i);
+    await expect(
+      env.DB.prepare(
+        "INSERT INTO support_reviews (id, submission_key_hash, request_fingerprint, body, status, created_at) VALUES (NULL, 'h', 'f', 'body', 'pending', 'now')",
+      ).run(),
+    ).rejects.toThrow(/NOT NULL/i);
+    for (const counter of [1.5, "text"]) {
+      await expect(
+        env.DB.prepare(
+          "INSERT INTO support_rate_limits (scope, key_digest, window_start, counter) VALUES ('test', 'key', 'now', ?)",
+        )
+          .bind(counter)
+          .run(),
+      ).rejects.toThrow();
+    }
+  });
+
+  it("rejects control characters before trimming support text", () => {
+    expect(normalizeSupportText("\thello", 40)).toBeNull();
+    expect(normalizeSupportText("hello\t", 40)).toBeNull();
+    expect(normalizeSupportText("hello\u0085world", 40)).toBeNull();
+    expect(normalizeSupportText("hello\nworld", 40, true)).toBe("hello\nworld");
+    expect(normalizeSupportText("hello\nworld", 40)).toBeNull();
   });
 });

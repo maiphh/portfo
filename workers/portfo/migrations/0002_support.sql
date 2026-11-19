@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS support_donations (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL PRIMARY KEY,
   receipt_key_hash TEXT NOT NULL,
   request_fingerprint TEXT NOT NULL,
   rail TEXT NOT NULL CHECK (rail IN ('payos', 'polar')),
@@ -21,11 +21,11 @@ CREATE TABLE IF NOT EXISTS support_webhook_events (
   PRIMARY KEY (rail, event_id)
 );
 CREATE TABLE IF NOT EXISTS support_review_tokens (
-  id TEXT PRIMARY KEY, donation_id TEXT NOT NULL UNIQUE REFERENCES support_donations(id),
+  id TEXT NOT NULL PRIMARY KEY, donation_id TEXT NOT NULL UNIQUE REFERENCES support_donations(id),
   issued_at TEXT NOT NULL, expires_at TEXT NOT NULL, used_at TEXT
 );
 CREATE TABLE IF NOT EXISTS support_reviews (
-  id TEXT PRIMARY KEY, submission_key_hash TEXT NOT NULL, request_fingerprint TEXT NOT NULL,
+  id TEXT NOT NULL PRIMARY KEY, submission_key_hash TEXT NOT NULL, request_fingerprint TEXT NOT NULL,
   token_id TEXT UNIQUE REFERENCES support_review_tokens(id), display_name TEXT, body TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'hidden')),
   created_at TEXT NOT NULL, moderated_at TEXT, ip_digest TEXT
@@ -35,6 +35,6 @@ CREATE INDEX IF NOT EXISTS support_reviews_wall ON support_reviews(status, moder
 CREATE INDEX IF NOT EXISTS support_reviews_ip ON support_reviews(status, ip_digest);
 CREATE TABLE IF NOT EXISTS support_rate_limits (
   scope TEXT NOT NULL, key_digest TEXT NOT NULL, window_start TEXT NOT NULL,
-  counter INTEGER NOT NULL CHECK (counter > 0), PRIMARY KEY (scope, key_digest, window_start)
+  counter INTEGER NOT NULL CHECK (typeof(counter) = 'integer' AND counter > 0), PRIMARY KEY (scope, key_digest, window_start)
 );
 CREATE INDEX IF NOT EXISTS support_rate_limits_age ON support_rate_limits(window_start);

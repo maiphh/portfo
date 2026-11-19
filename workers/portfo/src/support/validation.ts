@@ -16,14 +16,15 @@ export function normalizeSupportText(
   multiline = false,
 ): string | null {
   if (typeof value !== "string") return null;
-  const text = value.replace(/\r\n?/g, "\n").trim();
-  if (text.length > max || /[<>]|https?:\/\/|www\./i.test(text)) return null;
+  const normalized = value.replace(/\r\n?/g, "\n");
   if (
-    [...text].some((char) => {
+    [...normalized].some((char) => {
       const code = char.charCodeAt(0);
-      return (code < 32 && !(multiline && code === 10)) || code === 127;
+      return (code < 32 && !(multiline && code === 10)) || (code >= 127 && code <= 159);
     })
   )
     return null;
+  const text = normalized.trim();
+  if (text.length > max || /[<>]|https?:\/\/|www\./i.test(text)) return null;
   return text;
 }
