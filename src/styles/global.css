@@ -510,6 +510,29 @@ sup.fn {
   padding-top: 14px;
   border-top: 1px solid var(--rule);
 }
+.roles .role-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.roles .role-main > span {
+  min-width: 0;
+}
+.roles .org-logo {
+  width: 28px;
+  height: 28px;
+}
+/* Wordmarks read at the same height as the bold org name next to them. */
+.roles .org-logo--wordmark {
+  width: auto;
+  height: auto;
+}
+.roles .org-logo--wordmark img {
+  width: auto;
+  height: 1.1em;
+}
+
 .roles b {
   font-weight: 600;
 }
@@ -520,6 +543,37 @@ sup.fn {
   font: 400 0.85rem/1.6 var(--code);
   color: var(--muted);
   text-align: right;
+}
+/* Right column: GPA (or a score) above the year. */
+.roles .meta {
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 1px;
+  text-align: right;
+}
+.roles .meta .val {
+  font: 500 0.85rem/1.6 var(--code);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+/* Section labels inside the CV page: Work / Education. */
+.cvs-h {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  margin: 30px 0 0;
+  font: 500 0.66rem/1 var(--code);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.cvs-h::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
 }
 .hero .ctas {
   display: flex;
@@ -738,15 +792,22 @@ sup.fn {
   position: relative;
   grid-row: var(--row, 1);
   grid-column: var(--c);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-height: 58px;
   border-radius: 3px;
   background: var(--sheet-2);
   border: 1px solid var(--rule-2);
-  padding: 10px 12px;
+  padding: 8px 10px 8px 8px;
   transform-origin: left;
   overflow: hidden;
 }
-.bar b {
+.bar-copy {
+  min-width: 0;
+  flex: 1;
+}
+.bar-copy b {
   display: block;
   font-weight: 650;
   font-size: 0.98rem;
@@ -754,7 +815,7 @@ sup.fn {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.bar span {
+.bar-copy span {
   display: block;
   font-size: 0.85rem;
   color: var(--muted);
@@ -789,6 +850,25 @@ sup.fn {
   background: var(--violet);
   transform: rotate(45deg);
   border-radius: 1px;
+}
+/* Keyed org marks sit directly on the sheet, no chip behind them. */
+.org-logo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+.org-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.mark .org-logo {
+  width: 28px;
+  height: 28px;
 }
 .now {
   position: absolute;
@@ -853,6 +933,12 @@ sup.fn {
     grid-column: auto;
     grid-row: auto;
   }
+  .bar-copy b,
+  .bar-copy span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
   /* Narrow phones: let award labels wrap instead of running off the edge. */
   .mark {
     white-space: normal;
@@ -887,8 +973,20 @@ sup.fn {
   min-width: 0;
 }
 @media (min-width: 1100px) {
+  /* The heatmap gets the full width; the feed moves below and splits in two. */
   .gh-grid {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 900px) {
+  .gh-grid .feed {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--s6);
+    align-content: start;
+  }
+  .gh-grid .feed .feed-none {
+    grid-column: 1 / -1;
   }
 }
 .hm-scroll {
@@ -1319,12 +1417,6 @@ footer {
     display: none;
   }
 }
-.bar span {
-  white-space: normal;
-}
-.bar b {
-  white-space: normal;
-}
 .facts div > span {
   color: var(--muted);
   font-size: 0.95rem;
@@ -1352,7 +1444,7 @@ footer {
 .roles {
   margin-top: 22px;
 }
-.bar span {
+.bar-copy span {
   color: var(--ink-2);
 }
 .hero .ctas {
@@ -1604,16 +1696,6 @@ footer {
   overflow: hidden;
 }
 
-/* Room for the detection box (inset -10px) so it never overlaps "at" in the roles list. */
-.roles .det {
-  margin-left: 12px;
-}
-@media (max-width: 1023px) {
-  .roles .det {
-    margin-left: 0;
-  }
-}
-
 /* Older iOS (<16) lacks overflow: clip on <html>; keep slide-ins from causing sideways scroll. */
 @supports not (overflow: clip) {
   .tl {
@@ -1661,15 +1743,23 @@ footer {
   margin-top: clamp(14px, 3svh, 44px);
   font-size: clamp(1rem, 2.5svh, 1.3rem);
 }
+.hero .cvs-h {
+  margin-top: clamp(10px, 1.9svh, 20px);
+  font-size: clamp(0.56rem, 1.05svh, 0.66rem);
+}
+.hero .doc .name + .cvs-h {
+  margin-top: clamp(8px, 1.5svh, 14px);
+}
 .hero .roles {
-  margin-top: clamp(10px, 2.2svh, 22px);
-  gap: clamp(8px, 1.6svh, 18px);
+  margin-top: clamp(4px, 0.9svh, 10px);
+  gap: clamp(4px, 0.9svh, 12px);
   font-size: clamp(0.82rem, 1.9svh, 1rem);
 }
 .hero .roles li {
-  padding-top: clamp(6px, 1.2svh, 14px);
+  padding-top: clamp(5px, 0.9svh, 11px);
 }
-.hero .roles .when {
+.hero .roles .when,
+.hero .roles .val {
   font-size: 0.8em;
 }
 .hero .rail-head {
@@ -1698,46 +1788,76 @@ footer {
   .hero .rail {
     flex: none;
   }
+  /* No rail on this layout: centre the CV column in the wide sheet. */
+  .hero .doc {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
   .hero .roles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 0;
+    gap: clamp(2px, 0.7svh, 6px);
   }
-  .hero .roles li {
-    display: inline;
-    border-top: 0;
-    padding-top: 0;
+  .hero .roles .role-main > span {
+    white-space: nowrap;
   }
-  .hero .roles li + li::before {
-    content: "·";
-    margin: 0 7px;
-    color: var(--faint);
-  }
+}
+/* Phones: the year goes, GPA stays, and every row keeps its own line. */
+@media (max-width: 599px) {
   .hero .roles .when {
     display: none;
+  }
+}
+@media (max-width: 360px) {
+  .hero .roles {
+    font-size: 0.78rem;
   }
 }
 @media (max-width: 600px) {
   .hero .ctas {
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
   }
   .hero .ctas .btn {
-    gap: 8px;
-    padding-inline: 14px;
-    font-size: 0.92rem;
+    gap: 6px;
+    padding-inline: 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
   .hero .ctas .btn .icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+  }
+}
+/* Small phones: drop the icons so each label still fits on one line. */
+@media (max-width: 480px) {
+  .hero .ctas .btn .icon {
+    display: none;
+  }
+  .hero .ctas .btn {
+    padding-inline: 10px;
   }
 }
 /* Short screens: the headline, summary and actions are the hero. */
 @media (max-height: 700px) and (max-width: 1023px) {
   .hero .rail,
+  .hero .cvs-h,
   .hero .roles,
   .hero .doc .name {
     display: none;
+  }
+}
+/* Short-ish desktop windows: tighten the CV list so the sheet still clears the fold. */
+@media (max-height: 760px) {
+  .hero .doc .name + .cvs-h,
+  .hero .cvs-h {
+    margin-top: 8px;
+  }
+  .hero .roles {
+    margin-top: 4px;
+    gap: 6px;
+  }
+  .hero .roles li {
+    padding-top: 6px;
   }
 }
 @media (max-height: 640px) {
@@ -1757,8 +1877,12 @@ footer {
   .hero .roles li {
     padding-top: 5px;
   }
+  .hero .cvs-h {
+    margin-top: 8px;
+  }
 }
 @media (max-height: 560px) {
+  .hero .cvs-h,
   .hero .roles,
   .hero .doc .name {
     display: none;

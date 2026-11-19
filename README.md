@@ -128,7 +128,6 @@ After changing a case study, run `pnpm work` and `pnpm corpus` in `workers/portf
 ## Workflow
 
 - No direct pushes to `main` after the initial commit.
-- Every change goes on a feature branch (`feat/…`, `fix/…`) and a pull request. CI must pass, and the Vercel preview link is the review surface.
 - **Phu approves and merges PRs.** Agents never merge.
 
 ## Accessibility and motion

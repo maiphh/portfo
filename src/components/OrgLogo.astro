@@ -1,0 +1,19 @@
+---
+/**
+ * Small org mark on a paper chip so brand colors read on the dark sheet.
+ * Pass `named` when the surrounding text does not already say the org (e.g. Neo League → RMIT).
+ */
+interface Props {
+  src: string;
+  name: string;
+  /** Announce the org name; use when the visible label is a different event/title. */
+  named?: boolean;
+  /** Wordmarks (IELTS) set their own width so they don't squash into a square. */
+  wordmark?: boolean;
+}
+const { src, name, named = false, wordmark = false } = Astro.props;
+---
+
+<span class={`org-logo${wordmark ? " org-logo--wordmark" : ""}`}>
+  <img src={src} alt={named ? name : ""} width="32" height="32" decoding="async" />
+</span>

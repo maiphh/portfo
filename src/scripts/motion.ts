@@ -218,7 +218,12 @@ export function initMotion() {
               [".roles li", "experience"],
               [".hero .ctas", "actions"],
             ] as const
-          ).flatMap(([sel, k]) => $$(sel).map((el) => ({ el, k })));
+          ).flatMap(([sel, k]) =>
+            $$(sel).map((el) => ({
+              el,
+              k: (el as HTMLElement).dataset.label || k,
+            })),
+          );
           let cur: (typeof targets)[number] | null = null;
           const move = (e: PointerEvent) => {
             const dr = doc.getBoundingClientRect();

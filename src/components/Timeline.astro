@@ -1,6 +1,8 @@
 ---
 /** Work and study, 2021 to 2028: a 96-month grid built from the experience collection. */
 import { getCollection } from "astro:content";
+import OrgLogo from "./OrgLogo.astro";
+import { logoForExperience } from "~/lib/orgs";
 import { TL_MONTHS, TL_YEARS, gridColumn, monthIndex, nowIndex } from "~/lib/timeline";
 
 const entries = (await getCollection("experience")).sort((a, b) => a.data.order - b.data.order);
@@ -50,35 +52,51 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
       <div class="lane">
         <h3>Work</h3>
         <ol>
-          {byLane("work").map((e) => (
-            <li class="bar work" style={barStyle(e.data.start, e.data.end, e.data.row)}>
-              <b>{e.data.title}</b>
-              <span>{e.data.detail}</span>
-            </li>
-          ))}
+          {byLane("work").map((e) => {
+            const logo = logoForExperience(e.id);
+            return (
+              <li class="bar work" style={barStyle(e.data.start, e.data.end, e.data.row)}>
+                {logo && <OrgLogo src={logo.src} name={logo.name} />}
+                <span class="bar-copy">
+                  <b>{e.data.title}</b>
+                  <span>{e.data.detail}</span>
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </div>
       <div class="lane">
         <h3>Study</h3>
         <ol>
-          {byLane("study").map((e) => (
-            <li class="bar" style={barStyle(e.data.start, e.data.end, e.data.row)}>
-              <b>{e.data.title}</b>
-              <span>{e.data.detail}</span>
-            </li>
-          ))}
+          {byLane("study").map((e) => {
+            const logo = logoForExperience(e.id);
+            return (
+              <li class="bar" style={barStyle(e.data.start, e.data.end, e.data.row)}>
+                {logo && <OrgLogo src={logo.src} name={logo.name} />}
+                <span class="bar-copy">
+                  <b>{e.data.title}</b>
+                  <span>{e.data.detail}</span>
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </div>
       <div class="lane">
         <h3>Awards</h3>
         <ol>
-          {byLane("award").map((e) => (
-            <li class="mark" style={markCol(e.data.start)}>
-              <span>
-                <b>{e.data.title}</b> · {e.data.detail}
-              </span>
-            </li>
-          ))}
+          {byLane("award").map((e) => {
+            const logo = logoForExperience(e.id);
+            return (
+              <li class="mark" style={markCol(e.data.start)}>
+                {logo && <OrgLogo src={logo.src} name={logo.name} named={e.id === "neo-league"} />}
+                <span>
+                  <b>{e.data.title}</b> · {e.data.detail}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </div>
       <div class="now" style={`--p:${nowP}`} aria-hidden="true">
