@@ -515,6 +515,54 @@ test("polls for payment within three seconds", async ({ page }) => {
   });
 });
 
+test("return receipt retries automatically after its first status request fails", async ({
+  page,
+}) => {
+  const f = await setup(page, { state: "paid", outage: true });
+  await page.addInitScript(() =>
+    sessionStorage.setItem(
+      "support-attempt",
+      JSON.stringify({ id: "fixture-id", key: "fixture-key" }),
+    ),
+  );
+  await page.goto("/support/return/?id=fixture-id");
+  await expect(page.locator("[data-status-description]")).toContainText("unavailable");
+  f.outage = false;
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received", {
+    timeout: 8000,
+  });
+});
+
+test("edited note after a lost response can be submitted as a new note", async ({ page }) => {
+  const f = await setup(page);
+  const attempts: Record<string, unknown>[] = [];
+  await page.route("**/api/support/review", async (route) => {
+    attempts.push(route.request().postDataJSON());
+    if (attempts.length === 1) return route.abort();
+    if (attempts.length === 2)
+      return route.fulfill({
+        status: 409,
+        json: { error: "idempotency_conflict" },
+        headers: { "access-control-allow-origin": "*" },
+      });
+    await route.fallback();
+  });
+  await open(page);
+  await page.locator("#review-text").fill("Original note");
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("[data-review-status]")).toContainText("could not be submitted");
+  await page.locator("#review-text").fill("Edited note");
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("[data-review-status]")).toContainText(
+    "may already have been received",
+  );
+  expect(attempts[1]?.submissionId).toBe(attempts[0]?.submissionId);
+  await page.locator("[data-review-submit]").click();
+  await expect(page.locator("[data-review-status]")).toContainText("after a quick check");
+  expect(attempts[2]?.submissionId).not.toBe(attempts[0]?.submissionId);
+  expect(f.requests.filter((r) => r.path === "review")).toHaveLength(1);
+});
+
 for (const width of [320, 390, 414, 768, 1024, 1440]) {
   test(`responsive states and accessibility at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

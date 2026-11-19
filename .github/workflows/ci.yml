@@ -42,6 +42,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check disabled support visibility
+        run: node scripts/check-support-visibility.mjs
+
   e2e:
     name: Chat window (Playwright)
     runs-on: ubuntu-latest
@@ -76,6 +79,11 @@ jobs:
           PUBLIC_SUPPORT_ENABLED: "true"
           PUBLIC_WORKER_URL: https://support-fixture.invalid
           PUBLIC_TURNSTILE_SITE_KEY: fixture-site-key
+
+      - name: Check enabled support visibility
+        run: node scripts/check-support-visibility.mjs
+        env:
+          PUBLIC_SUPPORT_ENABLED: "true"
 
       - name: Support acceptance (six viewport widths)
         run: pnpm exec playwright test --config playwright.support.config.ts

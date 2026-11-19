@@ -3,6 +3,11 @@ import Base from "~/layouts/Base.astro";
 import SupportPage from "~/components/support/SupportPage.astro";
 ---
 
-<Base title="Your receipt · Mai Gia Phu" base="/" supportPage>
+<Base
+  title="Your receipt · Mai Gia Phu"
+  base="/"
+  supportPage
+  noindex={import.meta.env.PUBLIC_SUPPORT_ENABLED !== "true"}
+>
   <SupportPage returning />
 </Base>

@@ -668,6 +668,13 @@ function init(root: HTMLElement) {
       el("[data-badge]").hidden = true;
       reviewAttempt = { id: crypto.randomUUID(), key: secret() };
     } catch (error) {
+      if (error instanceof Error && error.message === "idempotency_conflict") {
+        reviewAttempt = { id: crypto.randomUUID(), key: secret() };
+        el("[data-review-status]").textContent =
+          "Your earlier note may already have been received. Submit again only if you want to send this edited note as a new submission.";
+        el("[data-without-badge]").hidden = true;
+        return;
+      }
       el("[data-review-status]").textContent =
         error instanceof Error && error.message === "token_unavailable"
           ? "Your badge is unavailable. You can submit without it."
@@ -770,10 +777,10 @@ function init(root: HTMLElement) {
     pollTimer = setTimeout(
       async () => {
         if (
-          current &&
+          enabled &&
           attempt &&
           !document.hidden &&
-          ["pending", "creating"].includes(current.status)
+          (current ? ["pending", "creating"].includes(current.status) : busy && pollFailures > 0)
         )
           await recheck(false);
         schedulePoll();
@@ -784,9 +791,9 @@ function init(root: HTMLElement) {
   document.addEventListener("visibilitychange", () => {
     if (
       !document.hidden &&
-      current &&
+      enabled &&
       attempt &&
-      ["pending", "creating"].includes(current.status)
+      (current ? ["pending", "creating"].includes(current.status) : busy && pollFailures > 0)
     ) {
       void recheck(false).finally(schedulePoll);
     }
