@@ -7,7 +7,11 @@ export const PRICING = {
   polar: { currency: "USD", unit: 300, min: 200, max: 50000, step: 100 },
 } as const;
 
-export function defaultRailForCountry(country: string | null | undefined): Rail {
+export function defaultRailForCountry(
+  country: string | null | undefined,
+  cardEnabled = false,
+): Rail {
+  if (!cardEnabled) return "payos";
   return country?.trim().toUpperCase() === "VN" ? "payos" : "polar";
 }
 

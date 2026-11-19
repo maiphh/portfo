@@ -3,14 +3,8 @@ import { safeEqual, sha256Hex } from "../http";
 import { buildSupportCallbacks } from "./callbacks";
 import { checkSupportLimit, supportIpDigest } from "./limits";
 import { createPayosLink, handlePayosWebhook, PayosRequestError, recoverPayosLink } from "./payos";
-import {
-  createPolarCheckout,
-  fetchPolarCheckout,
-  handlePolarWebhook,
-  matchesPolarCheckout,
-  PolarRequestError,
-} from "./polar";
-import { applyPaymentEvidence, reserveDonation } from "./store";
+import { cardAdapter } from "./card";
+import { reserveDonation } from "./store";
 import { verifyTurnstile } from "./turnstile";
 import { handleReviews } from "./reviews";
 import { normalizeSupportText, validateQuote } from "./validation";
@@ -100,18 +94,15 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
     const path = new URL(req.url).pathname;
     if (path === "/api/support/webhooks/payos" || path === "/api/support/webhooks/polar") {
       if (req.method !== "POST") return fail(405, "method_not_allowed", { Allow: "POST" });
+      if (path.endsWith("polar")) return cardAdapter.disabled();
       const raw = await rawBody(req, 65536);
-      let result: number;
-      if (path.endsWith("polar")) result = await handlePolarWebhook(raw, req.headers, env);
-      else {
-        let body: unknown;
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          return fail(400, "bad_request");
-        }
-        result = await handlePayosWebhook(body, env);
+      let body: unknown;
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return fail(400, "bad_request");
       }
+      const result = await handlePayosWebhook(body, env);
       return result === 200
         ? json({ received: true })
         : fail(
@@ -125,6 +116,7 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
       if (req.method !== "POST") return fail(405, "method_not_allowed", { Allow: "POST" });
       const data = (await readJson(req)) as Record<string, unknown>;
       if (!data || typeof data !== "object") return fail(400, "bad_request");
+      if (data.rail === "polar") return cardAdapter.disabled();
       const quote = validateQuote(data.rail, data.selection);
       const name = data.displayName == null ? "" : normalizeSupportText(data.displayName, 40);
       const message =
@@ -189,7 +181,7 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
       };
       if (row) return replay(row);
       if (
-        (rail === "payos" ? env.SUPPORT_PAYOS_ENABLED : env.SUPPORT_POLAR_ENABLED) !== "true" ||
+        env.SUPPORT_PAYOS_ENABLED !== "true" ||
         !env.SUPPORT_SITE_ORIGIN ||
         !env.SUPPORT_IP_HASH_SALT ||
         !env.TURNSTILE_SECRET_KEY
@@ -245,40 +237,23 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
       if (!reserved) return fail(503, "unavailable");
       try {
         const expiry = new Date(now.getTime() + 1800000).toISOString();
-        const provider =
-          rail === "payos"
-            ? await createPayosLink(env, {
-                orderCode: orderCode ?? 0,
-                amount: quote.amountMinor,
-                description: String(orderCode),
-                returnUrl: callbacks.returnUrl,
-                cancelUrl: callbacks.cancelUrl,
-                expiredAt: Math.floor(Date.parse(expiry) / 1000),
-              })
-            : await createPolarCheckout(
-                env,
-                { id: data.id, amountMinor: quote.amountMinor },
-                callbacks.returnUrl,
-                callbacks.cancelUrl,
-              );
-        const providerExpiry =
-          rail === "polar"
-            ? typeof provider.expires_at === "string"
-              ? Date.parse(provider.expires_at)
-              : NaN
-            : Date.parse(expiry);
-        if (!Number.isFinite(providerExpiry) || providerExpiry <= Date.now())
-          throw new PolarRequestError(true);
+        const provider = await createPayosLink(env, {
+          orderCode: orderCode ?? 0,
+          amount: quote.amountMinor,
+          description: String(orderCode),
+          returnUrl: callbacks.returnUrl,
+          cancelUrl: callbacks.cancelUrl,
+          expiredAt: Math.floor(Date.parse(expiry) / 1000),
+        });
         await env.DB.prepare(
-          "UPDATE support_donations SET status='pending', updated_at=?, expires_at=?, payos_link_id=?, polar_checkout_id=?, checkout_url=?, qr_code=? WHERE id=? AND status='creating'",
+          "UPDATE support_donations SET status='pending', updated_at=?, expires_at=?, payos_link_id=?, checkout_url=?, qr_code=? WHERE id=? AND status='creating'",
         )
           .bind(
             new Date().toISOString(),
-            new Date(providerExpiry).toISOString(),
-            rail === "payos" ? provider.paymentLinkId : null,
-            rail === "polar" ? provider.id : null,
-            rail === "payos" ? provider.checkoutUrl : provider.url,
-            rail === "payos" ? provider.qrCode : null,
+            expiry,
+            provider.paymentLinkId,
+            provider.checkoutUrl,
+            provider.qrCode,
             data.id,
           )
           .run();
@@ -286,8 +261,7 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
         if (!row) return fail(503, "unavailable");
         return row.status === "pending" ? json(checkout(row), 201) : json(status(row), 200);
       } catch (e) {
-        const uncertain =
-          !(e instanceof PayosRequestError || e instanceof PolarRequestError) || e.uncertain;
+        const uncertain = !(e instanceof PayosRequestError) || e.uncertain;
         await env.DB.prepare(
           "UPDATE support_donations SET status=?, updated_at=? WHERE id=? AND status='creating'",
         )
@@ -302,11 +276,13 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
       id = match[2] ?? "";
     const method = action === "confirm" ? "POST" : "GET";
     if (req.method !== method) return fail(405, "method_not_allowed", { Allow: method });
+    if (action === "confirm") return cardAdapter.disabled();
     const key = req.headers.get("Authorization")?.match(/^Bearer (.+)$/)?.[1];
     const row = uuid(id) ? await lookup(env, id) : null;
     if (!row || !keyValid(key) || !(await safeEqual(row.receipt_key_hash, await sha256Hex(key))))
       return fail(404, "not_found");
-    if (action !== "confirm") {
+    if (row.rail === "polar") return cardAdapter.disabled();
+    {
       if (!env.SUPPORT_IP_HASH_SALT || !env.SUPPORT_READ_LIMITER)
         return fail(503, "not_configured");
       const digest = await supportIpDigest(
@@ -321,37 +297,7 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
           ? json(checkout(row))
           : fail(409, "checkout_inactive");
     }
-    const body = (await readJson(req)) as Record<string, unknown>;
-    if (!body || typeof body.checkoutId !== "string") return fail(422, "invalid_fields");
-    if (row.rail !== "polar" || !row.polar_checkout_id || body.checkoutId !== row.polar_checkout_id)
-      return fail(409, "checkout_mismatch");
-    if (!(await checkSupportLimit(env.DB, "confirm", row.id, 12, 60)))
-      return fail(429, "rate_limited", { "Retry-After": "60" });
-    if (row.status === "paid") return json(status(row));
-    const remote = await fetchPolarCheckout(env, row.polar_checkout_id);
-    if (
-      !matchesPolarCheckout(remote, env, {
-        id: row.id,
-        amountMinor: row.amount_minor,
-        checkoutId: row.polar_checkout_id,
-      })
-    )
-      return fail(409, "checkout_mismatch");
-    if (remote.status === "succeeded") {
-      await applyPaymentEvidence(env.DB, {
-        rail: "polar",
-        eventId: `checkout:${row.polar_checkout_id}`,
-        donationId: row.id,
-        amountMinor: row.amount_minor,
-        currency: "USD",
-        providerReference: row.polar_checkout_id,
-        polarCheckoutId: row.polar_checkout_id,
-        observedAt: new Date().toISOString(),
-      });
-      const updated = await lookup(env, row.id);
-      return updated ? json(status(updated)) : fail(503, "unavailable");
-    }
-    return json(status(row), 202);
+    return cardAdapter.disabled();
   } catch (e) {
     if (typeof e === "number")
       return fail(

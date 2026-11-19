@@ -21,7 +21,8 @@ describe("support foundation", () => {
     expect(validateQuote("payos", { preset: 2 })).toBeNull();
     expect(validateQuote("payos", { preset: 1, customAmountMinor: 10000 })).toBeNull();
     expect(defaultRailForCountry(" vn ")).toBe("payos");
-    expect(defaultRailForCountry(null)).toBe("polar");
+    expect(defaultRailForCountry(null)).toBe("payos");
+    expect(defaultRailForCountry(null, true)).toBe("polar");
   });
 
   it("admits only one concurrent reservation for an id", async () => {

@@ -23,7 +23,7 @@ function init(root: HTMLElement) {
   const custom = el<HTMLInputElement>("#custom");
   const name = el<HTMLInputElement>("#support-name");
   const message = el<HTMLTextAreaElement>("#support-message");
-  let rail: Rail = "polar",
+  let rail: Rail = "payos",
     selection: "1" | "3" | "5" | "custom" = "3",
     changed = false,
     geoPending = true,
@@ -144,10 +144,9 @@ function init(root: HTMLElement) {
     try {
       const res = await fetch("/api/support/default-rail", { signal: AbortSignal.timeout(1800) });
       const data = await res.json();
-      if (!changed && !attempt && (data.defaultRail === "payos" || data.defaultRail === "polar"))
-        rail = data.defaultRail;
+      if (!changed && !attempt && data.defaultRail === "payos") rail = data.defaultRail;
     } catch {
-      /* card is the safe default */
+      /* VietQR remains the default */
     } finally {
       geoPending = false;
       preview();

@@ -5,8 +5,8 @@ import { GET } from "../../pages/api/support/default-rail";
 describe("support default rail", () => {
   it.each([
     [" vn ", "payos"],
-    ["US", "polar"],
-    [null, "polar"],
+    ["US", "payos"],
+    [null, "payos"],
   ])("suggests a rail for country %s", async (country, expected) => {
     const headers = new Headers();
     if (country !== null) headers.set("x-vercel-ip-country", country);

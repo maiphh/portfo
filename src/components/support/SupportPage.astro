@@ -29,10 +29,10 @@ const enabled = import.meta.env.PUBLIC_SUPPORT_ENABLED === "true";
     <div class="b-go">
       <div id="pay-challenge"></div>
       <button type="button" class="b-button b-lime" data-pay disabled>
-        Pay $9 with card →
+        Pay 75,000 ₫ with VietQR →
       </button>
       <p class="help" data-pay-help>
-        Secure checkout opens on Polar.
+        A QR opens for your banking app. No account needed.
       </p>
       <p role="status" data-pay-error>
         {enabled ? "Preparing secure payment…" : "Support is currently unavailable."}

@@ -43,6 +43,7 @@ export interface Env {
   POLAR_ENVIRONMENT?: string;
   SUPPORT_PAYOS_ENABLED?: string;
   SUPPORT_POLAR_ENABLED?: string;
+  SUPPORT_CARD_ENABLED?: string;
 
   // Secrets
   PAYOS_CLIENT_ID?: string;

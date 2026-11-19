@@ -20,7 +20,7 @@
           {n} {n === 1 ? "Claude" : "Claudes"}
         </b>
         <span class="b-pr" data-price={n}>
-          ${n * 3}
+          {(n * 25000).toLocaleString("vi-VN")} ₫
         </span>
       </button>
     ))}
@@ -37,7 +37,7 @@
     <label for="custom">Amount</label>
     <input id="custom" inputmode="numeric" aria-describedby="custom-help" />
     <p class="help" id="custom-help">
-      $2 to $500 in whole dollars.
+      10,000 to 20,000,000 ₫ in 1,000 ₫ steps.
     </p>
   </div>
   <div class="b-rail">
@@ -45,20 +45,19 @@
       How are you paying?
     </p>
     <div class="seg" role="radiogroup" aria-labelledby="rail-label">
-      <button type="button" role="radio" aria-checked="false" data-rail="payos">
+      <button type="button" role="radio" aria-checked="true" data-rail="payos">
         <span>
-          <b>Paying from Vietnam</b>
+          <b>Pay with VietQR</b>
           <small>VietQR · ₫</small>
         </span>
       </button>
-      <button type="button" role="radio" aria-checked="true" data-rail="polar">
+      <button type="button" disabled data-card-coming-soon>
         <span>
-          <b>Paying by card</b>
-          <small>Card · $</small>
+          <b>Card payments: coming soon</b>
         </span>
       </button>
     </div>
-    <p class="help">Suggested from your country. Switch any time before payment.</p>
+    <p class="help">VietQR is available to everyone.</p>
   </div>
   <details class="b-more">
     <summary>

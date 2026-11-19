@@ -115,6 +115,22 @@ async function shot(page: Page, width: number, state: string) {
         .map((x) => `${x.text} ${x.rect.width}x${x.rect.height}`),
     );
   expect(small).toEqual([]);
+  const tinyText = await page
+    .locator("#support *:visible")
+    .evaluateAll((elements) =>
+      elements
+        .filter(
+          (el) =>
+            [...el.childNodes].some(
+              (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+            ) && parseFloat(getComputedStyle(el).fontSize) < 12,
+        )
+        .map(
+          (el) =>
+            `${el.tagName}: ${getComputedStyle(el).fontSize} ${(el.textContent || "").trim().slice(0, 30)}`,
+        ),
+    );
+  expect(tinyText).toEqual([]);
   await mkdir(shots, { recursive: true });
   await page.screenshot({
     path: `${shots}/${width}-${state}.png`,
@@ -123,32 +139,17 @@ async function shot(page: Page, width: number, state: string) {
   });
 }
 
-for (const [geo, rail] of [
-  ["payos", "payos"],
-  ["polar", "polar"],
-] as const) {
-  test(`geo suggests ${geo}`, async ({ page }) => {
-    await setup(page, { geo });
-    await open(page);
-    await expect(page.locator(`[data-rail="${rail}"]`)).toHaveAttribute("aria-checked", "true");
-  });
-}
-test("manual rail wins over a slow geo response, and custom amounts validate", async ({ page }) => {
-  const f = await setup(page, { slowGeo: true });
-  await page.goto("/support/");
-  await page.locator('[data-rail="polar"]').click();
-  await expect(page.locator("[data-pay]")).toBeEnabled();
-  await expect(page.locator('[data-rail="polar"]')).toHaveAttribute("aria-checked", "true");
+test("VietQR is the default and card payments are unavailable", async ({ page }) => {
+  const f = await setup(page, { geo: "polar" });
+  await open(page);
+  await expect(page.locator('[data-rail="payos"]')).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator("[data-card-coming-soon]")).toBeDisabled();
+  await expect(page.locator("[data-card-coming-soon]")).toContainText("Card payments: coming soon");
   await page.locator('[data-amount="custom"]').click();
-  await page.locator("#custom").fill("1");
-  await page.locator("[data-pay]").click();
-  await expect(page.locator("[data-pay-error]")).toContainText("within the stated range");
-  expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(0);
-  await page.locator('[data-rail="payos"]').click();
-  await expect(page.locator("#custom")).toHaveValue("");
   await page.locator("#custom").fill("10500");
   await page.locator("[data-pay]").click();
   await expect(page.locator("[data-pay-error]")).toContainText("within the stated range");
+  expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(0);
 });
 test("QR copy and save; pending, expiry and late settlement", async ({ page, context }) => {
   const f = await setup(page);
@@ -179,33 +180,6 @@ test("lost create response recovers after reload with same receipt", async ({ pa
   await expect(page.locator("[data-qr]")).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBe(attempt);
   expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(1);
-});
-test("card checkout navigates only to the intercepted provider", async ({ page }) => {
-  await setup(page, { rail: "polar", geo: "polar" });
-  await page.route("https://sandbox.polar.sh/**", (route) =>
-    route.fulfill({ contentType: "text/html", body: "Fixture checkout" }),
-  );
-  await open(page);
-  await page.locator("[data-pay]").click();
-  await expect(page).toHaveURL("https://sandbox.polar.sh/fixture");
-  await expect(page.locator("body")).toHaveText("Fixture checkout");
-});
-test("card return, cancellation and forged return remain unconfirmed", async ({ page }) => {
-  const f = await setup(page, { rail: "polar", geo: "polar" });
-  await page.goto("/support/");
-  await page.evaluate(() =>
-    sessionStorage.setItem(
-      "support-attempt",
-      JSON.stringify({ id: "fixture-id", key: "fixture-key" }),
-    ),
-  );
-  await page.goto("/support/return/?id=fixture-id&hint=success&checkout_id=checkout-fixture");
-  await expect(page.locator("[data-status-description]")).toContainText("does not confirm");
-  expect(f.requests.some((r) => r.path === "confirm/fixture-id")).toBe(true);
-  await page.goto("/support/return/?id=fixture-id&hint=cancel");
-  await expect(page.locator("[data-status-heading]")).toHaveText("Payment unconfirmed");
-  await page.goto("/support/return/?id=forged&hint=success&checkout_id=fake");
-  await expect(page.locator("[data-status-description]")).toContainText("no matching receipt");
 });
 test("outage stays unconfirmed and free and badged notes await moderation", async ({ page }) => {
   const f = await setup(page);
@@ -272,10 +246,6 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
     await page.keyboard.press("Space");
     await expect(page.locator('[data-amount="1"]')).toHaveAttribute("aria-checked", "true");
     await page.locator('[data-amount="3"]').click();
-    await page.locator('[data-rail="payos"]').focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(page.locator('[data-rail="polar"]')).toBeFocused();
-    await page.keyboard.press("ArrowLeft");
     await start(page);
     await shot(page, width, "qr-confirming");
     f.state = "paid";
@@ -290,14 +260,6 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
     await page.locator("[data-recheck]").click();
     await expect(page.locator("[data-status-heading]")).toHaveText("Payment unconfirmed");
     await shot(page, width, "failed");
-    f.rail = "polar";
-    f.state = "pending";
-    const id = await page.evaluate(
-      () => JSON.parse(sessionStorage.getItem("support-attempt") || "{}").id,
-    );
-    await page.goto(`/support/return/?id=${id}&hint=cancel`);
-    await expect(page.locator("[data-status-description]")).toContainText("does not confirm");
-    await shot(page, width, "card-return");
     expect(await page.locator(".receipt").evaluate((el) => getComputedStyle(el).transform)).toBe(
       "none",
     );

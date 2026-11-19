@@ -112,30 +112,28 @@ Use `.codex-input/option-b/src/body.html`, `style.css`, `motion.js`, `.codex-inp
 
 Use empty placeholders in the examples. Phu supplies real values later. For secrets, document each in `workers/portfo/.dev.vars.example`, set local values in gitignored `workers/portfo/.dev.vars`, and set production values with `pnpm exec wrangler secret put <NAME> --env production` from `workers/portfo` after approval. Keep secrets out of Vercel and client bundles. Maintain separate live and sandbox credentials.
 
-| Worker secret                | Placeholder and purpose                                                 |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| `PAYOS_CLIENT_ID`            | `<payos-client-id>`, payment channel credential                         |
-| `PAYOS_API_KEY`              | `<payos-api-key>`, merchant API authentication                          |
-| `PAYOS_CHECKSUM_KEY`         | `<payos-checksum-key>`, request, response and webhook HMAC              |
-| `POLAR_ACCESS_TOKEN`         | `<polar-organization-access-token>`, minimum checkout read/write scopes |
-| `POLAR_WEBHOOK_SECRET`       | `<polar-webhook-signing-secret>`, endpoint-specific secret              |
-| `TURNSTILE_SECRET_KEY`       | `<turnstile-secret-key>`, paired with the site key                      |
-| `SUPPORT_REVIEW_SIGNING_KEY` | `<base64-32-random-bytes>`, dedicated token HMAC                        |
-| `SUPPORT_IP_HASH_SALT`       | `<base64-32-random-bytes>`, dedicated keyed digest salt                 |
-| `SUPPORT_ADMIN_TOKEN`        | `<high-entropy-bearer>`, moderation only                                |
+| Worker secret                | Placeholder and purpose                                    |
+| ---------------------------- | ---------------------------------------------------------- |
+| `PAYOS_CLIENT_ID`            | `<payos-client-id>`, payment channel credential            |
+| `PAYOS_API_KEY`              | `<payos-api-key>`, merchant API authentication             |
+| `PAYOS_CHECKSUM_KEY`         | `<payos-checksum-key>`, request, response and webhook HMAC |
+| `TURNSTILE_SECRET_KEY`       | `<turnstile-secret-key>`, paired with the site key         |
+| `SUPPORT_REVIEW_SIGNING_KEY` | `<base64-32-random-bytes>`, dedicated token HMAC           |
+| `SUPPORT_IP_HASH_SALT`       | `<base64-32-random-bytes>`, dedicated keyed digest salt    |
+| `SUPPORT_ADMIN_TOKEN`        | `<high-entropy-bearer>`, moderation only                   |
 
 | Public or non-secret setting                          | Where it goes and what it does                                                                                                                                                                                                                                                        |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SUPPORT_SITE_ORIGIN`                                 | Worker Wrangler vars, local override documented in `workers/portfo/.dev.vars.example`. `<support-site-origin>` is the site’s canonical origin for callbacks and Turnstile hostname. Must be among allowed browser origins.                                                            |
-| `POLAR_PRODUCT_ID`, `POLAR_ORG_ID`                    | Worker Wrangler vars/local dev overrides. `<polar-product-id>`, `<polar-org-id>` from the environment’s approved one-time product and owning org.                                                                                                                                     |
-| `POLAR_ENVIRONMENT`                                   | Worker Wrangler vars/local dev override. Choose `sandbox` or `production` explicitly. Use fixed provider API origins per environment and the API version pinned in code.                                                                                                              |
-| `SUPPORT_PAYOS_ENABLED`, `SUPPORT_POLAR_ENABLED`      | Worker Wrangler vars/local dev overrides. Default false for checkout creation. Keep settlement and receipt verification available for existing donations when creation is disabled.                                                                                                   |
+| Optional future: `POLAR_PRODUCT_ID`, `POLAR_ORG_ID`   | Worker Wrangler vars/local dev overrides. `<polar-product-id>`, `<polar-org-id>` from the environment’s approved one-time product and owning org.                                                                                                                                     |
+| Optional future: `POLAR_ENVIRONMENT`                  | Worker Wrangler vars/local dev override. Choose `sandbox` or `production` explicitly. Use fixed provider API origins per environment and the API version pinned in code.                                                                                                              |
+| `SUPPORT_PAYOS_ENABLED`, `SUPPORT_CARD_ENABLED`       | Worker Wrangler vars/local dev overrides. Both default false. PayOS settlement remains available when creation is disabled. Card remains disabled until a provider is selected and implemented.                                                                                       |
 | `ALLOWED_ORIGINS`, `ENVIRONMENT`, `DB`                | Existing Worker Wrangler vars and D1 binding. Use `<canonical-site-origin>` and approved preview origins where needed, `<worker-environment>`, and the existing database for that environment.                                                                                        |
 | `SUPPORT_READ_LIMITER`                                | Worker Wrangler rate-limiter binding with an unused namespace ID in both relevant config blocks, plus a Miniflare test binding. Reserve the ID during implementation and activate the production config only with Phu’s approval.                                                     |
 | `PUBLIC_SUPPORT_ENABLED`, `PUBLIC_TURNSTILE_SITE_KEY` | Root `.env.example`, local gitignored `.env` and Vercel build settings. Support visibility defaults off. Use `<turnstile-public-site-key>` to initialize both widgets.                                                                                                                |
 | `PUBLIC_WORKER_URL`, `PUBLIC_USE_MOCKS`, `SITE_URL`   | Existing root `.env.example` and Vercel settings. Set `<portfo-worker-origin>`, turn off global mocks for a live support build, and use `<canonical-site-url>` if needed. Missing config shows an unavailable state. Never substitute sample supporters or simulated payment success. |
 
-After Phu’s separate approval, register the exact Worker webhook URLs with the PayOS payment channel and the Polar organization and pin the Polar endpoint version. Authorize the public site hostname for the Turnstile widget. Keep sandbox callbacks and tokens separate from production. Leave existing unrelated secrets as documented in `workers/portfo/.dev.vars.example`. Never access `/workspace/portfo-secrets`.
+After Phu’s separate approval, register the PayOS Worker webhook URL with the payment channel. Polar settings are future/optional and are not required for launch. Authorize the public site hostname for the Turnstile widget. Keep sandbox callbacks and tokens separate from production. Leave existing unrelated secrets as documented in `workers/portfo/.dev.vars.example`. Never access `/workspace/portfo-secrets`.
 
 ## 8. Ordered commits in the single PR
 
@@ -159,3 +157,12 @@ After Phu’s separate approval, register the exact Worker webhook URLs with the
 3. **Placement.** Should the Option B ticket appear on case studies as planned or only on the homepage? Confirm footer-only placement for the donation link.
 4. **Moderation and retention.** Who checks the review queue and private supporter messages? Approve retention windows and the process for hiding supporter names, removals, disputed/refunded payments and provider reconciliation. Do not add an automatic refund flow in this PR without a clear policy.
 5. **Real hosting and mobile.** Confirm the canonical Vercel deployment supplies `x-vercel-ip-country` and supports the configured callbacks. After approval, test PayOS QR gallery import and any hosted checkout link with real Vietnamese banking apps, Polar return and email in an approved environment, Safari’s receipt mask, clipboard/download on iOS and Android, and chat dock clearance. These are live-readiness checks beyond the mocked PR tests.
+
+## Scope change from Phu (Nov 19, 2026), REQUIRED in this PR
+
+Ship **PayOS (VietQR, VND) only** for launch. Polar can't be used because its AUP prohibits donations. The card provider is undecided (PayPal Checkout is the likely candidate).
+
+- Keep the card rail behind a provider-agnostic adapter interface, but **disable it**. In the UI, the card toggle option shows "Card payments: coming soon" as non-interactive, with no checkout call. Non-VN visitors still see the full page and can pay with VietQR or leave a review.
+- The default rail is PayOS for everyone while card is disabled. Keep the country detection code, gated behind a `SUPPORT_CARD_ENABLED` flag (default false).
+- Card/Polar routes and webhooks return 503 `card_disabled` while the flag is off. Remove the Polar SDK dependency if it was added and keep only a stub adapter. Remove the `POLAR_*` secrets from the required list; list them as future/optional.
+- Update tests, mobile screenshots and the PR body to match. The reviewer must treat this section as part of the plan.
