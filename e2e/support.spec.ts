@@ -4,7 +4,7 @@ import { overflowReport } from "./overflow";
 
 const shots = process.env.SUPPORT_SHOTS_DIR ?? "/workspace/portfo-shots/buy-me-claude";
 type Rail = "payos" | "polar";
-type State = "pending" | "paid" | "expired" | "failed";
+type State = "pending" | "paid" | "expired" | "failed" | "creation_unknown";
 type Fixture = {
   rail: Rail;
   state: State;
@@ -14,15 +14,17 @@ type Fixture = {
   outage: boolean;
   lost: boolean;
   slowGeo: boolean;
+  oneClaude: boolean;
+  expiresAt: string;
 };
 const status = (f: Fixture, id = "fixture-id") => ({
   id,
   rail: f.rail,
-  status: f.state,
-  amountMinor: f.rail === "payos" ? 75000 : 900,
+  status: f.state === "pending" && Date.parse(f.expiresAt) <= Date.now() ? "expired" : f.state,
+  amountMinor: f.oneClaude ? 25000 : f.rail === "payos" ? 75000 : 900,
   currency: f.rail === "payos" ? "VND" : "USD",
-  presetCount: 3,
-  expiresAt: "2099-01-01T00:00:00Z",
+  presetCount: f.oneClaude ? 1 : 3,
+  expiresAt: f.expiresAt,
   paidAt: f.state === "paid" ? "2026-01-01T00:00:00Z" : null,
 });
 async function setup(page: Page, overrides: Partial<Fixture> = {}) {
@@ -35,6 +37,8 @@ async function setup(page: Page, overrides: Partial<Fixture> = {}) {
     outage: false,
     lost: false,
     slowGeo: false,
+    oneClaude: false,
+    expiresAt: "2099-01-01T00:00:00Z",
     ...overrides,
   };
   await page.route("https://challenges.cloudflare.com/**", (route) =>
@@ -165,6 +169,9 @@ test("QR copy and save; pending, expiry and late settlement", async ({ page, con
   f.state = "expired";
   await page.locator("[data-recheck]").click();
   await expect(page.locator("[data-status-heading]")).toHaveText("That QR expired");
+  await expect(page.locator("[data-copy]")).toBeHidden();
+  await expect(page.locator("[data-save]")).toBeHidden();
+  await expect(page.locator("[data-status-extra]")).toBeEmpty();
   f.state = "paid";
   await page.locator("[data-recheck]").click();
   await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
@@ -180,6 +187,42 @@ test("lost create response recovers after reload with same receipt", async ({ pa
   await expect(page.locator("[data-qr]")).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBe(attempt);
   expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(1);
+});
+test("uncertain creation remains recheckable and offers a new attempt after reload", async ({
+  page,
+}) => {
+  const f = await setup(page, { lost: true, state: "creation_unknown" });
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-new]")).toBeVisible();
+  await expect(page.locator("[data-status-description]")).toContainText("if you did not pay");
+  await page.reload();
+  await expect(page.locator("[data-new]")).toBeVisible();
+  f.state = "paid";
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  expect(f.requests.filter((r) => r.path === "pay")).toHaveLength(1);
+});
+test("late geo response preserves the verified receipt", async ({ page }) => {
+  await setup(page, { slowGeo: true, state: "paid", oneClaude: true });
+  await page.addInitScript(() =>
+    sessionStorage.setItem(
+      "support-attempt",
+      JSON.stringify({ id: "fixture-id", key: "fixture-key" }),
+    ),
+  );
+  await page.goto("/support/");
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  await page.waitForTimeout(1100);
+  await expect(page.locator("[data-summary]")).toHaveText("1 × CLAUDE");
+  await expect(page.locator("[data-total]").first()).toContainText("25.000");
+});
+test("countdown hides payment tools immediately on expiry", async ({ page }) => {
+  await setup(page, { expiresAt: new Date(Date.now() + 2500).toISOString() });
+  await open(page);
+  await start(page);
+  await expect(page.locator("[data-save]")).toBeHidden({ timeout: 5000 });
+  await expect(page.locator("[data-copy]")).toBeHidden();
 });
 test("outage stays unconfirmed and free and badged notes await moderation", async ({ page }) => {
   const f = await setup(page);
@@ -245,6 +288,9 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
     await page.locator('[data-amount="1"]').focus();
     await page.keyboard.press("Space");
     await expect(page.locator('[data-amount="1"]')).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator('[data-amount="3"]')).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator('[data-amount="3"]')).toBeFocused();
     await page.locator('[data-amount="3"]').click();
     await start(page);
     await shot(page, width, "qr-confirming");

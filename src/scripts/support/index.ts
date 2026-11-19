@@ -94,12 +94,14 @@ function init(root: HTMLElement) {
       rail === "payos"
         ? "10,000 to 20,000,000 ₫ in 1,000 ₫ steps."
         : "$2 to $500 in whole dollars.";
-    all<HTMLElement>("[data-total]").forEach(
-      (x) => (x.textContent = quote ? money(quote.amountMinor, quote.currency) : "—"),
-    );
-    el("[data-summary]").textContent =
-      selection === "custom" ? "CUSTOM SUPPORT" : `${selection} × CLAUDE`;
-    el("[data-via]").textContent = rail === "payos" ? "VIETQR" : "CARD · POLAR";
+    if (!current) {
+      all<HTMLElement>("[data-total]").forEach(
+        (x) => (x.textContent = quote ? money(quote.amountMinor, quote.currency) : "—"),
+      );
+      el("[data-summary]").textContent =
+        selection === "custom" ? "CUSTOM SUPPORT" : `${selection} × CLAUDE`;
+      el("[data-via]").textContent = rail === "payos" ? "VIETQR" : "CARD · POLAR";
+    }
     el("[data-name]").textContent = name.value || "—";
     el("[data-message]").textContent = message.value ? "PRIVATE" : "—";
     pay.textContent = `Pay ${quote ? money(quote.amountMinor, quote.currency) : ""} with ${rail === "payos" ? "VietQR" : "card"} →`;
@@ -109,12 +111,24 @@ function init(root: HTMLElement) {
         : "You finish on Polar’s secure checkout page.";
     pay.disabled = !enabled || geoPending || busy || !payToken;
   }
-  all<HTMLButtonElement>("[data-amount]").forEach((button) =>
-    button.addEventListener("click", () => {
-      selection = button.dataset.amount as typeof selection;
-      preview();
-    }),
-  );
+  const amounts = all<HTMLButtonElement>("[data-amount]");
+  function chooseAmount(button: HTMLButtonElement) {
+    selection = button.dataset.amount as typeof selection;
+    preview();
+  }
+  amounts.forEach((button, i) => {
+    button.addEventListener("click", () => chooseAmount(button));
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(event.key)) return;
+      event.preventDefault();
+      const step = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
+      const next = amounts[(i + step + amounts.length) % amounts.length];
+      if (next) {
+        next.focus();
+        chooseAmount(next);
+      }
+    });
+  });
   const rails = all<HTMLButtonElement>("[data-rail]");
   function chooseRail(next: Rail) {
     if (busy) return;
@@ -186,7 +200,8 @@ function init(root: HTMLElement) {
     el("[data-via]").textContent = status.rail === "payos" ? "VIETQR" : "CARD · POLAR";
     const paid = status.status === "paid",
       expired = status.status === "expired",
-      failed = ["failed", "cancelled"].includes(status.status);
+      failed = ["failed", "cancelled"].includes(status.status),
+      unknown = status.status === "creation_unknown";
     const heading = el("[data-status-heading]");
     heading.textContent = paid
       ? "Payment received"
@@ -201,11 +216,13 @@ function init(root: HTMLElement) {
       ? "Thank you. Want to say something about the site?"
       : expired
         ? "Payment unconfirmed. A late payment can still be received; recheck this receipt."
-        : failed
-          ? "Payment could not be confirmed. Recheck or start a new attempt."
-          : status.rail === "payos" && checkout?.qrCode
-            ? "Use the QR on your receipt. We’ll update it when payment is confirmed."
-            : "We’re checking your payment. Returning from checkout does not confirm it.";
+        : unknown
+          ? "Checkout creation is unconfirmed. Recheck this receipt for a late payment, or start a new attempt if you did not pay."
+          : failed
+            ? "Payment could not be confirmed. Recheck or start a new attempt."
+            : status.rail === "payos" && checkout?.qrCode
+              ? "Use the QR on your receipt. We’ll update it when payment is confirmed."
+              : "We’re checking your payment. Returning from checkout does not confirm it.";
     el("[data-receipt-status]").textContent = paid
       ? "PAYMENT RECEIVED"
       : expired
@@ -226,12 +243,12 @@ function init(root: HTMLElement) {
     const checkoutUrl = safeCheckout(checkout?.checkoutUrl ?? null);
     continueLink.hidden = status.rail !== "polar" || status.status !== "pending" || !checkoutUrl;
     if (checkoutUrl) continueLink.href = checkoutUrl;
-    el("[data-new]").hidden = !paid && !expired && !failed;
-    el("[data-copy]").hidden = !checkout?.transferNote || paid;
-    el("[data-save]").hidden = !checkout?.qrCode || paid;
+    el("[data-new]").hidden = !paid && !expired && !failed && !unknown;
+    el("[data-copy]").hidden = !checkout?.transferNote || paid || expired || failed;
+    el("[data-save]").hidden = !checkout?.qrCode || paid || expired || failed;
     el("[data-qr]").hidden = !checkout?.qrCode || paid || expired || failed;
     el("[data-status-extra]").textContent =
-      checkout?.qrCode && !paid
+      checkout?.qrCode && !paid && !expired && !failed
         ? "On a phone? Save the QR, then pick it from your banking app’s scan screen."
         : "";
     if (focus) {
@@ -564,6 +581,11 @@ function init(root: HTMLElement) {
   setInterval(() => {
     if (current?.expiresAt && current.status === "pending") {
       const seconds = Math.max(0, Math.ceil((Date.parse(current.expiresAt) - Date.now()) / 1000));
+      if (seconds === 0) {
+        showStatus({ ...current, status: "expired" }, false);
+        void recheck(false);
+        return;
+      }
       el("[data-receipt-detail]").textContent =
         `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} · NOTE ${checkout?.transferNote || "—"}`;
     }

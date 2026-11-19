@@ -2,7 +2,7 @@ import type { Env } from "../env";
 import { safeEqual, sha256Hex } from "../http";
 import { buildSupportCallbacks } from "./callbacks";
 import { checkSupportLimit, supportIpDigest } from "./limits";
-import { createPayosLink, handlePayosWebhook, PayosRequestError, recoverPayosLink } from "./payos";
+import { createPayosLink, handlePayosWebhook, PayosRequestError } from "./payos";
 import { cardAdapter } from "./card";
 import { reserveDonation } from "./store";
 import { verifyTurnstile } from "./turnstile";
@@ -34,9 +34,11 @@ const status = (row: Row) => ({
   id: row.id,
   rail: row.rail,
   status:
-    row.status === "pending" && row.expires_at && row.expires_at <= new Date().toISOString()
-      ? "expired"
-      : row.status,
+    row.status === "creating" && Date.now() - Date.parse(row.created_at) > 30000
+      ? "creation_unknown"
+      : row.status === "pending" && row.expires_at && row.expires_at <= new Date().toISOString()
+        ? "expired"
+        : row.status,
   amountMinor: row.amount_minor,
   currency: row.currency,
   presetCount: row.preset_count,
@@ -145,30 +147,6 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
             .bind(new Date().toISOString(), found.id)
             .run();
           found = (await lookup(env, found.id)) ?? found;
-        }
-        if (
-          found.status === "creation_unknown" &&
-          found.rail === "payos" &&
-          found.payos_order_code
-        ) {
-          const recovered = await recoverPayosLink(env, found.payos_order_code, found.amount_minor);
-          if (recovered) {
-            const expires = new Date(Date.parse(found.created_at) + 1800000).toISOString();
-            await env.DB.prepare(
-              "UPDATE support_donations SET status='pending', updated_at=?, expires_at=?, payos_link_id=?, checkout_url=?, qr_code=? WHERE id=? AND status='creation_unknown' AND (payos_link_id IS NULL OR payos_link_id=?)",
-            )
-              .bind(
-                new Date().toISOString(),
-                expires,
-                recovered.paymentLinkId,
-                recovered.checkoutUrl,
-                recovered.qrCode,
-                found.id,
-                recovered.paymentLinkId,
-              )
-              .run();
-            found = (await lookup(env, found.id)) ?? found;
-          }
         }
         return found.status === "pending" &&
           status(found).status === "pending" &&

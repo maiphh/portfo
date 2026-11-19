@@ -119,6 +119,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: workers/portfo/pnpm-lock.yaml
 
+      - name: Install site dependencies for shared pricing TypeScript config
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
       - name: Install
         run: pnpm install --frozen-lockfile
 

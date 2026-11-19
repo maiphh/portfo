@@ -160,3 +160,55 @@ it("reserves a single provider checkout on concurrent retries", async () => {
   expect((await create()).status).toBe(200);
   expect(creates).toBe(1);
 });
+
+it("keeps an uncertain create recheckable without issuing another provider request", async () => {
+  const id = "9be8db56-9589-447d-a0e9-d35d1dc07c92";
+  const key = "A".repeat(43);
+  let creates = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("siteverify"))
+        return Response.json({ success: true, hostname: "site.test", action: "support_pay" });
+      creates++;
+      throw new Error("timeout");
+    }),
+  );
+  const config = {
+    ...env,
+    SUPPORT_PAYOS_ENABLED: "true",
+    SUPPORT_SITE_ORIGIN: "https://site.test",
+    SUPPORT_IP_HASH_SALT: "salt",
+    TURNSTILE_SECRET_KEY: "challenge",
+    PAYOS_CLIENT_ID: "client",
+    PAYOS_API_KEY: "api",
+    PAYOS_CHECKSUM_KEY: "checksum",
+  };
+  const create = () =>
+    handleSupport(
+      new Request("https://worker/api/support/pay", {
+        method: "POST",
+        headers: { "content-type": "application/json", "cf-connecting-ip": "192.0.2.1" },
+        body: JSON.stringify({
+          id,
+          receiptKey: key,
+          rail: "payos",
+          selection: { preset: 3 },
+          turnstileToken: "token",
+        }),
+      }),
+      config,
+    );
+  expect((await create()).status).toBe(503);
+  const replay = await create();
+  expect(replay.status).toBe(202);
+  expect(await replay.json()).toMatchObject({ status: "creation_unknown" });
+  const response = await handleSupport(
+    new Request(`https://worker/api/support/status/${id}`, {
+      headers: { Authorization: `Bearer ${key}`, "cf-connecting-ip": "192.0.2.1" },
+    }),
+    config,
+  );
+  expect(await response.json()).toMatchObject({ status: "creation_unknown" });
+  expect(creates).toBe(1);
+});
