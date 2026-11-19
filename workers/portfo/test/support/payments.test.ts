@@ -46,6 +46,23 @@ describe("payment evidence", () => {
     const count = await env.DB.prepare("SELECT count(*) AS n FROM support_webhook_events").first();
     expect(count?.n).toBe(1);
   });
+  it("records a different payment reference as a mismatch after settlement", async () => {
+    await reserve();
+    await applyPaymentEvidence(env.DB, evidence);
+    await applyPaymentEvidence(env.DB, {
+      ...evidence,
+      eventId: "second",
+      providerReference: "other",
+    });
+    const event = await env.DB.prepare(
+      "SELECT outcome FROM support_webhook_events WHERE event_id = 'second'",
+    ).first();
+    expect(event?.outcome).toBe("mismatch");
+    const row = await env.DB.prepare(
+      "SELECT provider_payment_ref FROM support_donations WHERE id = 'donation'",
+    ).first();
+    expect(row?.provider_payment_ref).toBe("ref");
+  });
   it("does not settle mismatched amounts", async () => {
     await reserve();
     await applyPaymentEvidence(env.DB, { ...evidence, amountMinor: 1 });
@@ -211,4 +228,42 @@ it("keeps an uncertain create recheckable without issuing another provider reque
   );
   expect(await response.json()).toMatchObject({ status: "creation_unknown" });
   expect(creates).toBe(1);
+});
+
+it("limits rejected receipt reads before querying D1", async () => {
+  let reads = 0;
+  const db = new Proxy(env.DB, {
+    get(target, prop) {
+      if (prop === "prepare")
+        return (...args: Parameters<D1Database["prepare"]>) => {
+          reads++;
+          return target.prepare(...args);
+        };
+      const value = Reflect.get(target, prop);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+  let calls = 0;
+  const config = {
+    ...env,
+    DB: db,
+    SUPPORT_IP_HASH_SALT: "salt",
+    SUPPORT_READ_LIMITER: {
+      limit: async () => {
+        calls++;
+        return { success: false };
+      },
+    },
+  };
+  for (const path of ["status", "checkout"]) {
+    const response = await handleSupport(
+      new Request(`https://worker/api/support/${path}/9be8db56-9589-447d-a0e9-d35d1dc07c92`, {
+        headers: { Authorization: `Bearer ${"A".repeat(43)}`, "cf-connecting-ip": "192.0.2.1" },
+      }),
+      config,
+    );
+    expect(response.status).toBe(429);
+  }
+  expect(calls).toBe(2);
+  expect(reads).toBe(0);
 });

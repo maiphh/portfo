@@ -255,27 +255,24 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
     const method = action === "confirm" ? "POST" : "GET";
     if (req.method !== method) return fail(405, "method_not_allowed", { Allow: method });
     if (action === "confirm") return cardAdapter.disabled();
+    if (!env.SUPPORT_IP_HASH_SALT || !env.SUPPORT_READ_LIMITER) return fail(503, "not_configured");
+    const digest = await supportIpDigest(
+      req.headers.get("cf-connecting-ip") ?? "",
+      env.SUPPORT_IP_HASH_SALT,
+    );
+    if (!(await env.SUPPORT_READ_LIMITER.limit({ key: digest })).success)
+      return fail(429, "rate_limited", { "Retry-After": "60" });
     const key = req.headers.get("Authorization")?.match(/^Bearer (.+)$/)?.[1];
-    const row = uuid(id) ? await lookup(env, id) : null;
-    if (!row || !keyValid(key) || !(await safeEqual(row.receipt_key_hash, await sha256Hex(key))))
+    if (!uuid(id) || !keyValid(key)) return fail(404, "not_found");
+    const row = await lookup(env, id);
+    if (!row || !(await safeEqual(row.receipt_key_hash, await sha256Hex(key))))
       return fail(404, "not_found");
     if (row.rail === "polar") return cardAdapter.disabled();
-    {
-      if (!env.SUPPORT_IP_HASH_SALT || !env.SUPPORT_READ_LIMITER)
-        return fail(503, "not_configured");
-      const digest = await supportIpDigest(
-        req.headers.get("cf-connecting-ip") ?? "",
-        env.SUPPORT_IP_HASH_SALT,
-      );
-      if (!(await env.SUPPORT_READ_LIMITER.limit({ key: digest })).success)
-        return fail(429, "rate_limited", { "Retry-After": "60" });
-      return action === "status"
-        ? json(status(row))
-        : status(row).status === "pending" && row.checkout_url
-          ? json(checkout(row))
-          : fail(409, "checkout_inactive");
-    }
-    return cardAdapter.disabled();
+    return action === "status"
+      ? json(status(row))
+      : status(row).status === "pending" && row.checkout_url
+        ? json(checkout(row))
+        : fail(409, "checkout_inactive");
   } catch (e) {
     if (typeof e === "number")
       return fail(

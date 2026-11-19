@@ -77,6 +77,7 @@ export async function applyPaymentEvidence(
       .prepare(
         `INSERT INTO support_webhook_events (rail, event_id, donation_id, received_at, outcome)
       SELECT ?, ?, id, ?, CASE WHEN rail = ? AND amount_minor = ? AND currency = ?
+        AND (provider_payment_ref IS NULL OR provider_payment_ref = ?)
         AND (? IS NULL OR payos_link_id IS NULL OR payos_link_id = ?)
         AND (? IS NULL OR polar_checkout_id = ?)
         AND NOT EXISTS (SELECT 1 FROM support_donations other WHERE other.rail = ? AND other.provider_payment_ref = ? AND other.id <> support_donations.id)
@@ -90,6 +91,7 @@ export async function applyPaymentEvidence(
         rail,
         amountMinor,
         currency,
+        providerReference,
         payosLinkId ?? null,
         payosLinkId ?? null,
         polarCheckoutId ?? null,

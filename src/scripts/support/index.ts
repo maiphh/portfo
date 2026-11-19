@@ -36,6 +36,14 @@ function init(root: HTMLElement) {
     reviewChallenge = "";
   let payWidget: string | undefined, reviewWidget: string | undefined;
   let canRetryCreate = false;
+  let paymentPayload: {
+    rail: Rail;
+    selection: Selection;
+    displayName?: string;
+    privateMessage?: string;
+  } | null = null;
+  let badgePending = false;
+  let badgeChoiceRequired = false;
   let deadlinePassed = false;
   let statusSequence = 0;
   let pollFailures = 0;
@@ -281,7 +289,9 @@ function init(root: HTMLElement) {
     const checkoutUrl = safeCheckout(checkout?.checkoutUrl ?? null);
     continueLink.hidden = status.rail !== "polar" || status.status !== "pending" || !checkoutUrl;
     if (checkoutUrl) continueLink.href = checkoutUrl;
-    el("[data-new]").hidden = !paid && !expired && !failed && !unknown;
+    el("[data-new]").hidden = false;
+    el("[data-new]").textContent =
+      status.status === "pending" ? "Change amount" : "Start a new attempt";
     el("[data-copy]").hidden = !checkout?.transferNote || paid || expired || failed;
     el("[data-save]").hidden = !checkout?.qrCode || paid || expired || failed;
     el("[data-qr]").hidden = !checkout?.qrCode || paid || expired || failed;
@@ -295,19 +305,44 @@ function init(root: HTMLElement) {
     }
     if (paid) void claim();
   }
+  function updateReviewSubmit() {
+    reviewSubmit.disabled = !reviewChallenge || badgePending || badgeChoiceRequired;
+  }
   async function claim() {
-    if (!attempt || reviewToken) return;
+    if (!attempt || reviewToken || badgePending) return;
+    const requestedAttempt = attempt;
+    badgePending = true;
+    badgeChoiceRequired = true;
+    updateReviewSubmit();
+    el("[data-review-status]").textContent = "Getting your supporter badge…";
     try {
-      const result = await request<{ reviewToken: string }>(base, `review-token/${attempt.id}`, {
-        attempt,
-        body: {},
-      });
+      const result = await request<{ reviewToken: string }>(
+        base,
+        `review-token/${requestedAttempt.id}`,
+        {
+          attempt: requestedAttempt,
+          body: {},
+        },
+      );
+      if (attempt !== requestedAttempt) return;
       reviewToken = result.reviewToken;
+      badgeChoiceRequired = false;
       el("[data-badge]").hidden = false;
+      el("[data-retry-badge]").hidden = true;
+      el("[data-without-badge]").hidden = true;
+      el("[data-review-status]").textContent = "";
     } catch {
-      /* a free note remains available */
+      if (attempt !== requestedAttempt) return;
+      el("[data-review-status]").textContent =
+        "Your supporter badge could not be loaded. Retry or continue without it.";
+      el("[data-retry-badge]").hidden = false;
+      el("[data-without-badge]").hidden = false;
+    } finally {
+      badgePending = false;
+      updateReviewSubmit();
     }
   }
+  el("[data-retry-badge]").addEventListener("click", () => void claim());
   async function loadCheckout(requestedAttempt: Attempt, sequence: number) {
     try {
       const result = await request<Checkout>(base, `checkout/${requestedAttempt.id}`, {
@@ -372,7 +407,7 @@ function init(root: HTMLElement) {
   async function startPayment(retry = false) {
     if ((busy && !retry) || !payToken) return;
     const quote = quoteDonation(rail, amount());
-    if (!quote) {
+    if (!retry && !quote) {
       el("[data-pay-error]").textContent = "Enter an amount within the stated range and step.";
       custom.focus();
       return;
@@ -392,7 +427,7 @@ function init(root: HTMLElement) {
       : invalidText(message.value, true)
         ? message
         : null;
-    if (invalid) {
+    if (!retry && invalid) {
       el<HTMLDetailsElement>(".b-more").open = true;
       el("[data-pay-error]").textContent =
         `Please remove links, angle brackets, and control characters from the ${invalid === name ? "name" : "message"}.`;
@@ -401,11 +436,17 @@ function init(root: HTMLElement) {
     }
     try {
       if (!retry) {
+        paymentPayload = {
+          rail,
+          selection: amount(),
+          displayName: name.value || undefined,
+          privateMessage: message.value || undefined,
+        };
         attempt = { id: crypto.randomUUID(), key: secret() };
         store(attempt);
         previousReceipts();
       }
-      if (!attempt) throw new Error("Missing receipt");
+      if (!attempt || !paymentPayload) throw new Error("Missing receipt");
     } catch {
       el("[data-pay-error]").textContent =
         "Storage is unavailable. Enable session storage to continue securely.";
@@ -421,10 +462,7 @@ function init(root: HTMLElement) {
         body: {
           id: attempt.id,
           receiptKey: attempt.key,
-          rail,
-          selection: amount(),
-          displayName: name.value || undefined,
-          privateMessage: message.value || undefined,
+          ...paymentPayload,
           turnstileToken: payToken,
         },
       });
@@ -496,6 +534,14 @@ function init(root: HTMLElement) {
     );
     attempt = null;
     canRetryCreate = false;
+    paymentPayload = null;
+    reviewToken = "";
+    badgeChoiceRequired = false;
+    el("[data-badge]").hidden = true;
+    el("[data-retry-badge]").hidden = true;
+    el("[data-without-badge]").hidden = true;
+    el("[data-review-status]").textContent = "";
+    updateReviewSubmit();
     current = null;
     checkout = null;
     deadlinePassed = false;
@@ -637,8 +683,11 @@ function init(root: HTMLElement) {
   el("[data-without-badge]").addEventListener("click", () => {
     reviewToken = "";
     el("[data-badge]").hidden = true;
+    badgeChoiceRequired = false;
     el("[data-without-badge]").hidden = true;
+    el("[data-retry-badge]").hidden = true;
     el("[data-review-status]").textContent = "Complete verification to submit without a badge.";
+    updateReviewSubmit();
   });
   if (enabled) {
     const script = document.createElement("script");
@@ -670,7 +719,7 @@ function init(root: HTMLElement) {
         size: "compact",
         callback: (token: string) => {
           reviewChallenge = token;
-          reviewSubmit.disabled = false;
+          updateReviewSubmit();
         },
         "expired-callback": () => {
           reviewChallenge = "";
@@ -720,7 +769,12 @@ function init(root: HTMLElement) {
     clearTimeout(pollTimer);
     pollTimer = setTimeout(
       async () => {
-        if (current && attempt && !document.hidden && current.status !== "paid")
+        if (
+          current &&
+          attempt &&
+          !document.hidden &&
+          ["pending", "creating"].includes(current.status)
+        )
           await recheck(false);
         schedulePoll();
       },
@@ -728,7 +782,12 @@ function init(root: HTMLElement) {
     );
   }
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && current && attempt && current.status !== "paid") {
+    if (
+      !document.hidden &&
+      current &&
+      attempt &&
+      ["pending", "creating"].includes(current.status)
+    ) {
       void recheck(false).finally(schedulePoll);
     }
   });
@@ -739,7 +798,6 @@ function init(root: HTMLElement) {
       const seconds = Math.max(0, Math.ceil((Date.parse(current.expiresAt) - Date.now()) / 1000));
       if (seconds === 0) {
         showStatus({ ...current, status: "expired" }, false);
-        void recheck(false);
         return;
       }
       el("[data-receipt-detail]").textContent =

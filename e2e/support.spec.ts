@@ -432,6 +432,79 @@ test("validation during a retry preserves the uncertain receipt", async ({ page 
   ).toBeTruthy();
 });
 
+test("retry retains the original order when fields change during creation", async ({ page }) => {
+  const f = await setup(page, { lost: true });
+  await page.route("**/api/support/status/**", (route) =>
+    route.fulfill({
+      status: 404,
+      json: { error: "not_found" },
+      headers: { "access-control-allow-origin": "*" },
+    }),
+  );
+  await page.route("**/api/support/pay", async (route) => {
+    await page.unroute("**/api/support/pay");
+    await page.locator('[data-amount="5"]').click();
+    await route.fallback();
+  });
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-retry-create]")).toBeEnabled();
+  await page.locator("[data-retry-create]").click();
+  await expect(page.locator("[data-qr]")).toBeVisible();
+  const requests = f.requests.filter((r) => r.path === "pay");
+  expect(requests).toHaveLength(2);
+  expect(requests[1]?.body.selection).toEqual(requests[0]?.body.selection);
+  expect(requests[1]?.body.id).toBe(requests[0]?.body.id);
+});
+
+test("pending QR allows a new amount and keeps the previous receipt", async ({ page }) => {
+  await setup(page);
+  await open(page);
+  await start(page);
+  const old = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("support-attempt") || "null"),
+  );
+  await page.locator("[data-new]").click();
+  await expect(page.locator(`[data-receipt-links] a[href*="${old.id}"]`)).toBeVisible();
+  await page.locator('[data-amount="5"]').click();
+  await expect(page.locator("[data-pay]")).toBeEnabled();
+});
+
+test("expired receipts only recheck manually", async ({ page }) => {
+  const f = await setup(page);
+  await open(page);
+  await start(page);
+  f.state = "expired";
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-status-heading]")).toHaveText("That QR expired");
+  const reads = f.requests.filter((r) => r.path.startsWith("status/")).length;
+  await page.waitForTimeout(6500);
+  expect(f.requests.filter((r) => r.path.startsWith("status/")).length).toBe(reads);
+  await page.locator("[data-recheck]").click();
+  expect(f.requests.filter((r) => r.path.startsWith("status/")).length).toBe(reads + 1);
+});
+
+test("badge claim failure requires retry or an explicit choice", async ({ page }) => {
+  const f = await setup(page);
+  await page.route("**/api/support/review-token/**", async (route) => {
+    await page.unroute("**/api/support/review-token/**");
+    await route.fulfill({
+      status: 503,
+      json: { error: "unavailable" },
+      headers: { "access-control-allow-origin": "*" },
+    });
+  });
+  await open(page);
+  await start(page);
+  f.state = "paid";
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-retry-badge]")).toBeVisible();
+  await expect(page.locator("[data-review-submit]")).toBeDisabled();
+  await page.locator("[data-retry-badge]").click();
+  await expect(page.locator("[data-badge]")).toBeVisible();
+  await expect(page.locator("[data-review-submit]")).toBeEnabled();
+});
+
 test("polls for payment within three seconds", async ({ page }) => {
   const f = await setup(page);
   await open(page);
