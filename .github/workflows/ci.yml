@@ -70,6 +70,26 @@ jobs:
       - name: Playwright (desktop 1440 + mobile 390)
         run: pnpm test:e2e
 
+      - name: Build support fixture artifact
+        run: pnpm build
+        env:
+          PUBLIC_SUPPORT_ENABLED: "true"
+          PUBLIC_WORKER_URL: https://support-fixture.invalid
+          PUBLIC_TURNSTILE_SITE_KEY: fixture-site-key
+
+      - name: Support acceptance (six viewport widths)
+        run: pnpm exec playwright test --config playwright.support.config.ts
+        env:
+          SUPPORT_SHOTS_DIR: ${{ runner.temp }}/support-shots
+
+      - name: Upload support screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: support-screenshots
+          path: ${{ runner.temp }}/support-shots/
+          retention-days: 7
+
       - name: Upload traces on failure
         if: failure()
         uses: actions/upload-artifact@v7
