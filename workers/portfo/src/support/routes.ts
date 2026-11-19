@@ -12,6 +12,7 @@ import {
 } from "./polar";
 import { applyPaymentEvidence, reserveDonation } from "./store";
 import { verifyTurnstile } from "./turnstile";
+import { handleReviews } from "./reviews";
 import { normalizeSupportText, validateQuote } from "./validation";
 
 type Row = {
@@ -118,6 +119,8 @@ export async function handleSupport(req: Request, env: Env): Promise<Response> {
             result === 403 ? "invalid_signature" : result === 400 ? "bad_request" : "unavailable",
           );
     }
+    const reviewResponse = await handleReviews(req, env, readJson);
+    if (reviewResponse) return reviewResponse;
     if (path === "/api/support/pay") {
       if (req.method !== "POST") return fail(405, "method_not_allowed", { Allow: "POST" });
       const data = (await readJson(req)) as Record<string, unknown>;
