@@ -623,6 +623,8 @@
   color: var(--faint);
 }
 .b-stub > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 16px 18px;
   display: grid;
   gap: 8px;
@@ -660,7 +662,7 @@
 }
 .b-ledger li {
   display: grid;
-  grid-template-columns: auto minmax(12px, 1fr) auto auto;
+  grid-template-columns: minmax(0, auto) minmax(12px, 1fr) auto auto;
   gap: 10px;
   align-items: baseline;
   min-height: 44px;
@@ -672,6 +674,8 @@
   transform: translateY(-4px);
 }
 .b-lname {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--ink);
   font-family: var(--text);
   font-weight: 600;
@@ -687,7 +691,7 @@
 }
 @media (max-width: 420px) {
   .b-ledger li {
-    grid-template-columns: auto minmax(8px, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(8px, auto) auto;
   }
   .b-lm {
     display: none;

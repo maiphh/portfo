@@ -36,6 +36,9 @@ function init(root: HTMLElement) {
     reviewChallenge = "";
   let payWidget: string | undefined, reviewWidget: string | undefined;
   let canRetryCreate = false;
+  let statusSequence = 0;
+  let pollFailures = 0;
+  let pollTimer: ReturnType<typeof setTimeout> | undefined;
   let reviewAttempt = { id: crypto.randomUUID(), key: secret() };
   const turnstile = () =>
     (
@@ -64,6 +67,10 @@ function init(root: HTMLElement) {
   try {
     const saved = sessionStorage.getItem("support-attempt");
     if (saved) attempt = JSON.parse(saved) as Attempt;
+    if (returnId && attempt?.id !== returnId) {
+      const previous = sessionStorage.getItem(`support-attempt:${returnId}`);
+      attempt = previous ? (JSON.parse(previous) as Attempt) : null;
+    }
   } catch {
     el("[data-pay-error]").textContent =
       "Storage is unavailable. Secure checkout cannot be resumed.";
@@ -167,6 +174,7 @@ function init(root: HTMLElement) {
     }
   }
   function store(a: Attempt) {
+    sessionStorage.setItem(`support-attempt:${a.id}`, JSON.stringify(a));
     sessionStorage.setItem("support-attempt", JSON.stringify(a));
   }
   function safeCheckout(value: string | null): string | null {
@@ -270,39 +278,69 @@ function init(root: HTMLElement) {
       /* a free note remains available */
     }
   }
-  async function loadCheckout() {
-    if (!attempt || !current || current.status !== "pending") return;
+  async function loadCheckout(requestedAttempt: Attempt, sequence: number) {
     try {
-      checkout = await request<Checkout>(base, `checkout/${attempt.id}`, { attempt });
-      if (checkout.qrCode)
-        el<HTMLImageElement>("[data-qr]").src = await QRCode.toDataURL(checkout.qrCode, {
-          margin: 4,
-          width: 600,
-          errorCorrectionLevel: "M",
-        });
+      const result = await request<Checkout>(base, `checkout/${requestedAttempt.id}`, {
+        attempt: requestedAttempt,
+      });
+      const qr = result.qrCode
+        ? await QRCode.toDataURL(result.qrCode, {
+            margin: 4,
+            width: 600,
+            errorCorrectionLevel: "M",
+          })
+        : null;
+      if (
+        sequence !== statusSequence ||
+        attempt !== requestedAttempt ||
+        current?.status !== "pending"
+      )
+        return;
+      checkout = result;
+      if (qr) el<HTMLImageElement>("[data-qr]").src = qr;
     } catch {
-      checkout = null;
+      if (sequence === statusSequence && attempt === requestedAttempt) checkout = null;
     }
   }
   async function recheck(focus = true) {
-    if (!attempt) return;
+    if (!attempt || current?.status === "paid") return;
+    const requestedAttempt = attempt;
+    const sequence = ++statusSequence;
     try {
-      const status = await request<Status>(base, `status/${attempt.id}`, { attempt });
+      const status = await request<Status>(base, `status/${requestedAttempt.id}`, {
+        attempt: requestedAttempt,
+      });
+      if (sequence !== statusSequence || attempt !== requestedAttempt || current?.status === "paid")
+        return;
       current = status;
-      if (status.status === "pending" && !checkout) await loadCheckout();
+      if (status.status === "pending" && !checkout) await loadCheckout(requestedAttempt, sequence);
+      if (
+        sequence !== statusSequence ||
+        attempt !== requestedAttempt ||
+        (current?.status === "paid" && status.status !== "paid")
+      )
+        return;
+      pollFailures = 0;
       showStatus(status, focus);
     } catch (error) {
+      if (sequence !== statusSequence || attempt !== requestedAttempt || current?.status === "paid")
+        return;
+      pollFailures = Math.min(pollFailures + 1, 4);
       el("[data-order]").hidden = true;
       el(".b-go").hidden = true;
       el("[data-status-panel]").hidden = false;
       el("[data-new]").hidden = !(error instanceof Error && error.message === "not_found");
       el("[data-retry-create]").hidden = !canRetryCreate;
+      if (canRetryCreate) {
+        el(".b-go").hidden = false;
+        el<HTMLButtonElement>("[data-retry-create]").disabled = !payToken;
+      }
       el("[data-status-description]").textContent =
         "Status is unavailable. Please recheck shortly.";
     }
   }
   async function startPayment(retry = false) {
-    if (busy && !retry) return;
+    if ((busy && !retry) || !payToken) return;
     const quote = quoteDonation(rail, amount());
     if (!quote) {
       el("[data-pay-error]").textContent = "Enter an amount within the stated range and step.";
@@ -352,6 +390,11 @@ function init(root: HTMLElement) {
         if (rail === "polar" && destination) location.assign(destination);
       } else showStatus(result);
     } catch {
+      payToken = "";
+      el(".b-go").hidden = false;
+      pay.hidden = true;
+      el("[data-pay-help]").hidden = true;
+      if (payWidget) turnstile()?.reset(payWidget);
       el("[data-pay-error]").textContent =
         "Checkout could not be created. Recheck your receipt before starting another attempt.";
       await recheck();
@@ -362,10 +405,17 @@ function init(root: HTMLElement) {
   el("[data-recheck]").addEventListener("click", () => void recheck());
   el("[data-new]").addEventListener("click", () => {
     try {
+      if (attempt) sessionStorage.setItem(`support-attempt:${attempt.id}`, JSON.stringify(attempt));
       sessionStorage.removeItem("support-attempt");
     } catch {
       /* unavailable */
     }
+    statusSequence++;
+    history.replaceState(
+      { ...history.state, supportReturn: null },
+      "",
+      location.pathname + location.hash,
+    );
     attempt = null;
     canRetryCreate = false;
     current = null;
@@ -373,6 +423,8 @@ function init(root: HTMLElement) {
     busy = false;
     el("[data-order]").hidden = false;
     el(".b-go").hidden = false;
+    pay.hidden = false;
+    el("[data-pay-help]").hidden = false;
     el("[data-status-panel]").hidden = true;
     el(".r-bar").hidden = false;
     el("[data-qr]").hidden = true;
@@ -514,19 +566,23 @@ function init(root: HTMLElement) {
       payWidget = ts.render("#pay-challenge", {
         sitekey: root.dataset.siteKey,
         action: "support_pay",
+        size: "compact",
         callback: (token: string) => {
           payToken = token;
+          el<HTMLButtonElement>("[data-retry-create]").disabled = false;
           el("[data-pay-error]").textContent = "";
           preview();
         },
         "expired-callback": () => {
           payToken = "";
+          el<HTMLButtonElement>("[data-retry-create]").disabled = true;
           preview();
         },
       });
       reviewWidget = ts.render("#review-challenge", {
         sitekey: root.dataset.siteKey,
         action: "support_review",
+        size: "compact",
         callback: (token: string) => {
           reviewChallenge = token;
           reviewSubmit.disabled = false;
@@ -575,9 +631,23 @@ function init(root: HTMLElement) {
     el("[data-recheck]").hidden = true;
     el("[data-new]").hidden = true;
   }
-  setInterval(() => {
-    if (current && attempt && !document.hidden && current.status !== "paid") void recheck(false);
-  }, 15000);
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(
+      async () => {
+        if (current && attempt && !document.hidden && current.status !== "paid")
+          await recheck(false);
+        schedulePoll();
+      },
+      Math.min(3000 * 2 ** pollFailures, 48000),
+    );
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && current && attempt && current.status !== "paid") {
+      void recheck(false).finally(schedulePoll);
+    }
+  });
+  schedulePoll();
   setInterval(() => {
     if (current?.expiresAt && current.status === "pending") {
       const seconds = Math.max(0, Math.ceil((Date.parse(current.expiresAt) - Date.now()) / 1000));

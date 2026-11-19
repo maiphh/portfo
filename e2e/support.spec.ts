@@ -10,6 +10,7 @@ type Fixture = {
   state: State;
   geo: Rail;
   reviews: { name: string; text: string; supporter: boolean }[];
+  supporters: { name: string; presetCount: number | null; month: string }[];
   requests: { path: string; body: Record<string, unknown> }[];
   outage: boolean;
   lost: boolean;
@@ -33,6 +34,7 @@ async function setup(page: Page, overrides: Partial<Fixture> = {}) {
     state: "pending",
     geo: "payos",
     reviews: [],
+    supporters: [],
     requests: [],
     outage: false,
     lost: false,
@@ -44,7 +46,7 @@ async function setup(page: Page, overrides: Partial<Fixture> = {}) {
   await page.route("https://challenges.cloudflare.com/**", (route) =>
     route.fulfill({
       contentType: "application/javascript",
-      body: `window.turnstile={render:(s,o)=>{setTimeout(()=>o.callback('fixture-token'),0);return s},reset:()=>{}};`,
+      body: `window.turnstile={widgets:{},render:(s,o)=>{window.turnstile.widgets[s]=o;const e=document.createElement('iframe');e.title='Verification';e.style.cssText='width:'+(o.size==='compact'?'150px':o.size==='flexible'?'max(300px, 100%)':'300px')+';height:'+(o.size==='compact'?'140px':'65px')+';border:0';document.querySelector(s).append(e);setTimeout(()=>o.callback('fixture-token-1'),0);return s},reset:(s)=>setTimeout(()=>window.turnstile.widgets[s].callback('fixture-token-2'),0)};`,
     }),
   );
   await page.route("**/api/support/default-rail", async (route) => {
@@ -63,7 +65,7 @@ async function setup(page: Page, overrides: Partial<Fixture> = {}) {
         headers: { "access-control-allow-origin": "*" },
       });
     let data: unknown = {};
-    if (path === "wall") data = { reviews: f.reviews, supporters: [] };
+    if (path === "wall") data = { reviews: f.reviews, supporters: f.supporters };
     else if (path === "pay") {
       f.rail = body.rail as Rail;
       if (f.lost) {
@@ -253,6 +255,98 @@ test("outage stays unconfirmed and free and badged notes await moderation", asyn
   await expect(page.locator("[data-wall]")).toContainText("could not load");
   await expect(page.locator("[data-status-description]")).toContainText("unavailable");
 });
+test("stale status cannot undo a paid receipt", async ({ page }) => {
+  const f = await setup(page);
+  await open(page);
+  await start(page);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let seen!: () => void;
+  const requested = new Promise<void>((resolve) => {
+    seen = resolve;
+  });
+  await page.route("**/api/support/status/**", async (route) => {
+    await page.unroute("**/api/support/status/**");
+    seen();
+    await gate;
+    await route.fulfill({ json: status(f), headers: { "access-control-allow-origin": "*" } });
+  });
+  await page.locator("[data-recheck]").click();
+  await requested;
+  f.state = "paid";
+  await page.locator("[data-recheck]").click();
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  f.state = "pending";
+  release();
+  await page.waitForTimeout(300);
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  await expect(page.locator("[data-qr]")).toBeHidden();
+});
+test("new attempt survives return-page reload and preserves prior receipt", async ({ page }) => {
+  const f = await setup(page, { state: "expired" });
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-new]")).toBeVisible();
+  const old = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("support-attempt") || "null"),
+  );
+  await page.goto(`/support/return/?id=${old.id}`);
+  await expect(page.locator("[data-new]")).toBeVisible();
+  await page.locator("[data-new]").click();
+  f.state = "pending";
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-qr]")).toBeVisible();
+  const next = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("support-attempt") || "null"),
+  );
+  expect(next.id).not.toBe(old.id);
+  await page.reload();
+  await expect(page.locator("[data-qr]")).toBeVisible();
+  f.state = "paid";
+  await page.goto(`/support/return/?id=${old.id}`);
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received");
+  expect(f.requests.some((r) => r.path === `status/${old.id}`)).toBe(true);
+});
+test("checkout retry refreshes the challenge and keeps the receipt", async ({ page }) => {
+  const f = await setup(page);
+  await page.route("**/api/support/pay", async (route) => {
+    await page.unroute("**/api/support/pay");
+    await route.fulfill({
+      status: 503,
+      json: { error: "unavailable" },
+      headers: { "access-control-allow-origin": "*" },
+    });
+  });
+  await page.route("**/api/support/status/**", async (route) => {
+    await page.unroute("**/api/support/status/**");
+    await route.fulfill({
+      status: 404,
+      json: { error: "not_found" },
+      headers: { "access-control-allow-origin": "*" },
+    });
+  });
+  await open(page);
+  await page.locator("[data-pay]").click();
+  await expect(page.locator("[data-retry-create]")).toBeEnabled();
+  const previous = await page.evaluate(() => sessionStorage.getItem("support-attempt"));
+  await page.locator("[data-retry-create]").click();
+  await expect(page.locator("[data-qr]")).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem("support-attempt"))).toBe(previous);
+  expect(f.requests.find((r) => r.path === "pay")?.body.turnstileToken).toBe("fixture-token-2");
+});
+
+test("polls for payment within three seconds", async ({ page }) => {
+  const f = await setup(page);
+  await open(page);
+  await start(page);
+  f.state = "paid";
+  await expect(page.locator("[data-status-heading]")).toHaveText("Payment received", {
+    timeout: 4500,
+  });
+});
+
 for (const width of [320, 390, 414, 768, 1024, 1440]) {
   test(`responsive states and accessibility at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -285,6 +379,11 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
       });
       expect(ratio).toBeGreaterThanOrEqual(4.5);
     }
+    f.reviews.push({ name: "N".repeat(40), text: "W".repeat(160), supporter: true });
+    f.supporters.push({ name: "N".repeat(40), presetCount: 3, month: "2026-01" });
+    await page.reload();
+    await expect(page.locator(".b-q")).toBeVisible();
+    await shot(page, width, "populated-wall");
     await page.locator('[data-amount="1"]').focus();
     await page.keyboard.press("Space");
     await expect(page.locator('[data-amount="1"]')).toHaveAttribute("aria-checked", "true");
