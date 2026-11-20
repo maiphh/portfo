@@ -64,14 +64,14 @@ const work = defineCollection({
 
 const yearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Use YYYY-MM");
 
-/** CV entries: jobs, degrees and awards, drawn on the timeline. */
+/** CV entries: jobs, degrees, awards and qualifications, drawn on the timeline. */
 const experience = defineCollection({
   loader: file("src/data/experience.json"),
   schema: z.object({
     id: z.string(),
-    lane: z.enum(["work", "study", "award"]),
+    lane: z.enum(["work", "study", "award", "qualification"]),
     title: z.string(),
-    /** Secondary line on the bar ("Game Developer · Dec 2023 – Sep 2025"). */
+    /** Secondary line on the bar (dates live on the axis, not here). */
     detail: z.string(),
     start: yearMonth,
     /** Omit for ongoing ("now"). Awards are single points. */

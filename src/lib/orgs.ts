@@ -15,6 +15,7 @@ export const experienceOrg: Record<string, OrgKey> = {
   bit: "rmit",
   "rmit-master": "rmit",
   "neo-league": "rmit",
+  ielts: "ielts",
 };
 
 export function logoForExperience(id: string) {

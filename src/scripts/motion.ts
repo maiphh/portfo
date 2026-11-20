@@ -113,9 +113,13 @@ export function initMotion() {
       if (tlEl) {
         gsap
           .timeline({ scrollTrigger: { trigger: tlEl, start: "top 75%", once: true } })
-          .from($$(".bar", tlEl), { scaleX: 0, duration: 1.2, stagger: 0.12 })
-          .from($$(".bar > *", tlEl), { opacity: 0, duration: 0.4, stagger: 0.05 }, "-=0.8")
-          .from($$(".mark", tlEl), { opacity: 0, x: -10, duration: 0.5 }, "-=0.5")
+          .from($$("[data-tl-bar]", tlEl), { scaleX: 0, duration: 1.2, stagger: 0.12 })
+          .from(
+            $$("[data-tl-bar] > *", tlEl),
+            { opacity: 0, duration: 0.4, stagger: 0.05 },
+            "-=0.8",
+          )
+          .from($$("[data-tl-mark]", tlEl), { opacity: 0, x: -10, duration: 0.5 }, "-=0.5")
           .from($(".now", tlEl), { scaleY: 0, transformOrigin: "top", duration: 0.8 }, "-=0.4");
       }
 
@@ -179,7 +183,7 @@ export function initMotion() {
 
   // Reveals never trap content: anything focused becomes visible.
   document.addEventListener("focusin", (e) => {
-    const t = (e.target as HTMLElement | null)?.closest(".bar");
+    const t = (e.target as HTMLElement | null)?.closest("[data-tl-bar]");
     if (t) gsap.set(t, { opacity: 1 });
   });
   window.addEventListener("resize", () => {

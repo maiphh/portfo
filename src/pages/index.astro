@@ -16,10 +16,10 @@ const work = await getWork();
 
 <Base base="">
   <Hero />
+  <Timeline />
   <section id="work" data-selected-work aria-labelledby="work-h">
     <SelectedWork work={work} />
   </section>
-  <Timeline />
   <Activity github={getGithubSummary()} />
   <HowItWorks />
   <Contact />

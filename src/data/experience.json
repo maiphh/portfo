@@ -55,5 +55,13 @@
     "detail": "2nd runner-up of ~100 teams",
     "start": "2025-01",
     "order": 5
+  },
+  {
+    "id": "ielts",
+    "lane": "qualification",
+    "title": "IELTS 7.0",
+    "detail": "English proficiency",
+    "start": "2024-06",
+    "order": 6
   }
 ]
