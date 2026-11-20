@@ -4,9 +4,11 @@
   isolation: isolate;
   display: flex;
   align-items: center;
-  min-height: calc(100vh - var(--nav-h));
-  min-height: calc(100svh - var(--nav-h));
-  padding-block: clamp(24px, 4svh, 64px) clamp(24px, 4svh, 56px);
+  /* Start under the sticky nav so the section itself fills the whole viewport. */
+  margin-top: calc(-1 * var(--nav-h));
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-block: calc(var(--nav-h) + clamp(24px, 4svh, 64px)) clamp(24px, 4svh, 56px);
   overflow: clip;
 }
 .hero-glow {

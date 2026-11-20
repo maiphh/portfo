@@ -51,7 +51,7 @@
   letter-spacing: -0.045em;
 }
 .sw-title-dot {
-  color: #ff8f33;
+  color: var(--lime);
 }
 .sw-section-purpose {
   font-size: 18px;
