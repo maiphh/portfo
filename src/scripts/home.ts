@@ -3,11 +3,11 @@ import { initContact, initDevPanel, initNowMarker } from "./features";
 import { initSelectedWork } from "./selected-work";
 import { initMotion } from "./motion";
 import { initActivity } from "./activity";
-import { initHeroBg } from "./hero-bg";
+import { initAsciiHero } from "./ascii-hero";
 import { USE_MOCKS } from "~/lib/flags";
 import { trackSections } from "./analytics";
 
-initHeroBg();
+initAsciiHero();
 initDevPanel();
 trackSections();
 initSelectedWork();
