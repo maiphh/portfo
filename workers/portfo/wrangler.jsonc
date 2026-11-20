@@ -1,4 +1,4 @@
-// portfo: contact, views, GitHub activity, and the chat agent. Nothing here is a secret.
+// portfo: contact, views, GitHub activity, the chat agent, and the Personal Wall. Nothing here is a secret.
 // Top level is local/dev (localhost only). env.production is the launch config.
 // A deploy stops if any value is still a placeholder: see build.command.
 {
@@ -23,6 +23,9 @@
       "migrations_dir": "migrations",
     },
   ],
+
+  // Private Personal Wall media. Wrangler uses a local bucket by default.
+  "r2_buckets": [{ "binding": "WALL_MEDIA", "bucket_name": "portfo-wall-media-dev" }],
 
   // Burst guard at the edge: 3 messages per 10 s per visitor. namespace_id is any integer
   // unique in the account (chosen here, not a created resource). The binding only supports
@@ -68,6 +71,7 @@
           "migrations_dir": "migrations",
         },
       ],
+      "r2_buckets": [{ "binding": "WALL_MEDIA", "bucket_name": "portfo-wall-media" }],
       "ratelimits": [
         {
           "name": "CHAT_BURST_LIMITER",

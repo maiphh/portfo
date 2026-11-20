@@ -1,0 +1,98 @@
+---
+import "@fontsource-variable/familjen-grotesk";
+import "@fontsource-variable/hubot-sans/wdth.css";
+import "@fontsource-variable/jetbrains-mono";
+import "~/styles/global.css";
+import "~/styles/wall.css";
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#1b1b1a" />
+    <title>Personal Wall — Mai Gia Phu</title>
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="wall-page">
+    <main class="wall-app" id="wall-app" aria-label="Personal wall" data-index-open="false">
+      <div class="wall-toolbar">
+        <button id="index-toggle" type="button" aria-expanded="false" aria-controls="wall-index">
+          <span aria-hidden="true">☰</span> Index
+        </button>
+        <nav id="wall-crumbs" aria-label="Folder breadcrumb"></nav>
+        <div class="wall-tools">
+          <button id="expand-all" type="button" aria-pressed="false">
+            Expand all
+          </button>
+          <button id="edit-toggle" type="button" aria-pressed="false">
+            Edit locally
+          </button>
+        </div>
+      </div>
+      <div class="wall-actions" id="wall-actions" hidden>
+        <span>Changes stay in this browser.</span>
+        <button id="add-folder" type="button">
+          + Folder
+        </button>
+        <button id="add-note" type="button">
+          + Note
+        </button>
+        <button id="add-photo" type="button">
+          + Photo
+        </button>
+        <button id="export-wall" type="button">
+          Export draft
+        </button>
+        <button id="reset-wall" type="button">
+          Reset samples
+        </button>
+      </div>
+      <div id="wall-state" class="wall-state" role="status" hidden></div>
+      <div class="wall-body">
+        <aside class="wall-sidebar" id="wall-index" aria-label="Folder index" hidden>
+          <div id="wall-tree" class="wall-tree"></div>
+        </aside>
+        <div
+          class="wall-canvas"
+          id="wall-canvas"
+          tabindex="0"
+          aria-label="Memory canvas. Use arrow keys to pan and plus or minus to zoom."
+        >
+          <div class="wall-world" id="wall-world"></div>
+          <div class="wall-zoom">
+            <button id="zoom-out" type="button" aria-label="Zoom out">
+              −
+            </button>
+            <span id="zoom-level">100%</span>
+            <button id="zoom-in" type="button" aria-label="Zoom in">
+              +
+            </button>
+            <button id="zoom-fit" type="button" aria-label="Fit in view">
+              Fit
+            </button>
+          </div>
+        </div>
+      </div>
+      <noscript>
+        <p class="wall-noscript">Enable JavaScript to browse the wall.</p>
+      </noscript>
+    </main>
+    <dialog id="wall-detail" class="wall-dialog" aria-labelledby="wall-detail-title">
+      <form method="dialog">
+        <button class="wall-close" aria-label="Close detail">
+          ×
+        </button>
+      </form>
+      <div id="wall-detail-content"></div>
+    </dialog>
+    <dialog id="wall-editor" class="wall-editor" aria-labelledby="wall-editor-title"></dialog>
+    <script src="../scripts/wall.ts"></script>
+  </body>
+</html>

@@ -11,6 +11,7 @@ export default defineConfig({
       miniflare: {
         compatibilityDate: "2026-10-01",
         d1Databases: ["DB"],
+        r2Buckets: ["WALL_MEDIA"],
         durableObjects: { QUOTA: { className: "Quota", useSQLite: true } },
         ratelimits: {
           CHAT_BURST_LIMITER: { namespace_id: "1001", simple: { limit: 3, period: 10 } },
