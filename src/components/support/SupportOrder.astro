@@ -1,0 +1,120 @@
+<div class="b-sheet" data-order>
+  <div class="b-rows" role="radiogroup" aria-label="How many Claudes">
+    {[1, 3, 5].map((n) => (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={n === 3 ? "true" : "false"}
+        class="b-row"
+        data-amount={n}
+      >
+        <i class="b-dotr" aria-hidden="true"></i>
+        <span class="b-tks" aria-hidden="true">
+          {Array.from({ length: n }, () => (
+            <svg class="cl">
+              <use href="#claude"></use>
+            </svg>
+          ))}
+        </span>
+        <b>
+          {n} {n === 1 ? "Claude" : "Claudes"}
+        </b>
+        <span class="b-pr" data-price={n}>
+          {(n * 25000).toLocaleString("vi-VN")} ₫
+        </span>
+      </button>
+    ))}
+    <button type="button" role="radio" aria-checked="false" class="b-row" data-amount="custom">
+      <i class="b-dotr" aria-hidden="true"></i>
+      <span class="b-tks b-plus" aria-hidden="true">
+        +
+      </span>
+      <b>Your own amount</b>
+      <span class="b-pr">any</span>
+    </button>
+  </div>
+  <div class="fld b-custom" data-custom-wrap hidden>
+    <label for="custom">Amount</label>
+    <input id="custom" inputmode="numeric" aria-describedby="custom-help" />
+    <p class="help" id="custom-help">
+      10,000 to 20,000,000 ₫ in 1,000 ₫ steps.
+    </p>
+  </div>
+  <div class="b-rail">
+    <p class="b-rail-l" id="rail-label">
+      How are you paying?
+    </p>
+    <div class="seg" role="radiogroup" aria-labelledby="rail-label">
+      <button type="button" role="radio" aria-checked="true" data-rail="payos">
+        <span>
+          <b>Pay with VietQR</b>
+          <small>VietQR · ₫</small>
+        </span>
+      </button>
+      <button type="button" disabled data-card-coming-soon>
+        <span>
+          <b>Card payments: coming soon</b>
+        </span>
+      </button>
+    </div>
+    <p class="help">VietQR is available to everyone.</p>
+  </div>
+  <details class="b-more">
+    <summary>
+      Add a name or message <span>(optional)</span>
+    </summary>
+    <div class="b-more-in">
+      <div class="fld">
+        <label for="support-name">
+          Name <span class="opt">· shown in supporters</span>
+        </label>
+        <input
+          id="support-name"
+          maxlength="40"
+          autocomplete="given-name"
+          placeholder="Leave empty to stay anonymous"
+        />
+      </div>
+      <div class="fld">
+        <label for="support-message">
+          Message to Phu <span class="opt">· private</span>
+        </label>
+        <textarea id="support-message" maxlength="160" rows="3"></textarea>
+      </div>
+    </div>
+  </details>
+</div>
+<div data-previous-receipts hidden>
+  <p class="help">Previous receipts in this tab:</p>
+  <div class="a-btns" data-receipt-links></div>
+</div>
+<div class="b-status" data-status-panel hidden>
+  <h2 tabindex="-1" data-status-heading>
+    Payment unconfirmed
+  </h2>
+  <p data-status-description></p>
+  <div class="a-btns">
+    <button class="b-button b-outline" type="button" data-retry-create hidden>
+      Retry checkout
+    </button>
+    <a class="b-button b-outline" data-continue hidden>
+      Continue to secure checkout
+    </a>
+    <button class="b-button b-outline" type="button" data-recheck>
+      Recheck payment
+    </button>
+    <button class="b-button b-outline" type="button" data-copy hidden>
+      Copy note
+    </button>
+    <button class="b-button b-outline" type="button" data-save hidden>
+      Save QR image
+    </button>
+    <a class="b-button b-outline" href="#review" data-leave-note hidden>
+      Leave a note
+    </a>
+    <button class="b-button b-outline" type="button" data-new>
+      Start a new attempt
+    </button>
+  </div>
+  <p class="help" data-status-extra></p>
+</div>

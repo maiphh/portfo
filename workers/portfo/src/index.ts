@@ -25,6 +25,8 @@ import { createGraphqlProvider } from "./github/provider";
 import { runGithubSync } from "./github/sync";
 import { corsHeaders, error, withHeaders } from "./http";
 import { tools } from "./tools";
+import { handleSupport } from "./support/routes";
+import { cleanupSupport } from "./support/store";
 import { knownSlugs, workList } from "./work";
 
 export { Quota } from "./quota";
@@ -95,6 +97,11 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const url = new URL(request.url);
   const cfg = config(env);
   const origin = request.headers.get("Origin");
+  if (
+    url.pathname.startsWith("/api/support/webhooks/") ||
+    url.pathname.startsWith("/api/support/admin/")
+  )
+    return handleSupport(request, env);
   const cors = corsHeaders(origin, cfg);
 
   if (cors === false) {
@@ -103,7 +110,25 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const headers = cors;
 
   if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: headers ?? undefined });
+    return new Response(null, {
+      status: 204,
+      headers:
+        headers && url.pathname.startsWith("/api/support/")
+          ? {
+              ...headers,
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+              "Cache-Control": "no-store",
+            }
+          : (headers ?? undefined),
+    });
+  }
+
+  if (url.pathname.startsWith("/api/support/")) {
+    if (!headers) return error(403, "forbidden_origin", "Origin not allowed.");
+    return withHeaders(await handleSupport(request, env), {
+      ...headers,
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    });
   }
 
   switch (url.pathname) {
@@ -224,6 +249,11 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
 export default {
   fetch: (request, env, ctx) => handle(request, env, ctx),
   async scheduled(_controller, env) {
+    try {
+      await cleanupSupport(env.DB);
+    } catch {
+      log.error("[cron] support cleanup failed");
+    }
     const result = await runGithubSync(syncDeps(env));
     if (!result.ok) log.error("[cron] github sync failed", result);
     else log.info("[cron] github sync ok", result);

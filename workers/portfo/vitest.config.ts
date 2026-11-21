@@ -14,6 +14,7 @@ export default defineConfig({
         durableObjects: { QUOTA: { className: "Quota", useSQLite: true } },
         ratelimits: {
           CHAT_BURST_LIMITER: { namespace_id: "1001", simple: { limit: 3, period: 10 } },
+          SUPPORT_READ_LIMITER: { namespace_id: "1002", simple: { limit: 120, period: 60 } },
         },
         bindings: {
           ALLOWED_ORIGINS: "https://site.test,http://localhost:4321",

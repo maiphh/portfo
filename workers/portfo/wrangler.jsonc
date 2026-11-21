@@ -33,6 +33,11 @@
       "namespace_id": "1001",
       "simple": { "limit": 3, "period": 10 },
     },
+    {
+      "name": "SUPPORT_READ_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 120, "period": 60 },
+    },
   ],
 
   // Exact counters: per-visitor 10-minute window and the daily message budget.
@@ -44,6 +49,12 @@
 
   "vars": {
     "ALLOWED_ORIGINS": "http://localhost:4321",
+    "SUPPORT_SITE_ORIGIN": "http://localhost:4321",
+    "POLAR_PRODUCT_ID": "",
+    "POLAR_ORG_ID": "",
+    "POLAR_ENVIRONMENT": "sandbox",
+    "SUPPORT_PAYOS_ENABLED": "false",
+    "SUPPORT_CARD_ENABLED": "false",
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "DAILY_MESSAGE_CAP": "50",
@@ -74,6 +85,11 @@
           "namespace_id": "1001",
           "simple": { "limit": 3, "period": 10 },
         },
+        {
+          "name": "SUPPORT_READ_LIMITER",
+          "namespace_id": "1002",
+          "simple": { "limit": 120, "period": 60 },
+        },
       ],
       "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
@@ -82,6 +98,12 @@
         // TODO(launch): the production site origin, e.g. "https://maiphh.dev".
         "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN",
         "ENVIRONMENT": "production",
+        "SUPPORT_SITE_ORIGIN": "",
+        "POLAR_PRODUCT_ID": "",
+        "POLAR_ORG_ID": "",
+        "POLAR_ENVIRONMENT": "production",
+        "SUPPORT_PAYOS_ENABLED": "false",
+        "SUPPORT_CARD_ENABLED": "false",
         "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
         "DAILY_MESSAGE_CAP": "50",

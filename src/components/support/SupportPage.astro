@@ -1,0 +1,63 @@
+---
+import "~/styles/support.css";
+import "~/styles/support-footer.css";
+import SupportOrder from "./SupportOrder.astro";
+import Receipt from "./Receipt.astro";
+import ReviewForm from "./ReviewForm.astro";
+import SupportWall from "./SupportWall.astro";
+const { returning = false } = Astro.props;
+const enabled = import.meta.env.PUBLIC_SUPPORT_ENABLED === "true";
+---
+
+<div
+  id="support"
+  data-enabled={String(enabled)}
+  data-returning={String(returning)}
+  data-worker={import.meta.env.PUBLIC_WORKER_URL || ""}
+  data-site-key={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || ""}
+>
+  <section class="b-hero wrap" aria-labelledby="support-title">
+    <div class="b-head">
+      <h1 id="support-title">Buy me a Claude</h1>
+      <p class="b-lead">
+        A small thank-you for what I build and share here. Optional, and the site stays free. You’ll
+        get a receipt.
+      </p>
+    </div>
+    <SupportOrder />
+    <Receipt />
+    <div class="b-go">
+      <div id="pay-challenge"></div>
+      <button type="button" class="b-button b-lime" data-pay disabled>
+        Pay 75,000 ₫ with VietQR →
+      </button>
+      <p class="help" data-pay-help>
+        A QR opens for your banking app. No account needed.
+      </p>
+      <p role="status" data-pay-error>
+        {enabled ? "Preparing secure payment…" : "Support is currently unavailable."}
+      </p>
+      <noscript>
+        JavaScript is needed for secure payment, status updates and verification.{" "}
+        {returning &&
+          "Payment has not been confirmed here; return to the tab where you started or contact Phu for help."}
+      </noscript>
+    </div>
+  </section>
+  <section class="b-notes wrap" id="notes">
+    <div class="b-nhead">
+      <h2>Notes</h2>
+    </div>
+    <div class="b-ngrid">
+      <ReviewForm />
+      <SupportWall />
+    </div>
+    <div class="b-ledgerwrap">
+      <h3>Supporters</h3>
+      <div data-supporters>Published supporters could not load without JavaScript.</div>
+    </div>
+  </section>
+</div>
+<script>
+  import "~/scripts/support/index";
+</script>

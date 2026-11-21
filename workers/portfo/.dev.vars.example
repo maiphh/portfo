@@ -24,3 +24,22 @@ GITHUB_LOGIN=
 # Bearer token for POST /cron/github-sync. openssl rand -base64 32
 # The scheduled handler does not need it. Unset: manual route answers 503.
 CRON_SECRET=
+
+# Support: use separate sandbox and production credentials.
+PAYOS_CLIENT_ID=
+PAYOS_API_KEY=
+PAYOS_CHECKSUM_KEY=
+TURNSTILE_SECRET_KEY=
+SUPPORT_REVIEW_SIGNING_KEY=
+SUPPORT_IP_HASH_SALT=
+SUPPORT_ADMIN_TOKEN=
+# Local overrides for non-secret vars
+SUPPORT_SITE_ORIGIN=
+SUPPORT_PAYOS_ENABLED=false
+SUPPORT_CARD_ENABLED=false
+# Future/optional card provider settings, once selected (Polar is not launch-enabled):
+# POLAR_ACCESS_TOKEN=
+# POLAR_WEBHOOK_SECRET=
+# POLAR_PRODUCT_ID=
+# POLAR_ORG_ID=
+# POLAR_ENVIRONMENT=

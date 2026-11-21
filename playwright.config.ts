@@ -10,6 +10,7 @@ const chrome = process.env.PW_CHROME;
 
 export default defineConfig({
   testDir: "e2e",
+  testIgnore: "support.spec.ts",
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",

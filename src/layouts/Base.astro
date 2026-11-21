@@ -21,6 +21,7 @@ interface Props {
   noindex?: boolean;
   /** Footer credit line (case studies with iso-glow plates). */
   credit?: Credit | undefined;
+  supportPage?: boolean;
 }
 const {
   title = site.title,
@@ -28,6 +29,7 @@ const {
   base = "/",
   noindex = false,
   credit,
+  supportPage = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -36,6 +38,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    {supportPage && <meta name="referrer" content="no-referrer" />}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -85,7 +88,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <main id="main">
       <slot />
     </main>
-    <Footer base={base} credit={credit} />
+    <Footer base={base} credit={credit} supportPage={supportPage} />
     <Chat />
     <slot name="after" />
   </body>

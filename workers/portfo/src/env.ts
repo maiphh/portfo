@@ -36,7 +36,25 @@ export interface Env {
   /** Messages per day (Asia/Ho_Chi_Minh), across all visitors. */
   DAILY_MESSAGE_CAP?: string;
 
+  SUPPORT_READ_LIMITER: RateLimiter;
+  SUPPORT_SITE_ORIGIN?: string;
+  POLAR_PRODUCT_ID?: string;
+  POLAR_ORG_ID?: string;
+  POLAR_ENVIRONMENT?: string;
+  SUPPORT_PAYOS_ENABLED?: string;
+  SUPPORT_POLAR_ENABLED?: string;
+  SUPPORT_CARD_ENABLED?: string;
+
   // Secrets
+  PAYOS_CLIENT_ID?: string;
+  PAYOS_API_KEY?: string;
+  PAYOS_CHECKSUM_KEY?: string;
+  POLAR_ACCESS_TOKEN?: string;
+  POLAR_WEBHOOK_SECRET?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  SUPPORT_REVIEW_SIGNING_KEY?: string;
+  SUPPORT_IP_HASH_SALT?: string;
+  SUPPORT_ADMIN_TOKEN?: string;
   SESSION_SIGNING_KEY?: string;
   VISITOR_HASH_SALT?: string;
   RESEND_API_KEY?: string;
