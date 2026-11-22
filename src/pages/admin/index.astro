@@ -1,0 +1,18 @@
+---
+import Portal from "~/components/wall-admin/Portal.astro";
+import { ownerRedirect, ownerSession, privatePage } from "~/lib/wall-admin/server";
+
+export const prerender = false;
+privatePage(Astro);
+const session = await ownerSession(Astro);
+if (session !== "unavailable")
+  return ownerRedirect(session === "signed-in" ? "/admin/wall" : "/login");
+Astro.response.status = 503;
+---
+
+<Portal title="Owner portal">
+  <h1>Owner portal</h1>
+  <p>
+    The owner service is temporarily unavailable. <a href="/admin">Try again</a>
+  </p>
+</Portal>

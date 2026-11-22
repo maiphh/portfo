@@ -1,0 +1,34 @@
+---
+import Portal from "~/components/wall-admin/Portal.astro";
+import { ownerRedirect, ownerSession, privatePage } from "~/lib/wall-admin/server";
+
+export const prerender = false;
+privatePage(Astro);
+const session = await ownerSession(Astro);
+if (session === "signed-in") return ownerRedirect("/admin/wall");
+---
+
+<Portal title="Sign in">
+  <div class="owner-panel owner-login">
+    <a class="owner-back" href="/wall">
+      ← Personal wall
+    </a>
+    <h1>Sign in</h1>
+    <form method="post" data-account-form="login">
+      <label for="owner-password">Password</label>
+      <input
+        id="owner-password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+      <p data-form-status role="status">
+        {session === "unavailable" ? "The owner service is temporarily unavailable." : ""}
+      </p>
+      <button class="owner-primary" type="submit">
+        Sign in
+      </button>
+    </form>
+  </div>
+</Portal>

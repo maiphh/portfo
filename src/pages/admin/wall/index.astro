@@ -1,0 +1,50 @@
+---
+import Portal from "~/components/wall-admin/Portal.astro";
+import WallCanvas from "~/components/wall-admin/WallCanvas.astro";
+import WallTabs from "~/components/wall-admin/WallTabs.astro";
+import { ownerRedirect, ownerSession, privatePage } from "~/lib/wall-admin/server";
+
+export const prerender = false;
+privatePage(Astro);
+const session = await ownerSession(Astro);
+if (session === "signed-out") return ownerRedirect("/login");
+if (session === "unavailable") Astro.response.status = 503;
+---
+
+<Portal title="Wall editor" area="wall">
+  <section class="owner-heading">
+    <h1>Wall</h1>
+    <WallTabs view="editor" />
+  </section>
+  {session === "unavailable" ? (
+    <p>
+      The owner service is temporarily unavailable. <a href="/admin/wall">Try again</a>
+    </p>
+  ) : (
+    <>
+      <div class="owner-draft" aria-label="Draft controls">
+        <div class="owner-draft-actions">
+          <button type="button" id="save-hosted-wall" disabled>
+            Save draft
+          </button>
+          <button type="button" id="preview-hosted-wall" aria-pressed="false" disabled>
+            Preview
+          </button>
+          <button type="button" class="owner-primary" id="publish-hosted-wall" disabled>
+            Publish
+          </button>
+          <button type="button" id="reload-hosted-wall" hidden>
+            Reload server draft
+          </button>
+          <button type="button" id="reset-hosted-wall" hidden>
+            Start from live wall
+          </button>
+        </div>
+        <p id="hosted-wall-status" role="status">
+          Loading draft…
+        </p>
+      </div>
+      <WallCanvas hosted />
+    </>
+  )}
+</Portal>

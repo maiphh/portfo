@@ -1,4 +1,5 @@
 import { WORKER_URL, apiUrl } from "~/lib/api";
+import { apiMessage, OwnerApiError, ownerRequest } from "~/lib/wall-admin/client";
 
 type Kind = "folder" | "photo" | "note";
 type Item = {
@@ -133,6 +134,10 @@ const crumbs = $("#wall-crumbs");
 const detail = $<HTMLDialogElement>("#wall-detail");
 const detailContent = $("#wall-detail-content");
 const app = $("#wall-app");
+const hosted = app.dataset.hosted === "true";
+const hostedApi = "/api/admin/wall";
+const mediaUrl = (id: string, variant: "thumbnail" | "detail") =>
+  hosted ? `${hostedApi}/media/${id}/${variant}` : apiUrl(`/wall/media/${id}/${variant}`);
 const index = $("#wall-index");
 const indexToggle = $("#index-toggle");
 const expandButton = $("#expand-all");
@@ -146,16 +151,28 @@ const rootFolder = {
 };
 type FolderView = { x: number; y: number; scale: number };
 const storageKey = "personal-wall-prototype-v1";
-let items: Item[] = structuredClone(initial);
+let items: Item[] = hosted ? [] : structuredClone(initial);
+type HostedDraft = {
+  version: number;
+  baseRevision: string | null;
+  activeRevision: string | null;
+  items: Item[];
+};
+let serverDraft: Omit<HostedDraft, "items"> | undefined;
+let hostedDirty = false;
+let busy = false;
+let stale = false;
+let leaving = false;
 let hasLocalDraft = false;
-const database = import.meta.env.DEV
-  ? new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("personal-wall", 1);
-      request.onupgradeneeded = () => request.result.createObjectStore("drafts");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    })
-  : null;
+const database =
+  !hosted && import.meta.env.DEV
+    ? new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("personal-wall", 1);
+        request.onupgradeneeded = () => request.result.createObjectStore("drafts");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      })
+    : null;
 async function readDraft(): Promise<Item[] | null> {
   if (!database) return null;
   const db = await database;
@@ -218,6 +235,11 @@ const escapeHTML = (value: string) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
   );
 function save() {
+  if (hosted) {
+    hostedDirty = true;
+    hostedControls("Unsaved changes.");
+    return;
+  }
   hasLocalDraft = true;
   const snapshot = structuredClone(items);
   saveQueue = saveQueue
@@ -353,7 +375,7 @@ function renderCard(item: Item) {
       : "";
   let content = "";
   if (kind === "photo")
-    content = `<img src="${escapeHTML((item.mediaId ? apiUrl(`/wall/media/${item.mediaId}/thumbnail`) : item.src) || "")}" alt="" loading="lazy" draggable="false"><div class="item-label"><span>${title}</span><span aria-hidden="true">↗</span></div>`;
+    content = `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "thumbnail") : item.src) || "")}" alt="" loading="lazy" draggable="false"><div class="item-label"><span>${title}</span><span aria-hidden="true">↗</span></div>`;
   if (kind === "note") content = `<p>${escapeHTML(item.text || "")}</p><small>${title}</small>`;
   if (kind === "folder")
     content = `<div class="folder-tab"></div><div class="folder-face"><span aria-hidden="true">↗</span><strong>${title}</strong><small>${itemCount(folderChildren(id).length)}</small></div>`;
@@ -542,7 +564,7 @@ function openItem(id: string, trigger: HTMLElement) {
     showFolder(id, trigger);
     return;
   }
-  detailContent.innerHTML = `${item.kind === "photo" ? `<img src="${escapeHTML((item.mediaId ? apiUrl(`/wall/media/${item.mediaId}/detail`) : item.src) || "")}" alt="${escapeHTML(item.alt || item.title)}">` : ""}<h2 id="wall-detail-title">${escapeHTML(item.title)}</h2><p>${escapeHTML(item.text || "")}</p>`;
+  detailContent.innerHTML = `${item.kind === "photo" ? `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "detail") : item.src) || "")}" alt="${escapeHTML(item.alt || item.title)}">` : ""}<h2 id="wall-detail-title">${escapeHTML(item.title)}</h2><p>${escapeHTML(item.text || "")}</p>`;
   openDetail(trigger);
 }
 function moveItem(id: string) {
@@ -572,15 +594,14 @@ function moveItem(id: string) {
   ];
   showEditor(
     `Move ${item.title}`,
-    `<label for="destination">Destination</label><select id="destination" name="destination">${options.map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === item.parent ? "selected" : ""}>${escapeHTML(o.title)}</option>`).join("")}</select>`,
+    `<label for="destination">Destination</label><select id="destination" name="destination">${options.map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === item.parent ? "selected" : ""}>${escapeHTML(o.title)}</option>`).join("")}</select>${coordinates({ x: 100, y: 100 })}`,
     "Move",
     (data) => {
       item.parent = String(data.get("destination"));
-      item.x = 100;
-      item.y = 100;
+      Object.assign(item, position(data) ?? { x: 100, y: 100 });
       save();
       render();
-      $("#edit-toggle").focus();
+      (hosted ? canvas : editButton).focus({ preventScroll: true });
     },
   );
 }
@@ -796,34 +817,70 @@ function showEditor(
   title: string,
   fields: string,
   submit: string,
-  onSubmit: (data: FormData) => void,
+  onSubmit: (data: FormData) => void | Promise<void>,
 ) {
-  editor.innerHTML = `<form><h2 id="wall-editor-title">${escapeHTML(title)}</h2>${fields}<div class="wall-editor-actions"><button type="button" data-cancel>Cancel</button><button type="submit">${submit}</button></div></form>`;
+  editor.innerHTML = `<form><h2 id="wall-editor-title">${escapeHTML(title)}</h2>${fields}<p role="status" data-editor-status hidden></p><div class="wall-editor-actions"><button type="button" data-cancel>Cancel</button><button type="submit">${submit}</button></div></form>`;
   const form = editor.querySelector("form");
-  if (!form) return;
-  editor.querySelector("[data-cancel]")?.addEventListener("click", () => editor.close());
-  form.addEventListener("submit", (event) => {
+  const feedback = editor.querySelector<HTMLElement>("[data-editor-status]");
+  const cancel = editor.querySelector<HTMLButtonElement>("[data-cancel]");
+  if (!form || !feedback || !cancel) return;
+  cancel.addEventListener("click", () => editor.close());
+  editor.oncancel = (event) => {
+    if (cancel.disabled) event.preventDefault();
+  };
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (cancel.disabled) return;
     const data = new FormData(form);
-    editor.close();
-    onSubmit(data);
+    if (typeof data.get("title") === "string" && !String(data.get("title")).trim()) {
+      feedback.textContent = "Enter a title.";
+      feedback.hidden = false;
+      return;
+    }
+    const controls = form.querySelectorAll<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement
+    >("input, select, textarea, button");
+    for (const control of controls) control.disabled = true;
+    feedback.textContent = "Applying changes…";
+    feedback.hidden = false;
+    try {
+      await onSubmit(data);
+      editor.close();
+    } catch (error) {
+      feedback.textContent = apiMessage(error);
+    } finally {
+      for (const control of controls) control.disabled = false;
+      if (!editor.open && hosted) canvas.focus({ preventScroll: true });
+    }
   });
   editor.showModal();
+}
+function coordinates(item?: Pick<Item, "x" | "y">) {
+  if (!hosted) return "";
+  const x = item?.x ?? Math.round((canvas.clientWidth / 2 - offsetX) / scale - 90);
+  const y = item?.y ?? Math.round((canvas.clientHeight / 2 - offsetY) / scale - 80);
+  return `<div class="wall-coordinates">
+    <label for="item-x">X position</label><input id="item-x" name="x" type="number" min="-1000000" max="1000000" step="any" value="${x}" required>
+    <label for="item-y">Y position</label><input id="item-y" name="y" type="number" min="-1000000" max="1000000" step="any" value="${y}" required>
+  </div>`;
+}
+function position(data: FormData) {
+  return hosted ? { x: Number(data.get("x")), y: Number(data.get("y")) } : undefined;
 }
 function showFolderEditor(folder?: Item, description = folder?.description ?? "") {
   showEditor(
     folder ? "Edit folder" : "New folder",
-    `<label for="folder-title">Folder name</label><input id="folder-title" name="title" value="${escapeHTML(folder?.title ?? "")}" required maxlength="100"><label for="folder-description">Description</label><textarea id="folder-description" name="description" maxlength="500">${escapeHTML(description)}</textarea>`,
+    `<label for="folder-title">Folder name</label><input id="folder-title" name="title" value="${escapeHTML(folder?.title ?? "")}" required maxlength="100"><label for="folder-description">Description</label><textarea id="folder-description" name="description" maxlength="500">${escapeHTML(description)}</textarea>${coordinates(folder)}`,
     folder ? "Save details" : "Create folder",
     (data) => {
       const title = String(data.get("title")).trim();
       if (!title) return;
       const description = String(data.get("description")).trim();
       if (!folder) {
-        add("folder", title, { description });
+        add("folder", title, { description, ...position(data) });
         return;
       }
-      Object.assign(folder, { title, description });
+      Object.assign(folder, { title, description, ...position(data) });
       save();
       render();
       canvas.focus({ preventScroll: true });
@@ -840,11 +897,12 @@ function editItem(id: string) {
   const isPhoto = item.kind === "photo";
   showEditor(
     isPhoto ? "Edit photo" : "Edit note",
-    `<label for="item-title">${isPhoto ? "Title" : "Title"}</label><input id="item-title" name="title" required maxlength="100" value="${escapeHTML(item.title)}"><label for="item-text">${isPhoto ? "Caption" : "Note"}</label><textarea id="item-text" name="text" maxlength="5000">${escapeHTML(item.text || "")}</textarea>${isPhoto ? `<label for="item-alt">Image description</label><input id="item-alt" name="alt" maxlength="500" value="${escapeHTML(item.alt || "")}">` : ""}`,
+    `<label for="item-title">Title</label><input id="item-title" name="title" required maxlength="100" value="${escapeHTML(item.title)}"><label for="item-text">${isPhoto ? "Caption" : "Note"}</label><textarea id="item-text" name="text" maxlength="5000">${escapeHTML(item.text || "")}</textarea>${isPhoto ? `<label for="item-alt">Image description</label><input id="item-alt" name="alt" maxlength="500" value="${escapeHTML(item.alt || "")}">` : ""}${coordinates(item)}`,
     "Save",
     (data) => {
       item.title = String(data.get("title")).trim();
       item.text = String(data.get("text")).trim();
+      Object.assign(item, position(data));
       if (isPhoto) item.alt = String(data.get("alt")).trim();
       save();
       render();
@@ -868,7 +926,7 @@ function deleteItem(id: string) {
   const count = removed.size - 1;
   showEditor(
     `Delete ${item.title}?`,
-    `<p>${count ? `This also deletes ${count} nested ${count === 1 ? "item" : "items"}.` : "This removes the item from your local draft."}</p>`,
+    `<p>${count ? `This also deletes ${count} nested ${count === 1 ? "item" : "items"}.` : "This removes the item from your draft."}</p>`,
     "Delete",
     () => {
       items = items.filter((i) => !removed.has(i.id));
@@ -882,36 +940,68 @@ $("#add-folder").addEventListener("click", () => showFolderEditor());
 $("#add-note").addEventListener("click", () =>
   showEditor(
     "New note",
-    '<label for="note-title">Title</label><input id="note-title" name="title" required maxlength="100"><label for="note-body">Note</label><textarea id="note-body" name="body" required></textarea>',
+    `<label for="note-title">Title</label><input id="note-title" name="title" required maxlength="100"><label for="note-body">Note</label><textarea id="note-body" name="body" required ${hosted ? 'maxlength="5000"' : ""}></textarea>${coordinates()}`,
     "Create note",
     (data) =>
-      add("note", String(data.get("title")).trim(), { text: String(data.get("body")).trim() }),
+      add("note", String(data.get("title")).trim(), {
+        text: String(data.get("body")).trim(),
+        ...position(data),
+      }),
   ),
 );
 $("#add-photo").addEventListener("click", () =>
   showEditor(
     "Add photo",
-    '<label for="photo-title">Caption</label><input id="photo-title" name="title" required maxlength="100"><label for="photo-alt">Image description</label><input id="photo-alt" name="alt" maxlength="500"><label for="photo-file">Image (under 10 MB)</label><input id="photo-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required><p>JPEG, PNG or WebP only. Photos are stored only in this browser; browser storage is limited.</p>',
+    `<label for="photo-title">${hosted ? "Title" : "Caption"}</label><input id="photo-title" name="title" required maxlength="100">
+    ${hosted ? '<label for="photo-caption">Caption</label><textarea id="photo-caption" name="caption" maxlength="5000"></textarea>' : ""}
+    <label for="photo-alt">Image description</label><input id="photo-alt" name="alt" maxlength="500">
+    <label for="photo-file">Image (up to ${hosted ? 4 : 10} MB)</label><input id="photo-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required>
+    <p>JPEG, PNG or WebP only.${hosted ? "" : " Photos are stored only in this browser; browser storage is limited."}</p>
+    ${coordinates()}`,
     "Add photo",
-    (data) => {
+    async (data) => {
       const file = data.get("file");
+      const limit = hosted ? 4_000_000 : 10_000_000;
       if (
         !(file instanceof File) ||
-        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-        file.size > 10_000_000
+        (!hosted && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) ||
+        !file.size ||
+        file.size > limit
       ) {
-        alert("Please choose a JPEG, PNG or WebP image under 10 MB.");
+        throw new OwnerApiError(422, {
+          error: `Choose a JPEG, PNG, or WebP image up to ${limit / 1_000_000} MB.`,
+        });
+      }
+      const title = String(data.get("title")).trim();
+      const alt = String(data.get("alt")).trim();
+      if (hosted) {
+        const upload = new FormData();
+        upload.set("photo", file);
+        const image = await ownerRequest<Pick<Item, "mediaId" | "width" | "height">>(
+          `${hostedApi}/media`,
+          {
+            method: "POST",
+            body: upload,
+          },
+        );
+        add("photo", title, {
+          ...image,
+          ...position(data),
+          text: String(data.get("caption")).trim(),
+          alt,
+        });
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () =>
-        add("photo", String(data.get("title")).trim(), {
-          src: String(reader.result),
-          text: "",
-          alt: String(data.get("alt")).trim(),
-        });
-      reader.onerror = () => alert("The selected image could not be read. Please try again.");
-      reader.readAsDataURL(file);
+      const src = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () =>
+          reject(
+            new OwnerApiError(422, { error: "The image could not be read. Please try again." }),
+          );
+        reader.readAsDataURL(file);
+      });
+      add("photo", title, { src, text: "", alt });
     },
   ),
 );
@@ -981,13 +1071,170 @@ async function initialize() {
   openLinkedFolder();
   document.fonts.ready.then(fit);
 }
-void initialize();
+function hostedControls(message: string) {
+  if (!hosted) return;
+  $("#hosted-wall-status").textContent = message;
+  $<HTMLButtonElement>("#save-hosted-wall").disabled =
+    busy || !serverDraft || !hostedDirty || stale;
+  $<HTMLButtonElement>("#preview-hosted-wall").disabled = busy || !serverDraft;
+  $<HTMLButtonElement>("#publish-hosted-wall").disabled =
+    busy || !serverDraft || stale || serverDraft.activeRevision !== serverDraft.baseRevision;
+  const reload = $<HTMLButtonElement>("#reload-hosted-wall");
+  reload.disabled = busy;
+  reload.hidden = !stale && !!serverDraft;
+  const reset = $<HTMLButtonElement>("#reset-hosted-wall");
+  reset.disabled = busy || stale;
+  reset.hidden = !serverDraft || serverDraft.activeRevision === serverDraft.baseRevision;
+  app.inert = busy || !serverDraft;
+}
+
+function replaceHosted(draft: HostedDraft) {
+  const { items: snapshot, ...versions } = draft;
+  items = snapshot;
+  serverDraft = versions;
+  hostedDirty = false;
+  stale = false;
+  setIndex(!mobileIndex.matches);
+  openLinkedFolder();
+}
+
+function readyMessage() {
+  if (serverDraft && serverDraft.activeRevision !== serverDraft.baseRevision)
+    return "The live wall changed outside this editor. Start from the live wall to publish again.";
+  return "Draft ready.";
+}
+
+async function loadHosted() {
+  replaceHosted(await ownerRequest<HostedDraft>(`${hostedApi}/draft`));
+  document.fonts.ready.then(fit);
+  return readyMessage();
+}
+
+async function saveHosted() {
+  if (!serverDraft || !hostedDirty) return;
+  const { version, baseRevision, activeRevision } = await ownerRequest<HostedDraft>(
+    `${hostedApi}/draft`,
+    {
+      method: "PUT",
+      json: { version: serverDraft.version, items },
+    },
+  );
+  serverDraft = { version, baseRevision, activeRevision };
+  hostedDirty = false;
+}
+
+async function hostedOperation(progress: string, operation: () => Promise<string>) {
+  if (busy) return;
+  busy = true;
+  hostedControls(progress);
+  let message: string;
+  try {
+    message = await operation();
+  } catch (error) {
+    message = apiMessage(error);
+    if (error instanceof OwnerApiError && error.status === 409) {
+      const { version, activeRevision, baseRevision } = error.data;
+      if (
+        serverDraft &&
+        version === serverDraft.version &&
+        baseRevision === serverDraft.baseRevision &&
+        (activeRevision === null || typeof activeRevision === "string")
+      ) {
+        serverDraft.activeRevision = activeRevision;
+      } else stale = true;
+    }
+  } finally {
+    busy = false;
+  }
+  hostedControls(message);
+}
+
+if (hosted) {
+  editing = true;
+  $("#save-hosted-wall").addEventListener(
+    "click",
+    () =>
+      void hostedOperation("Saving draft…", async () => {
+        await saveHosted();
+        return serverDraft?.activeRevision !== serverDraft?.baseRevision
+          ? readyMessage()
+          : "Draft saved.";
+      }),
+  );
+  $("#preview-hosted-wall").addEventListener("click", () => {
+    editing = !editing;
+    if (editing && expanded) toggleOverview();
+    else render();
+    $("#preview-hosted-wall").setAttribute("aria-pressed", String(!editing));
+    hostedControls(
+      editing
+        ? hostedDirty
+          ? "Unsaved changes."
+          : readyMessage()
+        : "Previewing your current draft.",
+    );
+  });
+  $("#publish-hosted-wall").addEventListener(
+    "click",
+    () =>
+      void hostedOperation("Publishing draft…", async () => {
+        await saveHosted();
+        if (!serverDraft) return "Load the draft again.";
+        if (serverDraft.baseRevision !== serverDraft.activeRevision) return readyMessage();
+        const { version, revision } = await ownerRequest<{ version: number; revision: string }>(
+          `${hostedApi}/publish`,
+          {
+            method: "POST",
+            json: { version: serverDraft.version, baseRevision: serverDraft.baseRevision },
+          },
+        );
+        serverDraft = { version, baseRevision: revision, activeRevision: revision };
+        return "Published to the public wall.";
+      }),
+  );
+  $("#reload-hosted-wall").addEventListener("click", () => {
+    if (hostedDirty && !confirm("Discard your unsaved changes and reload the server draft?"))
+      return;
+    void hostedOperation("Reloading draft…", loadHosted);
+  });
+  $("#reset-hosted-wall").addEventListener("click", () => {
+    if (!confirm("Replace the hosted draft and any unsaved changes with the live wall?")) return;
+    void hostedOperation("Starting from the live wall…", async () => {
+      replaceHosted(
+        await ownerRequest<HostedDraft>(`${hostedApi}/reset`, {
+          method: "POST",
+          json: serverDraft,
+        }),
+      );
+      return "Draft reset to the live wall.";
+    });
+  });
+  window.addEventListener("beforeunload", (event) => {
+    if (hostedDirty && !leaving) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener("owner-sign-out", (event) => {
+    if (
+      hostedDirty &&
+      !confirm("Sign out with unsaved changes? Cancel to return and save your draft.")
+    ) {
+      event.preventDefault();
+      return;
+    }
+  });
+  document.addEventListener("owner-signed-out", () => {
+    leaving = true;
+  });
+}
+if (hosted) void hostedOperation("Loading draft…", loadHosted);
+else void initialize();
 $("#export-wall").addEventListener("click", async () => {
   try {
     const exported = await Promise.all(
       items.map(async (item) => {
         if (item.kind !== "photo" || item.src?.startsWith("data:")) return item;
-        const source = item.mediaId ? apiUrl(`/wall/media/${item.mediaId}/detail`) : item.src;
+        const source = item.mediaId ? mediaUrl(item.mediaId, "detail") : item.src;
         if (!source) throw new Error("Photo has no source");
         const response = await fetch(source);
         if (!response.ok) throw new Error("Photo unavailable");
@@ -1031,7 +1278,7 @@ $("#reset-wall").addEventListener("click", () =>
       items = structuredClone(initial);
       save();
       enter("root");
-      $("#edit-toggle").focus();
+      (hosted ? canvas : editButton).focus({ preventScroll: true });
     },
   ),
 );

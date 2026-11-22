@@ -28,6 +28,7 @@ import { runGithubSync } from "./github/sync";
 import { corsHeaders, error, withHeaders } from "./http";
 import { tools } from "./tools";
 import { handleWall } from "./wall";
+import { handleWallAdmin } from "./wall-admin";
 import { knownSlugs, workList } from "./work";
 
 export { Quota } from "./quota";
@@ -96,6 +97,7 @@ async function handleView(request: Request, env: Env): Promise<Response> {
 
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
+  if (url.pathname.startsWith("/internal/wall-admin/")) return handleWallAdmin(request, url, env);
   const cfg = config(env);
   const origin = request.headers.get("Origin");
   const cors = corsHeaders(origin, cfg);

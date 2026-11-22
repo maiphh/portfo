@@ -24,3 +24,6 @@ GITHUB_LOGIN=
 # Bearer token for POST /cron/github-sync. openssl rand -base64 32
 # The scheduled handler does not need it. Unset: manual route answers 503.
 CRON_SECRET=
+
+# Shared with the Astro wall gateway. Use a different random value per environment.
+WALL_ADMIN_SERVICE_KEY=replace-with-a-random-32-byte-secret

@@ -117,3 +117,58 @@ Install this repo’s frontend and Worker dependencies and make ImageMagick 7’
 - Set the real portfolio origin in `workers/portfo/wrangler.jsonc`, provision the private `portfo-wall-media` bucket, and apply the D1 migration to the production Worker’s database. Use a staging site and separate resources to rehearse the release first.
 - Configure `PUBLIC_WORKER_URL` on the Astro deployment. Use the publisher’s explicit `--production` flag once the Cloudflare resources and owner credentials are ready.
 - To remove a memory, remove it in the local editor and publish a new revision. Keep known-good draft exports for rollback and republish an earlier export to restore it. The active revision controls media access, with a one-minute browser cache window. Review unreferenced R2 objects after retries have finished and after the grace period for retained rollback revisions. Media garbage collection is manual.
+
+## Hosted owner portal and visitor contributions
+
+The hosted owner portal uses the Astro/Vercel site and `portfo` Worker. Apply the additive `0003_wall_admin.sql` migration to each target D1 database before enabling its Astro routes. Existing wall revisions, folder IDs, and private R2 object keys remain compatible. [Owner portal specification](wall-admin.md)
+
+### Isolated local run
+
+Use Node 22.22 or newer and pnpm. Install both lockfiles and create a separate local database directory.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm --dir workers/portfo install --frozen-lockfile
+pnpm --dir workers/portfo exec wrangler d1 migrations apply portfo --local --persist-to /tmp/portfo-wall-admin-state
+```
+
+Create `/tmp/portfo-wall-admin.vars` with a dummy local secret.
+
+```dotenv
+WALL_ADMIN_SERVICE_KEY=local-wall-admin-key-replace-me-with-a-long-random-value
+```
+
+From `workers/portfo`, run the Worker.
+
+```sh
+./node_modules/.bin/wrangler dev --ip 127.0.0.1 --port 8787 --persist-to /tmp/portfo-wall-admin-state --env-file /tmp/portfo-wall-admin.vars --var ALLOWED_ORIGINS:http://localhost:4321,http://localhost:4421
+```
+
+From the repository root, run Astro with that same service key and a dummy bootstrap password.
+
+```sh
+PUBLIC_WORKER_URL=http://127.0.0.1:8787 WALL_ADMIN_WORKER_URL=http://127.0.0.1:8787 WALL_ADMIN_SERVICE_KEY=local-wall-admin-key-replace-me-with-a-long-random-value ADMIN_BOOTSTRAP_PASSWORD='local owner password for development' pnpm dev
+```
+
+Open `/login` and sign in with the bootstrap password. The public wall accepts notes and JPEG, PNG, or WebP photos. The owner editor is at `/admin/wall`, the review queue at `/admin/wall/submissions`, and password rotation at `/admin/password`. Queued photos become public only when an accepted card is published. The bootstrap hash is initialized once. Remove `ADMIN_BOOTSTRAP_PASSWORD` after initializing a real environment. Recovery requires an authorized operator to replace `admin_credentials.password_hash` with a hash in the format defined by `src/lib/wall-admin/password.ts` and increment `admin_credentials.version` in the same update. Incrementing the version invalidates existing sessions.
+
+Run checks with `pnpm lint`, `pnpm check`, `pnpm build`, `pnpm test`, `pnpm test:e2e`, `pnpm --dir workers/portfo typecheck`, and `pnpm --dir workers/portfo test`. The live browser test uses separate owner and visitor contexts for contribution, review, publication, logout, password rotation, and revocation.
+
+### Live owner browser test
+
+Start the Worker as above with a new temporary persistence directory for each run. Apply the migrations to that directory and keep the Worker running. From the repository root, run the dedicated Playwright suite. It starts its own Astro server on port 4421.
+
+```sh
+WALL_ADMIN_WORKER_URL=http://127.0.0.1:8787 \
+WALL_ADMIN_SERVICE_KEY=local-wall-admin-key-replace-me-with-a-long-random-value \
+ADMIN_BOOTSTRAP_PASSWORD='local owner password for development' \
+pnpm test:e2e:wall
+```
+
+The test publishes a revision and rotates the password in its local database. The default `pnpm test:e2e` command runs the static preview suite with mock data.
+
+### Release sequence
+
+For each preview or production environment, provision a separate D1 database and private R2 bucket, deploy the matching Worker with `WALL_ADMIN_SERVICE_KEY`, and apply migrations through `0003_wall_admin.sql`. Configure Astro server variables `WALL_ADMIN_WORKER_URL`, `WALL_ADMIN_SERVICE_KEY`, and the initial `ADMIN_BOOTSTRAP_PASSWORD`, plus the existing `PUBLIC_WORKER_URL`. Set Worker `ALLOWED_ORIGINS` to the exact Astro origin. Keep the service key matched only between Astro and its corresponding Worker.
+
+Deploy the Worker and migration before Astro. After first successful owner login, remove the bootstrap password from Astro. On the same-origin preview, verify `Secure` cookies, platform-derived client IP quotas, photo uploads and private queue previews, published media takedown, and that the public page reads the intended environment revision. Keep incomplete or unreferenced normalized media private until the retry and revision-retention grace period has elapsed. Never include secrets or password bodies in logs.
