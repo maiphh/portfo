@@ -1,5 +1,33 @@
 import { expect, test } from "@playwright/test";
 
+test("Talentnet's full role fits on one line and aligns with its name", async ({ page }, info) => {
+  const desktop = info.project.name === "desktop";
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: desktop ? 1280 : 320, height: 900 });
+  await page.goto("/");
+  const card = page.locator(
+    desktop ? '.tl-grid [data-note-id="talentnet"]' : '.tl-v [data-note-id="talentnet"] .tl-v-card',
+  );
+  const role = card.getByText("AI Engineer Specialist", { exact: true });
+
+  await card.scrollIntoViewIfNeeded();
+  await expect(role).toBeVisible();
+  await expect(role).toHaveCSS("white-space", "nowrap");
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  const fits = await role.evaluate((element) => {
+    const card = element.closest("[data-tl-bar]")!;
+    const bounds = card.getBoundingClientRect();
+    return (
+      element.scrollWidth <= element.clientWidth &&
+      element.getBoundingClientRect().bottom <= bounds.bottom
+    );
+  });
+  expect(fits).toBe(true);
+  const nameBounds = (await card.getByText("Talentnet", { exact: true }).boundingBox())!;
+  const roleBounds = (await role.boundingBox())!;
+  expect(roleBounds.x).toBeCloseTo(nameBounds.x);
+});
+
 test("experience sits before work and the IELTS mark never overlaps its label", async ({
   page,
 }) => {

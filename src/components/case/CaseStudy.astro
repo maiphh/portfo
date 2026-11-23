@@ -1,13 +1,13 @@
 ---
 /**
  * The shared case-study page (portfo-design case-studies/moodboards/case-study-skeleton.md):
- * Hero A (CaseHeroTitle) → rail → overview → the short cut (flagged video) → the highlight →
+ * Hero A (CaseHeroTitle) → overview → the short cut (flagged video) → the highlight →
  * how it works (FlowDiagram) → highlights → limits → next. Each project passes its data
  * (lib/case.ts) and fills slots:
  *   highlight      the one component that proves the claim
  *   extra          the body of the optional extra section (data.extra), after the deep dives
  * The hero lists the entry's `links` (live site, repository) and an optional credit line.
- * The accent comes from the work entry; the badge from its `org_badge`.
+ * The accent comes from the work entry; the org logo (when one exists) sits above the title.
  * Each highlight gets one drawing with one looping motion (FlowFigure, lib/highlights; HIGHLIGHTS-SPEC
  * v3 §2–§3); the iso-glow credit goes in the footer of the pages with an iso drawing only.
  */
@@ -45,13 +45,6 @@ const dive = dives.map((x) => {
 });
 const hasIso = dive.some((x) => x.scene.iso);
 const showVideo = CASE_VIDEOS.has(entry.id) ? data.video : undefined;
-const rail = [
-  { href: "#overview", label: "Overview" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#deep-dives", label: "Highlights" },
-  ...(extra ? [{ href: `#${extra.id}`, label: extra.rail }] : []),
-  { href: "#limits", label: "Limits" },
-];
 const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."]), ...d.todo];
 ---
 
@@ -77,30 +70,6 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
       <CaseHeroTitle entry={entry} data={data} />
     </div>
 
-    <nav class="cs2-rail" aria-label="On this page" data-rail data-sticky-top>
-      <div class="wrap">
-        {/* The hero's scan line "lands" here as an accent hairline (scripts/case/hero-a.ts). */}
-        <i class="cs2-rail__ln" aria-hidden="true" />
-        <ul data-scroll-x>
-          {rail.map((r) => (
-            <li>
-              <a href={r.href}>
-                {r.label}
-                {r.href === "#deep-dives" && (
-                  <>
-                    <span class="cs2-rail__n" aria-hidden="true">
-                      {String(dives.length).padStart(2, "0")}
-                    </span>
-                    <span class="sr-only"> ({dives.length})</span>
-                  </>
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </nav>
-
     <div class="wrap">
       <section class="cs2-sec cs2-pso" id="overview" aria-labelledby="ov-h">
         <h2 id="ov-h" class="sr-only">
@@ -115,9 +84,23 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           <p set:html={richText(o.solution)} />
         </div>
         {o.outcome ? (
-          <div>
+          <div class="cs2-outcome">
             <h3>Outcome</h3>
-            <p set:html={richText(o.outcome)} />
+            {o.metrics?.length ? (
+              <>
+                {o.metricsNote && <p class="cs2-metrics-note">{o.metricsNote}</p>}
+                <ul class="cs2-metrics">
+                  {o.metrics.map((metric) => (
+                    <li>
+                      <span class="cs2-metrics__n">{metric.value}</span>
+                      <span class="cs2-metrics__l">{metric.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p set:html={richText(o.outcome)} />
+            )}
           </div>
         ) : (
           <div class="cs2-todo" data-dev-only hidden>

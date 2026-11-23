@@ -21,6 +21,7 @@ test("editorial structure, real destinations and existing anchors", async ({ pag
   await expect(work.getByRole("heading", { level: 2, name: "Selected work" })).toBeVisible();
   await expect(work.locator("video")).toHaveCount(1);
   await expect(work.locator(".sw-list > li")).toHaveCount(6);
+  await expect(work.locator(".sw-group-label")).toHaveText(["Enterprise", "Personal / open"]);
   await expect(work.locator(".sw-list img, .sw-list video, .sw-list canvas")).toHaveCount(0);
   await expect(
     work.locator(

@@ -11,7 +11,8 @@ import { overflowReport } from "./overflow";
 interface CasePage {
   slug: string;
   title: RegExp;
-  badge: boolean;
+  /** Company logo above the title when the work org has one. */
+  logo: string | null;
   /** A node to open, and the heading its details show. */
   node: string;
   heading: RegExp;
@@ -26,7 +27,7 @@ export const PAGES: CasePage[] = [
   {
     slug: "legal-rag",
     title: /Legal RAG/,
-    badge: true,
+    logo: "Talentnet",
     node: "hybrid",
     heading: /Hybrid legal chunker/,
     groups: ["Ingest", "Question"],
@@ -36,7 +37,7 @@ export const PAGES: CasePage[] = [
   {
     slug: "data-validation",
     title: /DVP · payroll data validation/,
-    badge: true,
+    logo: "Talentnet",
     video: true,
     node: "translate",
     heading: /engine\.translate/,
@@ -47,7 +48,7 @@ export const PAGES: CasePage[] = [
   {
     slug: "openportfo",
     title: /OpenPortfo/,
-    badge: false,
+    logo: null,
     node: "agent",
     heading: /Chat agent/,
     groups: ["Daily clock"],
@@ -57,7 +58,7 @@ export const PAGES: CasePage[] = [
   {
     slug: "ecom",
     title: /Ecom shop template/,
-    badge: false,
+    logo: null,
     node: "orders",
     heading: /orders\/machine\.ts/,
     groups: ["src/shop engine"],
@@ -67,7 +68,7 @@ export const PAGES: CasePage[] = [
   {
     slug: "poet",
     title: /Poet/,
-    badge: false,
+    logo: null,
     node: "worker",
     heading: /Worker poet-donations/,
     groups: [],
@@ -94,13 +95,22 @@ for (const p of PAGES) {
     });
 
   test.describe(p.slug, () => {
-    test("template: title, badge, rail, dives, no legacy layout", async ({ page }) => {
+    test("template: title, org logo, no rail, dives, no legacy layout", async ({ page }) => {
       await page.goto(url);
       await expect(page.locator("h1#cs-h")).toBeVisible();
       await expect(page.locator(".cs2-crumbs")).toContainText(p.title);
       await expect(page.locator("article.cs2[data-case]")).toHaveCount(1);
       await expect(page.locator(".cs-sheet")).toHaveCount(0);
-      await expect(page.locator(".cs-hero-a__meta .org-badge")).toHaveCount(p.badge ? 1 : 0);
+      await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
+      if (p.logo) {
+        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute(
+          "alt",
+          p.logo,
+        );
+      } else {
+        await expect(page.locator(".cs-hero-a__meta")).toHaveCount(0);
+      }
+      await expect(page.locator(".cs-hero-a__meta .org-badge")).toHaveCount(0);
       await expect(page.locator("[data-dive]")).toHaveCount(p.dives);
       await expect(page.locator("main video")).toHaveCount(p.video ? 1 : 0);
     });
@@ -115,9 +125,9 @@ for (const p of PAGES) {
         await expect(sheet).toBeVisible();
         await expect(sheet.locator("h3")).toHaveText(p.heading);
         const r = await node.boundingBox();
-        const rail = await page.locator("[data-rail]").boundingBox();
+        const nav = await page.locator("header.nav").boundingBox();
         const s = await sheet.boundingBox();
-        expect(r?.y ?? 0).toBeGreaterThanOrEqual((rail?.y ?? 0) + (rail?.height ?? 0) - 1);
+        expect(r?.y ?? 0).toBeGreaterThanOrEqual((nav?.y ?? 0) + (nav?.height ?? 0) - 1);
         expect((r?.y ?? 0) + (r?.height ?? 0)).toBeLessThanOrEqual((s?.y ?? 0) + 1);
         await page.keyboard.press("Escape");
         await expect(sheet).toBeHidden();
@@ -135,14 +145,14 @@ for (const p of PAGES) {
   });
 }
 
-/** Hero A (HERO-A-SPEC.md): the name is the h1, the headline's mark, the meta strip. */
+/** Hero A (HERO-A-SPEC.md): the name is the h1, the headline's mark, optional org logo. */
 const HEROES = [
-  { slug: "document-ocr", name: "Document OCR", mark: "clean data out" },
-  { slug: "legal-rag", name: "Legal RAG", mark: "the citation" },
-  { slug: "data-validation", name: "DVP", mark: "turned into code" },
-  { slug: "openportfo", name: "OpenPortfo", mark: "side by side" },
-  { slug: "ecom", name: "Ecom", mark: "many storefronts" },
-  { slug: "poet", name: "POET", mark: "youth charity" },
+  { slug: "document-ocr", name: "Document OCR", mark: "clean data out", logo: "Talentnet" },
+  { slug: "legal-rag", name: "Legal RAG", mark: "the citation", logo: "Talentnet" },
+  { slug: "data-validation", name: "DVP", mark: "turned into code", logo: "Talentnet" },
+  { slug: "openportfo", name: "OpenPortfo", mark: "side by side", logo: null },
+  { slug: "ecom", name: "Ecom", mark: "many storefronts", logo: null },
+  { slug: "poet", name: "POET", mark: "youth charity", logo: null },
 ];
 
 /** What the hero looks like at rest: the HTML end state. */
@@ -178,7 +188,7 @@ const AT_REST = {
 test.describe("Hero A", () => {
   for (const h of HEROES) {
     const url = `/work/${h.slug}/`;
-    test(`${h.slug}: one h1 named "${h.name}", the mark, the rail count`, async ({ page }) => {
+    test(`${h.slug}: one h1 named "${h.name}", the mark, optional org logo`, async ({ page }) => {
       await page.goto(url);
       const h1 = page.locator("h1");
       await expect(h1).toHaveCount(1);
@@ -187,11 +197,15 @@ test.describe("Hero A", () => {
       ).toBeVisible();
       await expect(page.locator(".cs-hero-a__ol")).toHaveAttribute("aria-hidden", "true");
       await expect(page.locator(".cs-hero-a__line mark.hx-mark")).toHaveText(h.mark);
-      const n = await page.locator("[data-dive]").count();
-      await expect(page.locator('[data-rail] a[href="#deep-dives"]')).toHaveText(
-        `Highlights${String(n).padStart(2, "0")} (${n})`,
-      );
-      await expect(page.locator(".cs-hero-a__meta")).toHaveCSS("font-size", "12px");
+      await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
+      if (h.logo) {
+        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute(
+          "alt",
+          h.logo,
+        );
+      } else {
+        await expect(page.locator(".cs-hero-a__meta")).toHaveCount(0);
+      }
     });
 
     test(`${h.slug}: reduced motion shows the end state`, async ({ page }) => {
@@ -213,16 +227,14 @@ test.describe("Hero A", () => {
     });
   }
 
-  test("no JS: the name, headline and mark are complete; no sweep, no hairline", async ({
-    browser,
-  }) => {
+  test("no JS: the name, headline and mark are complete; no sweep", async ({ browser }) => {
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
     for (const h of HEROES) {
       await page.goto(`/work/${h.slug}/`);
       expect(await page.evaluate(heroState), h.slug).toEqual(AT_REST);
       await expect(page.locator(".cs-hero-a__sweep")).toBeHidden();
-      await expect(page.locator(".cs2-rail__ln")).toBeHidden();
+      await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
       // The page-transition curtain is SSR-covered on case pages; without JS it must not show.
       await expect(page.locator("#t-curtain")).toBeHidden();
       await expect(page.locator("#t-readout")).toBeHidden();
@@ -230,121 +242,17 @@ test.describe("Hero A", () => {
     await ctx.close();
   });
 
-  // The visible part of each rail link (the rail scrolls sideways) against the chat launcher.
-  const railUnderLauncher = () => {
-    const l = document.querySelector(".chat-launcher");
-    if (!l || getComputedStyle(l).display === "none") return [];
-    const L = l.getBoundingClientRect();
-    const R = document.querySelector("[data-rail]")?.getBoundingClientRect();
-    if (!R) return ["no rail"];
-    const hits: string[] = [];
-    for (const a of document.querySelectorAll("[data-rail] a")) {
-      const r = a.getBoundingClientRect();
-      const w = Math.min(r.right, R.right, L.right) - Math.max(r.left, R.left, L.left);
-      const h = Math.min(r.bottom, L.bottom) - Math.max(r.top, L.top);
-      if (w > 0 && h > 0) hits.push((a.textContent ?? "").trim());
-    }
-    return hits;
-  };
-  const LAUNCHER_SIZES = [
-    [360, 780],
-    [390, 844],
-    [430, 932],
-    [768, 1024],
-    [1440, 900],
-  ] as const;
-
-  for (const js of [true, false])
-    test(`the chat button never covers a rail link (${js ? "JS" : "no JS"})`, async ({
-      browser,
-      isMobile,
-    }) => {
-      test.skip(isMobile, "sizes are set per context; runs once");
-      test.setTimeout(120_000);
-      for (const [width, height] of LAUNCHER_SIZES) {
-        const ctx = await browser.newContext({
-          viewport: { width, height },
-          javaScriptEnabled: js,
-          reducedMotion: "reduce",
-        });
-        const page = await ctx.newPage();
-        for (const slug of ["legal-rag", "document-ocr", "openportfo"]) {
-          await page.goto(`/work/${slug}/`);
-          if (!js) {
-            // It can't open the chat without JS, so it isn't shown at all.
-            await expect(page.locator(".chat-launcher")).toBeHidden();
-            expect(await page.evaluate(railUnderLauncher), `${slug} ${width}`).toEqual([]);
-            continue;
-          }
-          // After the launcher settles (boot.ts re-places it at 400ms and 2.6s), then with the
-          // rail stuck under the nav.
-          await page.waitForTimeout(2800);
-          expect(await page.evaluate(railUnderLauncher), `${slug} ${width} top`).toEqual([]);
-          await page.mouse.wheel(0, height);
-          await page.waitForTimeout(1200);
-          expect(await page.evaluate(railUnderLauncher), `${slug} ${width} stuck`).toEqual([]);
-        }
-        await ctx.close();
-      }
-    });
-
-  test("the rail count is the small accent pill; the rest of the rail reads at 12px+", async ({
-    page,
-  }) => {
-    await page.goto("/work/legal-rag/");
-    const pill = page.locator(".cs2-rail__n");
-    await expect(pill).toHaveAttribute("aria-hidden", "true");
-    const css = await pill.evaluate((el) => {
-      const c = getComputedStyle(el);
-      const acc = c.getPropertyValue("--acc").trim();
-      const probe = document.createElement("i");
-      probe.style.color = acc;
-      document.body.append(probe);
-      const accRgb = getComputedStyle(probe).color;
-      probe.remove();
-      return {
-        accent: c.color === accRgb,
-        border: `${c.borderTopWidth} ${c.borderTopStyle} ${c.borderTopColor === c.color}`,
-        radius: c.borderTopLeftRadius,
-        size: c.fontSize,
-        padding: c.padding,
-      };
-    });
-    expect(css).toEqual({
-      accent: true,
-      border: "1px solid true",
-      radius: "3px",
-      size: "11px",
-      padding: "3px 4px",
-    });
-    // The 11px count is decorative (aria-hidden, with an sr-only " (n)"); every other piece of
-    // rail text keeps the 12px floor (the overflow audit skips the sideways-scrolling rail).
-    const small = await page.evaluate(() =>
-      [...document.querySelectorAll("[data-rail] *")]
-        .filter(
-          (el) =>
-            el.firstChild?.nodeType === Node.TEXT_NODE &&
-            (el.textContent ?? "").trim() &&
-            !el.closest('[aria-hidden="true"], .sr-only') &&
-            parseFloat(getComputedStyle(el).fontSize) < 12,
-        )
-        .map((el) => el.outerHTML.slice(0, 60)),
-    );
-    expect(small).toEqual([]);
-  });
-
-  test("with motion, the intro plays once and lands as the rail hairline", async ({ page }) => {
+  test("with motion, the intro plays once and settles", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/work/legal-rag/");
     // Mid-intro the outline is split into letters and shown.
     await expect(page.locator(".cs-hero-a__ol")).toHaveCSS("visibility", "visible");
     await expect.poll(() => page.locator(".cs-hero-a__ol div").count()).toBeGreaterThan(0);
-    // Then: the filled name at rest, the hairline drawn under the rail.
+    // Then: the filled name at rest.
     await expect
       .poll(() => page.evaluate(heroState), { timeout: 8000 })
       .toMatchObject({ fill: "none", fillIn: "none", outline: "hidden", sweep: true, line: "1" });
-    await expect(page.locator(".cs2-rail__ln")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
   });
 });
 
@@ -402,7 +310,7 @@ test.describe("public projects: links, credit and real screenshots", () => {
       credit.locator('a[href="https://github.com/Open-Dev-Society/OpenStock"]'),
     ).toBeVisible();
     // A personal project (Phu, 2026-10-22), not presented as coursework.
-    await expect(page.locator(".cs-hero-a__meta")).toContainText("Personal project");
+    await expect(page.locator(".cs-hero-a__meta")).toHaveCount(0);
     expect(await page.locator("main").innerText()).not.toMatch(/assessment|RMIT|coursework/i);
   });
 
@@ -410,7 +318,8 @@ test.describe("public projects: links, credit and real screenshots", () => {
     page,
   }) => {
     await page.goto("/work/ecom/");
-    await expect(page.locator(".cs2-rail a[href='#mirror-now']")).toBeVisible();
+    await expect(page.locator("section#mirror-now")).toBeVisible();
+    await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
     await expect(page.locator("main img")).toHaveCount(0);
     await expect(page.locator('main a[href*="github.com"]')).toHaveCount(0);
     await expect(page.locator("main")).toContainText(/the first shop built on the template/i);
@@ -522,19 +431,10 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
     await expect(page.locator("[data-video-play]")).toBeVisible();
   });
 
-  test("the cut sits right after the overview and counts as Overview in the rail", async ({
-    page,
-  }) => {
+  test("the cut sits right after the overview", async ({ page }) => {
     await page.goto(URL);
     expect(await page.evaluate(() => document.querySelector("#overview + section")?.id ?? "")).toBe(
       "video",
-    );
-    await page
-      .locator("#video h2")
-      .evaluate((h) => window.scrollBy(0, h.getBoundingClientRect().top - 140));
-    await expect(page.locator('[data-rail] a[href="#overview"]')).toHaveAttribute(
-      "aria-current",
-      "true",
     );
   });
 });

@@ -21,16 +21,26 @@ for (const width of WIDTHS) {
 }
 
 test.describe("Document OCR case study", () => {
-  test("Phu's answers: README results, solo, no old figures", async ({ page }) => {
+  test("Phu's answers: README results, Talentnet logo, no old figures", async ({ page }) => {
     await page.goto(URL);
     const head = page.locator(".cs-hero-a__meta");
-    await expect(head.locator(".org-badge")).toHaveText(/Enterprise\s*,?\s*Talentnet/);
-    await expect(head.locator(".cs-hero-a__mi")).not.toContainText("Talentnet");
-    await expect(head).toContainText("Solo");
-    // Verbatim from projects/ocr/README.md "## Result".
-    await expect(page.locator("#overview")).toContainText(
-      "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
+    await expect(head.locator(".org-logo img")).toHaveAttribute("alt", "Talentnet");
+    await expect(head.locator(".org-badge")).toHaveCount(0);
+    await expect(head.locator(".cs-hero-a__mi")).toHaveCount(0);
+    // Result figures from projects/ocr/README.md "## Result", shown as three metric cards.
+    const metrics = page.locator("#overview .cs2-metrics li");
+    await expect(metrics).toHaveCount(3);
+    await expect(metrics.nth(0)).toContainText("7");
+    await expect(metrics.nth(0)).toContainText("Templates in use");
+    await expect(metrics.nth(1)).toContainText("8,000");
+    await expect(metrics.nth(1)).toContainText("Pages processed");
+    await expect(metrics.nth(2)).toContainText("99.6%");
+    await expect(metrics.nth(2)).toContainText("Accuracy");
+    await expect(page.locator("#overview .cs2-metrics-note")).toContainText(
+      "Two months after go-live",
     );
+    await expect(page.locator("#overview .cs2-metrics-note")).toContainText("800 ms");
+    await expect(page.locator("#overview .cs2-metrics-note")).toContainText("300 hours saved");
     const text = await page.locator("main").innerText();
     for (const old of ["98%", ">90%", "90% of"])
       expect(text, `"${old}" on the page`).not.toContain(old);
@@ -84,11 +94,12 @@ test.describe("Document OCR case study", () => {
     ]);
   });
 
-  test("home selected work carries the three Talentnet badges", async ({ page }) => {
+  test("home selected work carries the Talentnet logo on the featured OCR card", async ({
+    page,
+  }) => {
     await page.goto("/");
-    for (const id of ["#work-ocr", "#work-rag", "#work-validation"])
-      await expect(page.locator(`${id} .org-badge`)).toHaveCount(1);
-    await expect(page.locator(".org-badge")).toHaveCount(3);
+    await expect(page.locator("#work-ocr .org-logo img")).toHaveAttribute("alt", "Talentnet");
+    await expect(page.locator("#work[data-selected-work] .org-badge")).toHaveCount(0);
   });
 
   test("the architecture flow opens details; the how section has no stack", async ({
@@ -103,11 +114,11 @@ test.describe("Document OCR case study", () => {
       const sheet = page.locator("dialog#cs-sheet");
       await expect(sheet).toBeVisible();
       await expect(sheet.locator("h3")).toHaveText(/Extraction worker/);
-      // The opened row stays visible between the sticky rail and the sheet.
+      // The opened row stays visible between the sticky site nav and the sheet.
       const r = await node.boundingBox();
-      const rail = await page.locator("[data-rail]").boundingBox();
+      const nav = await page.locator("header.nav").boundingBox();
       const s = await sheet.boundingBox();
-      expect(r?.y ?? 0).toBeGreaterThanOrEqual((rail?.y ?? 0) + (rail?.height ?? 0) - 1);
+      expect(r?.y ?? 0).toBeGreaterThanOrEqual((nav?.y ?? 0) + (nav?.height ?? 0) - 1);
       expect((r?.y ?? 0) + (r?.height ?? 0)).toBeLessThanOrEqual((s?.y ?? 0) + 1);
       await page.keyboard.press("Escape");
       await expect(sheet).toBeHidden();
@@ -164,19 +175,10 @@ test.describe("Document OCR case study", () => {
     await expect(page.locator(".hl-cap:visible")).toHaveCount(3);
   });
 
-  test("rail links are 44px targets and mark the section in view", async ({ page }) => {
+  test("the case study has no on-this-page rail", async ({ page }) => {
     await page.goto(URL);
-    const links = page.locator("[data-rail] a");
-    await expect(links).toHaveCount(4);
-    for (const a of await links.all())
-      expect((await a.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await page.locator("#deep-dives").scrollIntoViewIfNeeded();
-    await page
-      .locator("#deep-dives h2")
-      .evaluate((h) => window.scrollBy(0, h.getBoundingClientRect().top - 200));
-    await expect(page.locator('[data-rail] a[href="#deep-dives"]')).toHaveAttribute(
-      "aria-current",
-      "true",
+    await expect(page.locator("[data-rail], .cs2-rail, nav[aria-label='On this page']")).toHaveCount(
+      0,
     );
   });
 
@@ -232,7 +234,7 @@ test.describe("Document OCR case study", () => {
       await ctx.close();
     });
 
-  test("the first screen ends on the rail at the fold", async ({ page }) => {
+  test("the hero fits on the first screen", async ({ page }) => {
     for (const [w, h] of [
       [390, 844],
       [430, 932],
@@ -241,8 +243,8 @@ test.describe("Document OCR case study", () => {
     ] as const) {
       await page.setViewportSize({ width: w, height: h });
       await page.goto(URL);
-      const r = await page.locator("[data-rail]").boundingBox();
-      expect(Math.round((r?.y ?? 0) + (r?.height ?? 0)), `${w}×${h}`).toBeLessThanOrEqual(h);
+      const hero = await page.locator("[data-hero-a]").boundingBox();
+      expect(Math.round((hero?.y ?? 0) + (hero?.height ?? 0)), `${w}×${h}`).toBeLessThanOrEqual(h);
     }
   });
 });

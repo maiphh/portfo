@@ -1,10 +1,9 @@
 /**
  * Hero A · Title intro (components/case/CaseHeroTitle.astro, HERO-A-SPEC.md §4–5).
  * Once per load: the outline letters rise, an accent scan line sweeps once and leaves the
- * filled name behind, the headline and side copy rise, the accent mark draws, and the scan
- * "lands" as the rail's hairline. On scroll the name lifts and shrinks a little as the rail
- * takes over; scrolling back up into the hero repeats a faint line-only pass, at most once
- * every 20 s. No timed loop.
+ * filled name behind, the headline and side copy rise, and the accent mark draws. On scroll
+ * the name lifts and shrinks a little; scrolling back up into the hero repeats a faint
+ * line-only pass, at most once every 20 s. No timed loop.
  *
  * Transform/opacity/visibility only. Reduced motion and no-JS show the end state that is
  * already in the HTML (only loaded without reduced motion; gsap.matchMedia also reverts
@@ -31,7 +30,6 @@ function intro(hero: HTMLElement, delay: number): () => void {
   if (!stage || !name || !ol || !fill || !fin) return () => {};
   const sw = q<HTMLElement>(".cs-hero-a__sweep");
   const tag = sw ? q<HTMLElement>("b", sw) : null;
-  const ln = document.querySelector<HTMLElement>(".cs2-rail__ln");
   const W = () => fin.scrollWidth;
 
   const split = SplitText.create(ol, { type: "words,chars" });
@@ -80,9 +78,8 @@ function intro(hero: HTMLElement, delay: number): () => void {
   const mk = [...hero.querySelectorAll(".hx-mk")];
   if (mk.length)
     tl.fromTo(mk, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "expo.inOut" }, 1.6);
-  if (ln) tl.fromTo(ln, { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: "expo.inOut" }, 1.9);
 
-  // On scroll the name lifts and shrinks a little as the rail takes over.
+  // On scroll the name lifts and shrinks a little.
   const lift = gsap.to(name, {
     yPercent: -14,
     scale: 0.96,
@@ -120,7 +117,7 @@ function intro(hero: HTMLElement, delay: number): () => void {
     tl.kill();
     hero.removeAttribute("data-anim");
     split.revert();
-    gsap.set([stage, name, ol, fill, fin, sw, tag, ln, ...mk].filter(Boolean), {
+    gsap.set([stage, name, ol, fill, fin, sw, tag, ...mk].filter(Boolean), {
       clearProps: "all",
     });
     gsap.set(

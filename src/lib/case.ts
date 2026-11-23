@@ -5,12 +5,22 @@
  */
 import type { FlowEdge, FlowNode } from "~/lib/flow/types";
 
+/** One outcome figure: a large number with a short label beside it. */
+export interface CaseMetric {
+  value: string;
+  label: string;
+}
+
 export interface CaseOverview {
   problem: string;
   solution: string;
   /** Only results the project pack states. Omit when the pack's result is unconfirmed: the
    * column then shows only in the ?dev view, as a TODO slot. */
   outcome?: string;
+  /** When set, the outcome column shows these cards instead of the outcome paragraph. */
+  metrics?: CaseMetric[];
+  /** Line above the metric cards, e.g. "Two months after go-live". */
+  metricsNote?: string;
   /** What is still missing for the outcome (shown in ?dev only). */
   outcomeTodo?: string;
 }

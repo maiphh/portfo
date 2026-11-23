@@ -1,7 +1,6 @@
 /**
  * Case-study page behaviour (components/case/CaseStudy.astro):
  * - ?dev shows the TODO slots;
- * - the depth rail marks the section in view;
  * - highlights: "The detail" is open on wide screens and folded on narrow ones;
  * - "Full stack with versions" opens the stack table;
  * - the short cut (OCR, DVP) autoplays muted while half in view, unless reduced motion or a
@@ -23,31 +22,6 @@ const motions: Record<string, () => Promise<{ default: (root: HTMLElement) => vo
 if (page) {
   if (/[?&]dev\b/.test(location.search))
     for (const el of page.querySelectorAll<HTMLElement>("[data-dev-only]")) el.hidden = false;
-
-  // Depth rail.
-  const links = [...page.querySelectorAll<HTMLAnchorElement>("[data-rail] a")];
-  const targets = links
-    .map((a) => document.querySelector<HTMLElement>(a.hash))
-    .filter((t): t is HTMLElement => t !== null);
-  const setCurrent = (id: string) => {
-    for (const a of links) {
-      if (a.hash === `#${id}`) a.setAttribute("aria-current", "true");
-      else a.removeAttribute("aria-current");
-    }
-  };
-  // The short cut sits between Overview and the rest, and counts as Overview.
-  const cut = document.getElementById("video");
-  if (cut) targets.splice(1, 0, cut);
-  const seen = new Map<Element, boolean>();
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) seen.set(e.target, e.isIntersecting);
-      const on = targets.filter((t) => seen.get(t)).at(-1);
-      if (on) setCurrent(on === cut ? "overview" : on.id);
-    },
-    { rootMargin: "-120px 0px -55% 0px" },
-  );
-  for (const t of targets) io.observe(t);
 
   // Highlights: "The detail" is open on wide screens, where its summary leaves the tab order and
   // ignores clicks; on phones it is folded until the reader opens it.

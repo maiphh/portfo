@@ -4,12 +4,13 @@
  * name, set huge, is the hero. Without JS or with reduced motion the HTML is the end state (the
  * filled name, the headline with its accent mark). scripts/case/hero-a.ts plays the intro: the
  * outline letters rise, an accent scan line sweeps once and leaves the filled name behind, the
- * mark draws, and the line "lands" as the rail's hairline (CaseStudy.astro).
+ * mark draws. On scroll the name lifts and shrinks a little.
  */
 import type { CollectionEntry } from "astro:content";
 import Icon from "~/components/Icon.astro";
-import OrgBadge from "~/components/OrgBadge.astro";
+import OrgLogo from "~/components/OrgLogo.astro";
 import type { CaseStudyData } from "~/lib/case";
+import { isWordmark, logoForWorkOrg } from "~/lib/orgs";
 
 interface Props {
   entry: CollectionEntry<"work">;
@@ -17,6 +18,7 @@ interface Props {
 }
 const { entry, data } = Astro.props;
 const d = entry.data;
+const logo = logoForWorkOrg(d.org);
 const words = (data.hero_name ?? d.title).split(" ");
 // Fallback width when unmeasured: about 0.7em per letter of the longest word.
 const w = data.hero_w ?? Math.max(...words.map((x) => x.length)) * 0.7;
@@ -27,15 +29,13 @@ const post = mark && at >= 0 ? d.headline.slice(at + mark.length) : null;
 ---
 
 <header class="cs-hero-a" data-hero-a>
-  <p class="cs-hero-a__meta">
-    {d.org_badge && <OrgBadge label={d.org_badge} />}
-    <span class="cs-hero-a__mi">
-      {d.meta.map((m) => (
-        <span>{m}</span>
-      ))}
-      {d.period && <span>{d.period}</span>}
-    </span>
-  </p>
+  {
+    logo && (
+      <p class="cs-hero-a__meta">
+        <OrgLogo src={logo.src} name={logo.name} named wordmark={isWordmark(logo)} />
+      </p>
+    )
+  }
 
   <div class="cs-hero-a__stage" style={`--w:${w};--lines:${words.length}`}>
     <h1 id="cs-h" class="cs-hero-a__name">

@@ -829,16 +829,14 @@ sup.fn {
   background: var(--lime-tint);
   border-color: var(--lime-line);
 }
-/* The ongoing role keeps its label on one small, calm line — the "now" rail carries the date. */
-.bar.is-current .bar-copy span,
-.tl-v-item.is-current .tl-v-sub {
-  font-size: 0.78rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .bar.is-current .bar-copy b {
   font-size: 0.92rem;
+}
+.bar.is-current .bar-copy span {
+  font-size: 0.6875rem;
+}
+.tl-v-item.is-current .tl-v-sub {
+  font-size: 0.75rem;
 }
 .bar.future {
   background: repeating-linear-gradient(135deg, var(--sheet-2) 0 8px, var(--sheet) 8px 16px);
@@ -888,15 +886,16 @@ sup.fn {
   width: 28px;
   height: 28px;
 }
-/* Wordmarks keep their aspect ratio; the IELTS mark is wide, so cap it by width and never
-   let it grow into the label beside it. */
+/* Wordmarks keep their aspect ratio; wide marks (IELTS, Talentnet) cap by width. */
+.bar .org-logo--wordmark,
 .mark .org-logo--wordmark,
 .tl-v-card .org-logo--wordmark {
   flex: none;
-  width: 52px;
+  width: 72px;
   height: auto;
   overflow: hidden;
 }
+.bar .org-logo--wordmark img,
 .mark .org-logo--wordmark img,
 .tl-v-card .org-logo--wordmark img {
   display: block;
@@ -986,11 +985,11 @@ sup.fn {
   stroke: currentColor;
   stroke-width: 2;
 }
-/* Timeline grid is the wide-screen view; phones get a single vertical rail below. */
+/* Use the vertical rail when the timeline grid is too narrow for the work labels. */
 .tl-v {
   display: none;
 }
-@media (max-width: 899px) {
+@media (width < 1280px) {
   .tl {
     --lane: 0px;
   }

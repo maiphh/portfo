@@ -2,7 +2,7 @@
 /** Work and study, 2021 to 2028: a 96-month grid built from the experience collection. */
 import { getCollection } from "astro:content";
 import OrgLogo from "./OrgLogo.astro";
-import { logoForExperience } from "~/lib/orgs";
+import { isWordmark, logoForExperience } from "~/lib/orgs";
 import { TL_MONTHS, TL_YEARS, gridColumn, monthIndex, nowIndex } from "~/lib/timeline";
 
 type Lane = "work" | "study" | "award" | "qualification";
@@ -94,7 +94,9 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
                   data-tl-bar
                   {...noteAttrs(e)}
                 >
-                  {logo && <OrgLogo src={logo.src} name={logo.name} />}
+                  {logo && (
+                    <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />
+                  )}
                   <span class="bar-copy">
                     <b>{e.data.title}</b>
                     <span>{cardLabel(e.data.detail)}</span>
@@ -111,7 +113,9 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
               const logo = logoForExperience(e.id);
               return (
                 <li class="bar" style={barStyle(e.data.start, e.data.end, e.data.row)} data-tl-bar>
-                  {logo && <OrgLogo src={logo.src} name={logo.name} />}
+                  {logo && (
+                    <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />
+                  )}
                   <span class="bar-copy">
                     <b>{e.data.title}</b>
                     <span>{cardLabel(e.data.detail)}</span>
@@ -175,7 +179,7 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
                     src={logo.src}
                     name={logo.name}
                     named={e.id === "neo-league"}
-                    wordmark={e.id === "ielts"}
+                    wordmark={isWordmark(logo)}
                   />
                 )}
                 <span class="tl-v-copy">

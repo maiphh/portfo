@@ -16,9 +16,16 @@ export const ocr: CaseStudyData = {
       "Operators turn batches of PDFs and images into spreadsheet records by hand: read each page, type values into a workbook, check them again. Throughput is limited by page count and review time, and mistakes show up late.",
     solution:
       "A template-driven platform. An admin binds a workbook, a field schema, prompts and rules; a vision-language model reads each page into that schema, rules clean the fields, and operators correct them beside the source page and export Excel.",
-    // Verbatim from projects/ocr/README.md, "## Result".
+    // Verbatim from projects/ocr/README.md, "## Result". The three cards are the visual
+    // focus; the note keeps the other confirmed figures.
     outcome:
       "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
+    metricsNote: "Two months after go-live · ~800 ms per page · about 300 hours saved",
+    metrics: [
+      { value: "7", label: "Templates in use" },
+      { value: "8,000", label: "Pages processed" },
+      { value: "99.6%", label: "Accuracy" },
+    ],
   },
   highlight: {
     title: "A new document is configuration, not a new pipeline",

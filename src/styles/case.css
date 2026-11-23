@@ -43,50 +43,32 @@
   justify-content: space-between;
   gap: clamp(18px, 3vh, 36px);
   padding-block: clamp(22px, 4vh, 48px) clamp(28px, 5vh, 56px);
-  /* The rail sits at the fold: viewport − nav − the article's top padding − crumbs − rail. */
-  min-height: calc(100svh - var(--nav-h) - var(--s5) - 44px - 50px);
+  /* First screen: viewport − nav − the article's top padding − crumbs. */
+  min-height: calc(100svh - var(--nav-h) - var(--s5) - 44px);
 }
 .cs-hero-a__meta {
   max-width: none;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 14px;
-  font: 500 12px/1.4 var(--code);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
+  margin: 0 0 12px;
 }
-.cs-hero-a__meta .org-badge {
-  text-transform: none;
-  letter-spacing: 0;
+.cs-hero-a__meta .org-logo {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  background: none;
 }
-.cs-hero-a__meta .cs-hero-a__mi {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 22px;
-  overflow: hidden; /* clips the dot of the chip that starts each line */
-  min-width: 0;
+.cs-hero-a__meta .org-logo--wordmark {
+  width: auto;
+  height: 52px;
+  max-width: min(280px, 70vw);
+  padding: 0;
 }
-.cs-hero-a__mi > span {
-  position: relative;
-  white-space: nowrap;
-}
-.cs-hero-a__meta .cs-hero-a__mi > span::before {
-  content: "";
-  position: absolute;
-  left: -13px;
-  top: 50%;
-  width: 4px;
-  height: 4px;
-  margin: -2px 0 0;
-  border-radius: 50%;
-  background: var(--faint);
-}
-@media (max-width: 599px) {
-  .cs-hero-a__meta .org-badge + .cs-hero-a__mi {
-    flex-basis: 100%;
-  }
+.cs-hero-a__meta .org-logo--wordmark img {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .cs-hero-a__stage {
@@ -107,13 +89,13 @@
   color: var(--ink);
 }
 /* Two columns: the first screen should hold the whole hero, so the name is also capped by the
-   height left after the nav, crumbs, meta, headline row and rail (about 460px). */
+   height left after the nav, crumbs, logo, and headline row (about 410px). */
 @media (min-width: 900px) {
   .cs-hero-a__name {
     font-size: min(
       19rem,
       100cqw / var(--w) * 0.985,
-      (100svh - var(--nav-h) - 460px) / var(--lines) / 0.84
+      (100svh - var(--nav-h) - 410px) / var(--lines) / 0.84
     );
   }
 }
@@ -266,83 +248,6 @@ html:not(.js) .cs-hero-a__sweep {
   min-height: 44px;
 }
 
-/* ---------- depth rail ---------- */
-.cs2-rail {
-  position: sticky;
-  top: var(--nav-h);
-  z-index: 40;
-  background: rgba(20, 20, 20, 0.9);
-  backdrop-filter: blur(8px);
-  border-block: 1px solid var(--rule);
-}
-.cs2-rail ul {
-  display: flex;
-  gap: 4px clamp(14px, 3vw, 24px);
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.cs2-rail ul::-webkit-scrollbar {
-  display: none;
-}
-.cs2-rail li {
-  flex: none;
-}
-.cs2-rail a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  min-width: 44px;
-  color: var(--muted);
-  gap: 7px;
-  font-weight: 550;
-  font-size: 15px;
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-}
-.cs2-rail a:hover {
-  color: var(--ink);
-}
-.cs2-rail a[aria-current] {
-  color: var(--ink);
-  border-bottom-color: var(--acc);
-}
-.cs2-rail a:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: -2px;
-}
-
-.cs2-rail .wrap {
-  position: relative;
-}
-/* Where the hero's scan line lands (scripts/case/hero-a.ts draws it in). */
-.cs2-rail__ln {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  top: -1px;
-  height: 1px;
-  background: var(--acc);
-  transform: scaleX(0);
-  transform-origin: 0 50%;
-  pointer-events: none;
-}
-html:not(.js) .cs2-rail__ln {
-  display: none;
-}
-/* The count is decorative (aria-hidden; the link carries an sr-only " (n)"), so it may sit at
-   11px, under the 12px floor for reading text. */
-.cs2-rail__n {
-  display: inline-block;
-  padding: 3px 4px;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  font: 500 11px/1 var(--code);
-  color: var(--acc);
-}
-
 /* ---------- sections ---------- */
 .cs2-sec {
   padding: var(--s8) 0;
@@ -390,12 +295,61 @@ html:not(.js) .cs2-rail__ln {
 }
 @media (min-width: 900px) {
   .cs2-pso {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 40px;
+  }
+  .cs2-outcome {
+    grid-column: 1 / -1;
   }
 }
 .cs2-pso h3 {
   margin-bottom: var(--s3);
+}
+/* Outcome is one full-width column under Problem and Solution, with metric cards in a row. */
+.cs2-outcome {
+  min-width: 0;
+}
+.cs2-metrics-note {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.cs2-metrics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cs2-metrics li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--sheet);
+}
+.cs2-metrics__n {
+  flex: none;
+  font: 720 clamp(1.85rem, 1.2rem + 1.6vw, 2.6rem) / 1 var(--display);
+  font-variation-settings: "wdth" 108;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.cs2-metrics__l {
+  color: var(--ink-2);
+  font-size: 0.98rem;
+  line-height: 1.25;
+  max-width: 14ch;
+}
+@media (min-width: 700px) {
+  .cs2-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .cs2-todo {
   border: 1px dashed var(--faint);

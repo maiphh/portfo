@@ -14,8 +14,8 @@ export function initTimelineNotes(): void {
   let pinned = false;
 
   const place = (entry: HTMLElement) => {
-    // Phones use a fixed sheet (see global.css); the wide grid floats the card by the entry.
-    if (window.matchMedia("(max-width: 899px)").matches) {
+    // The vertical timeline uses a fixed sheet.
+    if (getComputedStyle(modal).position === "fixed") {
       modal.style.removeProperty("left");
       modal.style.removeProperty("top");
       return;
