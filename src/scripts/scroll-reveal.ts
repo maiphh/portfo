@@ -76,50 +76,53 @@ export function initSectionReveals(opts: RevealOptions = {}): () => void {
       return;
     }
 
-    const mm = gsap.matchMedia();
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const local: (() => void)[] = [];
-      for (const section of sections) {
-        const items = childrenOf(section);
-        if (!items.length) continue;
-        // Opacity (not autoAlpha): keep visibility so keyboard focus still works off-screen.
-        gsap.set(items, { opacity: 0, y });
-        const shift = () => document.dispatchEvent(new CustomEvent("portfo:content-shift"));
-        const tween = gsap.to(items, {
-          opacity: 1,
-          y: 0,
-          duration,
-          ease: "power3.out",
-          stagger,
-          clearProps: "transform",
-          // Mascot / layout listeners: transforms do not fire ResizeObserver.
-          onComplete: shift,
-          scrollTrigger: {
-            trigger: section,
-            start,
-            once: true,
-            onEnter: () => {
-              items.forEach((el) => el.setAttribute("data-reveal-done", ""));
-              shift();
+    // Failsafe only when GSAP/ScrollTrigger cannot initialise — never on a timer
+    // while ScrollTrigger is working (that would force-show off-screen sections).
+    try {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const local: (() => void)[] = [];
+        for (const section of sections) {
+          const items = childrenOf(section);
+          if (!items.length) continue;
+          // Opacity (not autoAlpha): keep visibility so keyboard focus still works off-screen.
+          gsap.set(items, { opacity: 0, y });
+          const shift = () => document.dispatchEvent(new CustomEvent("portfo:content-shift"));
+          const tween = gsap.to(items, {
+            opacity: 1,
+            y: 0,
+            duration,
+            ease: "power3.out",
+            stagger,
+            clearProps: "transform",
+            // Mascot / layout listeners: transforms do not fire ResizeObserver.
+            onComplete: shift,
+            scrollTrigger: {
+              trigger: section,
+              start,
+              once: true,
+              onEnter: () => {
+                items.forEach((el) => el.setAttribute("data-reveal-done", ""));
+                shift();
+              },
             },
-          },
-        });
-        local.push(() => {
-          tween.scrollTrigger?.kill();
-          tween.kill();
-          items.forEach((el) => {
-            el.setAttribute("data-reveal-done", "");
-            gsap.set(el, { clearProps: "opacity,transform" });
           });
-        });
-      }
-      // Failsafe: never leave content hidden if ScrollTrigger never fires.
-      const failsafe = window.setTimeout(showAll, 4000);
-      local.push(() => clearTimeout(failsafe));
-      return () => local.forEach((f) => f());
-    });
-    cleanups.push(() => mm.revert());
-    if (document.fonts?.ready) void document.fonts.ready.then(() => ScrollTrigger.refresh());
+          local.push(() => {
+            tween.scrollTrigger?.kill();
+            tween.kill();
+            items.forEach((el) => {
+              el.setAttribute("data-reveal-done", "");
+              gsap.set(el, { clearProps: "opacity,transform" });
+            });
+          });
+        }
+        return () => local.forEach((f) => f());
+      });
+      cleanups.push(() => mm.revert());
+      if (document.fonts?.ready) void document.fonts.ready.then(() => ScrollTrigger.refresh());
+    } catch {
+      showAll();
+    }
   };
 
   if (delay > 0) timer = window.setTimeout(run, delay * 1000);
