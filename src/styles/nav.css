@@ -5,15 +5,31 @@
   border-bottom: 1px solid var(--rule);
   background: rgb(20 20 20 / 86%);
   backdrop-filter: saturate(1.2) blur(10px);
+  will-change: top;
 }
 
 .nav[data-nav-ready] {
   position: fixed;
   inset-inline: 0;
+  top: 0;
 }
 
 .nav[data-nav-ready]:not([data-nav-visible]) {
   visibility: hidden;
+}
+
+.nav[data-nav-away] {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    will-change: auto;
+  }
+  .nav[data-nav-away] {
+    pointer-events: auto;
+    top: 0 !important;
+  }
 }
 
 .nav-inner {
