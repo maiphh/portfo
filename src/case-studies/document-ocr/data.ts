@@ -19,6 +19,13 @@ export const ocr: CaseStudyData = {
     // Verbatim from projects/ocr/README.md, "## Result".
     outcome:
       "Two months after go-live: 7 templates in use. 8,000 pages processed. Average processing time about 800 ms per page. Accuracy 99.6%. About 300 hours saved.",
+    metricsNote:
+      "Two months after go-live. Average processing time about 800 ms per page. About 300 hours saved.",
+    metrics: [
+      { value: "7", label: "Templates in use" },
+      { value: "8,000", label: "Pages processed" },
+      { value: "99.6%", label: "Accuracy" },
+    ],
   },
   highlight: {
     title: "A new document is configuration, not a new pipeline",
