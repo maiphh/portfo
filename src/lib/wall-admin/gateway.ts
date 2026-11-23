@@ -140,9 +140,7 @@ export async function publicSubmission(context: APIContext) {
       visitorName.length > 100 ||
       (!photo && (!title || !body)) ||
       (photo && alt.length > 500) ||
-      (folderHint &&
-        folderHint !== "root" &&
-        !/^[A-Za-z0-9_-]{1,100}$/.test(folderHint))
+      (folderHint && folderHint !== "root" && !/^[A-Za-z0-9_-]{1,100}$/.test(folderHint))
     )
       throw new GatewayError(422, "Check your title, note, and image description.");
     const bytes = photo ? Buffer.from(await photo.arrayBuffer()) : null;

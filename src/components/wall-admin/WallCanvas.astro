@@ -28,24 +28,22 @@ const { hosted = false } = Astro.props;
     </div>
   </div>
   <div class="wall-actions" id="wall-actions" hidden={!hosted}>
-    {
-      hosted && (
-        <>
-          <button id="add-folder" type="button">
-            + Folder
-          </button>
-          <button id="add-note" type="button">
-            + Note
-          </button>
-          <button id="add-photo" type="button">
-            + Photos
-          </button>
-          <button id="add-folder-upload" type="button">
-            + Upload folder
-          </button>
-        </>
-      )
-    }
+    {hosted && (
+      <>
+        <button id="add-folder" type="button">
+          + Folder
+        </button>
+        <button id="add-note" type="button">
+          + Note
+        </button>
+        <button id="add-photo" type="button">
+          + Photos
+        </button>
+        <button id="add-folder-upload" type="button">
+          + Upload folder
+        </button>
+      </>
+    )}
   </div>
   <div id="wall-state" class="wall-state" role="status" hidden></div>
   <div class="wall-body">

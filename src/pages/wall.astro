@@ -52,7 +52,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         </select>
         <label for="contribution-name">Your name (optional)</label>
         <input id="contribution-name" name="visitorName" maxlength="100" autocomplete="nickname" />
-        <label id="contribution-title-label" for="contribution-title">Title</label>
+        <label id="contribution-title-label" for="contribution-title">
+          Title
+        </label>
         <input id="contribution-title" name="title" maxlength="100" required />
         <label id="contribution-body-label" for="contribution-body">
           Note

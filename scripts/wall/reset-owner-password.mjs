@@ -19,10 +19,7 @@ import { promisify } from "node:util";
 
 const scryptAsync = promisify(scrypt);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const defaultState = join(
-  root,
-  "workers/portfo/.wrangler/state/v3/d1/miniflare-D1DatabaseObject",
-);
+const defaultState = join(root, "workers/portfo/.wrangler/state/v3/d1/miniflare-D1DatabaseObject");
 
 function usage(message) {
   if (message) console.error(message);
@@ -92,7 +89,9 @@ SELECT version AS credential_version FROM admin_credentials WHERE singleton = 1;
 try {
   const out = execFileSync("sqlite3", [dbPath, sql], { encoding: "utf8" }).trim();
   if (!out) {
-    console.error("No admin_credentials row found. Sign in once with ADMIN_BOOTSTRAP_PASSWORD first, or insert a row.");
+    console.error(
+      "No admin_credentials row found. Sign in once with ADMIN_BOOTSTRAP_PASSWORD first, or insert a row.",
+    );
     process.exit(1);
   }
   console.log(`Owner password reset. credential version=${out}`);
