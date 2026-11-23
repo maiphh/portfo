@@ -1,64 +1,93 @@
 ---
 import { site } from "~/lib/site";
+import "~/styles/nav.css";
 
 interface Props {
-  /** "" on the home page (in-page anchors), "/" elsewhere. */
   base?: "" | "/";
 }
+
 const { base = "" } = Astro.props;
 const h = (id: string) => `${base}#${id}`;
-const links = [
-  { id: "timeline", label: "Experience" },
-  { id: "work", label: "Work" },
-  { id: "activity", label: "Activity" },
-  { id: "how", label: "How it works" },
+const sections = [
+  { id: "timeline", label: "Experience", description: "Where I’ve worked and studied." },
+  { id: "work", label: "Work", description: "Selected projects and case studies." },
+  { id: "activity", label: "Activity", description: "What I’ve been building on GitHub." },
+  { id: "how", label: "How it works", description: "A look at how I built this portfolio." },
 ];
-const menu = [
-  { id: "timeline", label: "Experience" },
-  { id: "work", label: "Work" },
-  { id: "activity", label: "Activity" },
-  { id: "how", label: "How it works" },
-  { id: "contact", label: "Contact" },
+const previews = [
+  {
+    label: "Wall",
+    title: "Memory Wall",
+    description: "Find out more about Phu through photos and notes.",
+  },
+  {
+    label: "BMC",
+    title: "Buy me Claude",
+    description: "Support my work with a donation.",
+  },
 ];
 ---
 
-<header class="nav">
-  <div class="wrap">
+<header class="nav" data-home-nav={!base ? "" : undefined}>
+  <nav class="wrap nav-inner" aria-label="Primary">
     <a class="wordmark" href={base ? "/" : "#top"}>
       {site.name}
     </a>
-    <ul>
-      {links.map((l) => (
-        <li>
-          <a href={h(l.id)}>{l.label}</a>
-        </li>
-      ))}
-    </ul>
-    <div class="nav-end">
-      <a class="btn btn-lime" href={h("contact")}>
-        Get in touch
-      </a>
-      <details class="menu">
-        <summary>Menu</summary>
-        <ul>
-          {menu.map((l) => (
+    {[false, true].map((mobile) => {
+      const Group = mobile ? "details" : "div";
+      const disclosureGroup = mobile ? "mobile-nav" : "desktop-nav";
+      return (
+        <Group class:list={["nav-group", mobile && "nav-mobile"]}>
+          {mobile && <summary class="nav-menu-toggle">Menu</summary>}
+          <ul class="nav-items">
             <li>
-              <a href={h(l.id)}>{l.label}</a>
+              <details class="nav-item" name={disclosureGroup}>
+                <summary>Me</summary>
+                <div class="nav-panel nav-me">
+                  <ul class="nav-grid">
+                    {sections.map(({ id, label, description }) => (
+                      <li>
+                        <a href={h(id)} data-nav-section={id}>
+                          <span class="nav-title">{label}</span>
+                          <span class="nav-description">{description}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
             </li>
-          ))}
-          <li>
-            <button type="button" class="menu-chat" data-chat-open>
-              Ask my assistant
-            </button>
-          </li>
-        </ul>
-      </details>
-    </div>
-  </div>
+            {previews.map(({ label, title, description }) => (
+              <li>
+                <details class="nav-item" name={disclosureGroup}>
+                  <summary>{label}</summary>
+                  <div class="nav-panel nav-preview">
+                    <span class="nav-title">{title}</span>
+                    <p class="nav-description">{description}</p>
+                    <span class="nav-status">Coming soon</span>
+                  </div>
+                </details>
+              </li>
+            ))}
+            {mobile && (
+              <li>
+                <button type="button" class="menu-chat" data-chat-open>
+                  Ask my assistant
+                </button>
+              </li>
+            )}
+          </ul>
+        </Group>
+      );
+    })}
+    <a class="btn btn-lime nav-contact" href={h("contact")} data-nav-section="contact">
+      Get in Touch
+    </a>
+  </nav>
   <span class="scanbar" aria-hidden="true" data-scanbar></span>
 </header>
 
 <script>
-  import { initMenu } from "~/scripts/nav";
-  initMenu();
+  import { initNav } from "~/scripts/nav";
+  initNav();
 </script>

@@ -4,11 +4,9 @@
   isolation: isolate;
   display: flex;
   align-items: center;
-  /* Start under the sticky nav so the section itself fills the whole viewport. */
-  margin-top: calc(-1 * var(--nav-h));
   min-height: 100vh;
   min-height: 100svh;
-  padding-block: calc(var(--nav-h) + clamp(24px, 4svh, 64px)) clamp(24px, 4svh, 56px);
+  padding-block: clamp(24px, 4svh, 64px) clamp(24px, 4svh, 56px);
   overflow: clip;
 }
 .hero-glow {
@@ -83,8 +81,9 @@
   z-index: 1;
   /* 88 cols x 62 rows at a 0.6 monospace cell ratio. The svh term keeps the
      whole hero (overline, art, role/actions) inside the first screen. */
-  width: min(100%, 520px, calc((100svh - 400px) * 0.85));
+  width: min(100%, 570px, max(210px, calc((100svh - 350px) * 0.8516)));
   aspect-ratio: 0.8516;
+  container-type: inline-size;
 }
 .ascii-fallback,
 .ascii-canvas {
@@ -100,7 +99,7 @@
   overflow: hidden;
   margin: 0;
   color: var(--ink-2);
-  font: 400 clamp(4px, 0.78vw, 9px) / 1 var(--code);
+  font: 400 1.85cqw / 1 var(--code);
   white-space: pre;
 }
 .ascii-canvas {
@@ -211,6 +210,7 @@
 }
 .hero-actions .btn {
   min-height: 48px;
+  white-space: nowrap;
 }
 
 .hero-foot {
@@ -221,6 +221,10 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
+  text-decoration: none;
+}
+.hero-foot:hover {
+  color: var(--ink);
 }
 .hero-foot-rule {
   flex: 1;
@@ -231,7 +235,7 @@
 /* Desktop: role | full-height portrait | actions. */
 @media (min-width: 1000px) {
   .hero-main {
-    --art-h: calc(100svh - var(--nav-h) - 170px);
+    --art-h: max(280px, calc(100svh - 160px));
     --frame-h: calc(var(--art-h) - 48px);
     height: var(--art-h);
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -279,9 +283,39 @@
     justify-content: center;
   }
 }
+
+/* Narrow desktop column: shrink padding/type/icons so labels stay on one line. */
+@media (min-width: 1000px) and (max-width: 1180px) {
+  .hero-actions .btn {
+    gap: 8px;
+    padding-inline: 12px;
+    font-size: 0.9rem;
+  }
+  .hero-actions .btn .icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1080px) {
+  .hero-actions .btn {
+    gap: 6px;
+    padding-inline: 10px;
+    font-size: 0.82rem;
+  }
+  .hero-actions .btn .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
 @media (max-width: 600px) {
+  .hero {
+    padding-block: 16px;
+  }
+  .hero-wrap {
+    gap: 12px;
+  }
   .ascii-frame {
-    width: min(100%, 340px);
+    width: min(100%, 380px, max(210px, calc((100svh - 350px) * 0.8516)));
   }
   .hero-name {
     font-size: clamp(3.5rem, 18vw, 7rem);

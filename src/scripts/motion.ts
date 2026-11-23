@@ -31,23 +31,6 @@ function countUp(el: HTMLElement) {
 export function initMotion() {
   gsap.defaults({ ease: "expo.out", duration: 0.9 });
 
-  // Navigation feedback (not decoration): always on, created top-to-bottom.
-  const navLinks = $$<HTMLAnchorElement>(".nav .wrap > ul a");
-  $$("main > section[id]").forEach((sec) => {
-    ScrollTrigger.create({
-      trigger: sec,
-      start: "top 45%",
-      end: "bottom 45%",
-      refreshPriority: -1,
-      onToggle: (self) => {
-        if (!self.isActive) return;
-        navLinks.forEach((a) => {
-          if (a.getAttribute("href") === "#" + sec.id) a.setAttribute("aria-current", "true");
-          else a.removeAttribute("aria-current");
-        });
-      },
-    });
-  });
   const setBar = gsap.quickSetter("[data-scanbar]", "scaleX");
   ScrollTrigger.create({
     start: 0,

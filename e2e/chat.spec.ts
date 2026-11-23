@@ -131,13 +131,15 @@ test("friendly errors: rate limit, daily cap and network, with retry where it he
 });
 
 test("the mobile menu and footer open the chat too", async ({ page, isMobile }) => {
-  await page.goto("/");
+  await page.goto(isMobile ? "/#timeline" : "/");
   if (isMobile) {
-    await page.locator(".menu summary").click();
-    await page.getByRole("button", { name: "Ask my assistant" }).first().click();
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    const menu = nav.getByText("Menu", { exact: true });
+    await menu.click();
+    await nav.getByRole("button", { name: "Ask my assistant" }).click();
     await expect(dialog(page)).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.locator(".menu summary")).toBeFocused();
+    await expect(menu).toBeFocused();
   } else {
     await page.locator("footer").getByRole("button", { name: "Ask my assistant" }).click();
     await expect(dialog(page)).toBeVisible();

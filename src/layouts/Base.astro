@@ -81,8 +81,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <a class="skip" href="#main">
       Skip to content
     </a>
-    <Nav base={base} />
+    {base && <Nav base={base} />}
     <main id="main">
+      <slot name="hero" />
+      {!base && <Nav base={base} />}
       <slot />
     </main>
     <Footer base={base} credit={credit} />
