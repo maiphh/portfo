@@ -38,6 +38,7 @@ export interface Env {
   DAILY_MESSAGE_CAP?: string;
 
   // Secrets
+  WALL_ADMIN_SERVICE_KEY?: string;
   SESSION_SIGNING_KEY?: string;
   VISITOR_HASH_SALT?: string;
   RESEND_API_KEY?: string;

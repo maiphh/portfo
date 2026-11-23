@@ -1,0 +1,46 @@
+---
+import Portal from "~/components/wall-admin/Portal.astro";
+import WallTabs from "~/components/wall-admin/WallTabs.astro";
+import { ownerRedirect, ownerSession, privatePage } from "~/lib/wall-admin/server";
+
+export const prerender = false;
+privatePage(Astro);
+const session = await ownerSession(Astro);
+if (session === "signed-out") return ownerRedirect("/login");
+if (session === "unavailable") Astro.response.status = 503;
+---
+
+<Portal title="Wall submissions" area="wall">
+  <section class="owner-heading">
+    <h1>Wall</h1>
+    <WallTabs view="submissions" />
+  </section>
+  {session === "unavailable" ? (
+    <p>
+      The owner service is temporarily unavailable. <a href="/admin/wall/submissions">Try again</a>
+    </p>
+  ) : (
+    <section class="owner-submissions" aria-labelledby="submissions-heading">
+      <h2 id="submissions-heading">Submissions</h2>
+      <label for="submission-status">Show</label>
+      <select id="submission-status">
+        <option value="pending">Pending</option>
+        <option value="accepted">Accepted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <p id="submission-feedback" role="status">
+        Loading submissions…
+      </p>
+      <button type="button" id="reload-submissions" hidden>
+        Reload submissions
+      </button>
+      <div id="submission-list"></div>
+      <button type="button" id="more-submissions" hidden>
+        Load more
+      </button>
+    </section>
+  )}
+  <script>
+    import "~/scripts/wall-moderation";
+  </script>
+</Portal>

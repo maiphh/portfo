@@ -3,7 +3,7 @@ import "@fontsource-variable/familjen-grotesk";
 import "@fontsource-variable/hubot-sans/wdth.css";
 import "@fontsource-variable/jetbrains-mono";
 import "~/styles/global.css";
-import "~/styles/wall.css";
+import WallCanvas from "~/components/wall-admin/WallCanvas.astro";
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -21,78 +21,56 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body class="wall-page">
-    <main class="wall-app" id="wall-app" aria-label="Personal wall" data-index-open="false">
-      <div class="wall-toolbar">
-        <button id="index-toggle" type="button" aria-expanded="false" aria-controls="wall-index">
-          <span aria-hidden="true">☰</span> Index
-        </button>
-        <nav id="wall-crumbs" aria-label="Folder breadcrumb"></nav>
-        <div class="wall-tools">
-          <button id="expand-all" type="button" aria-pressed="false">
-            Expand all
-          </button>
-          <button id="edit-toggle" type="button" aria-pressed="false">
-            Edit locally
-          </button>
-        </div>
-      </div>
-      <div class="wall-actions" id="wall-actions" hidden>
-        <span>Changes stay in this browser.</span>
-        <button id="add-folder" type="button">
-          + Folder
-        </button>
-        <button id="add-note" type="button">
-          + Note
-        </button>
-        <button id="add-photo" type="button">
-          + Photo
-        </button>
-        <button id="export-wall" type="button">
-          Export draft
-        </button>
-        <button id="reset-wall" type="button">
-          Reset samples
-        </button>
-      </div>
-      <div id="wall-state" class="wall-state" role="status" hidden></div>
-      <div class="wall-body">
-        <aside class="wall-sidebar" id="wall-index" aria-label="Folder index" hidden>
-          <div id="wall-tree" class="wall-tree"></div>
-        </aside>
-        <div
-          class="wall-canvas"
-          id="wall-canvas"
-          tabindex="0"
-          aria-label="Memory canvas. Use arrow keys to pan and plus or minus to zoom."
-        >
-          <div class="wall-world" id="wall-world"></div>
-          <div class="wall-zoom">
-            <button id="zoom-out" type="button" aria-label="Zoom out">
-              −
-            </button>
-            <span id="zoom-level">100%</span>
-            <button id="zoom-in" type="button" aria-label="Zoom in">
-              +
-            </button>
-            <button id="zoom-fit" type="button" aria-label="Fit in view">
-              Fit
-            </button>
-          </div>
-        </div>
-      </div>
-      <noscript>
-        <p class="wall-noscript">Enable JavaScript to browse the wall.</p>
-      </noscript>
+    <main>
+      <WallCanvas />
     </main>
-    <dialog id="wall-detail" class="wall-dialog" aria-labelledby="wall-detail-title">
-      <form method="dialog">
-        <button class="wall-close" aria-label="Close detail">
-          ×
-        </button>
+    <dialog id="wall-contribution" class="wall-editor" aria-labelledby="contribute-title">
+      <form>
+        <h2 id="contribute-title">Contribute to the wall</h2>
+        <p id="contribution-folder-hint" class="wall-contribute-hint"></p>
+        <input id="contribution-folder" name="folderHint" type="hidden" value="root" />
+        <label for="contribution-kind">Contribution</label>
+        <select id="contribution-kind">
+          <option value="note">Note</option>
+          <option value="photo">Photos</option>
+        </select>
+        <label for="contribution-name">Your name (optional)</label>
+        <input id="contribution-name" name="visitorName" maxlength="100" autocomplete="nickname" />
+        <label id="contribution-title-label" for="contribution-title">Title</label>
+        <input id="contribution-title" name="title" maxlength="100" required />
+        <label id="contribution-body-label" for="contribution-body">
+          Note
+        </label>
+        <textarea id="contribution-body" name="body" maxlength="5000" required></textarea>
+        <div id="contribution-image-fields" hidden>
+          <label for="contribution-photo">
+            Photos (JPEG, PNG, or WebP, up to 4 MB each, 10 max)
+          </label>
+          <input
+            id="contribution-photo"
+            name="photo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            disabled
+          />
+          <label for="contribution-alt">Image description (optional)</label>
+          <input id="contribution-alt" name="alt" maxlength="500" disabled />
+          <p class="wall-contribute-hint">
+            Photos go into the folder you are viewing. Title is optional for photos.
+          </p>
+        </div>
+        <p id="contribution-status" role="status"></p>
+        <div class="wall-editor-actions">
+          <button id="contribution-close" type="button">
+            Close
+          </button>
+          <button type="submit">Submit for review</button>
+        </div>
       </form>
-      <div id="wall-detail-content"></div>
     </dialog>
-    <dialog id="wall-editor" class="wall-editor" aria-labelledby="wall-editor-title"></dialog>
-    <script src="../scripts/wall.ts"></script>
+    <script>
+      import "~/scripts/wall-contribution";
+    </script>
   </body>
 </html>

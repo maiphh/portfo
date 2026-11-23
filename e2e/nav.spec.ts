@@ -30,7 +30,7 @@ test("the home nav follows the hero boundary and current section", async ({ page
   await expect(nav).toBeHidden();
 });
 
-test("Wall and BMC have previews with no live destination before launch", async ({
+test("Wall opens /wall from its preview panel; BMC stays coming soon", async ({
   page,
   isMobile,
 }) => {
@@ -42,20 +42,31 @@ test("Wall and BMC have previews with no live destination before launch", async 
     ? nav.locator(".nav-mobile")
     : nav.locator(".nav-group:not(.nav-mobile)");
 
-  for (const [label, title] of [
-    ["Wall", "Memory Wall"],
-    ["BMC", "Buy me Claude"],
-  ] as const) {
-    const toggle = controls.getByText(label, { exact: true });
-    if (isMobile) await toggle.tap();
-    else await toggle.hover();
-    const panel = toggle.locator("..").locator(".nav-panel");
-    await expect(panel.getByText(title, { exact: true })).toBeVisible();
-    await expect(panel.getByText("Coming soon")).toBeVisible();
-    await expect(panel.getByRole("link")).toHaveCount(0);
-    if (!isMobile) await panel.hover();
-    await expect(panel).toBeVisible();
-  }
+  const wall = controls.getByText("Wall", { exact: true });
+  if (isMobile) await wall.tap();
+  else await wall.hover();
+  const wallPanel = wall.locator("..").locator(".nav-panel");
+  await expect(wallPanel.getByText("Memory Wall", { exact: true })).toBeVisible();
+  await expect(wallPanel.getByRole("link", { name: "Open wall" })).toHaveAttribute(
+    "href",
+    "/wall",
+  );
+  await wallPanel.getByRole("link", { name: "Open wall" }).click();
+  await expect(page).toHaveURL(/\/wall\/?$/);
+  await expect(page.getByRole("region", { name: "Personal wall" })).toBeVisible();
+
+  await page.goto("/#work");
+  await expect(nav).toBeVisible();
+  if (isMobile) await nav.getByText("Menu", { exact: true }).tap();
+  const bmc = controls.getByText("BMC", { exact: true });
+  if (isMobile) await bmc.tap();
+  else await bmc.hover();
+  const bmcPanel = bmc.locator("..").locator(".nav-panel");
+  await expect(bmcPanel.getByText("Buy me Claude", { exact: true })).toBeVisible();
+  await expect(bmcPanel.getByText("Coming soon")).toBeVisible();
+  await expect(bmcPanel.getByRole("link")).toHaveCount(0);
+  if (!isMobile) await bmcPanel.hover();
+  await expect(bmcPanel).toBeVisible();
 });
 
 test("case studies show the nav on arrival and support keyboard disclosure", async ({

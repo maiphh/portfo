@@ -19,13 +19,14 @@ const previews = [
     label: "Wall",
     title: "Memory Wall",
     description: "Find out more about Phu through photos and notes.",
+    href: "/wall",
   },
   {
     label: "BMC",
     title: "Buy me Claude",
     description: "Support my work with a donation.",
   },
-];
+] as const;
 ---
 
 <header class="nav" data-home-nav={!base ? "" : undefined}>
@@ -57,14 +58,20 @@ const previews = [
                 </div>
               </details>
             </li>
-            {previews.map(({ label, title, description }) => (
+            {previews.map((preview) => (
               <li>
                 <details class="nav-item" name={disclosureGroup}>
-                  <summary>{label}</summary>
+                  <summary>{preview.label}</summary>
                   <div class="nav-panel nav-preview">
-                    <span class="nav-title">{title}</span>
-                    <p class="nav-description">{description}</p>
-                    <span class="nav-status">Coming soon</span>
+                    <span class="nav-title">{preview.title}</span>
+                    <p class="nav-description">{preview.description}</p>
+                    {"href" in preview ? (
+                      <a class="nav-preview-link" href={preview.href}>
+                        Open wall
+                      </a>
+                    ) : (
+                      <span class="nav-status">Coming soon</span>
+                    )}
                   </div>
                 </details>
               </li>

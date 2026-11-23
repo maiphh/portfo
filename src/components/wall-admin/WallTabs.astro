@@ -1,0 +1,12 @@
+---
+const { view } = Astro.props;
+---
+
+<nav class="owner-tabs" aria-label="Wall">
+  <a href="/admin/wall" aria-current={view === "editor" ? "page" : undefined}>
+    Editor
+  </a>
+  <a href="/admin/wall/submissions" aria-current={view === "submissions" ? "page" : undefined}>
+    Submissions
+  </a>
+</nav>

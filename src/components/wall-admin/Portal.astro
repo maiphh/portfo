@@ -1,0 +1,52 @@
+---
+import "@fontsource-variable/familjen-grotesk";
+import "@fontsource-variable/hubot-sans/wdth.css";
+import "@fontsource-variable/jetbrains-mono";
+import "~/styles/global.css";
+import "~/styles/wall-admin.css";
+
+interface Props {
+  title: string;
+  area?: "wall" | "password";
+}
+const { title, area } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="dark" />
+    <title>{title} — Owner portal</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class:list={["owner-page", { "owner-page--login": !area }]}>
+    {area && (
+      <aside class="owner-sidebar">
+        <a class="owner-brand" href="/admin">
+          Owner portal
+        </a>
+        <nav aria-label="Owner portal">
+          <a href="/admin/wall" aria-current={area === "wall" ? "page" : undefined}>
+            Wall
+          </a>
+          <a href="/admin/password" aria-current={area === "password" ? "page" : undefined}>
+            Change password
+          </a>
+        </nav>
+        <button type="button" data-sign-out>
+          Sign out
+        </button>
+        <p data-sign-out-status role="status"></p>
+      </aside>
+    )}
+    <main class="owner-main">
+      <slot />
+    </main>
+    <script>
+      import "~/scripts/wall-owner-account";
+    </script>
+  </body>
+</html>

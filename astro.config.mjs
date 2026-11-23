@@ -22,7 +22,12 @@ export default defineConfig({
   integrations: [
     mdx(),
     // Retired case-study URLs (pages/work/craftland, mirror-now) only forward the browser.
-    sitemap({ filter: (page) => !/\/work\/(craftland|mirror-now)\/?$/.test(page) }),
+    sitemap({
+      filter: (page) =>
+        !/\/(?:login|admin(?:\/.*)?|work\/(?:craftland|mirror-now))\/?$/.test(
+          new URL(page).pathname,
+        ),
+    }),
   ],
   trailingSlash: "ignore",
   prefetch: { prefetchAll: false, defaultStrategy: "hover" },

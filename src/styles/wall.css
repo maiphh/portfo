@@ -410,10 +410,14 @@
   min-height: 120px;
   resize: vertical;
 }
-.wall-editor p {
+.wall-editor p,
+.wall-contribute-hint {
   color: var(--muted);
   font-size: 13px;
   margin-top: 12px;
+}
+.wall-contribute-hint:empty {
+  display: none;
 }
 .wall-editor-actions {
   display: flex;
@@ -540,4 +544,15 @@
   border: 0;
   text-decoration: underline;
   cursor: pointer;
+}
+
+#contribution-image-fields:not([hidden]) {
+  display: contents;
+}
+
+.wall-coordinates {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
 }

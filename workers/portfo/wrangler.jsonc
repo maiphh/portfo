@@ -46,7 +46,8 @@
   "triggers": { "crons": ["17 */6 * * *"] },
 
   "vars": {
-    "ALLOWED_ORIGINS": "http://localhost:4321",
+    // Astro may be opened as localhost or [::1] on the same machine.
+    "ALLOWED_ORIGINS": "http://localhost:4321,http://[::1]:4321",
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "DAILY_MESSAGE_CAP": "50",
