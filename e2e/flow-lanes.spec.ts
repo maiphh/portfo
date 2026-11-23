@@ -419,8 +419,9 @@ test.describe("a dragged mascot on a phone-width diagram", () => {
       const flow = page.locator('[data-flow="cs"]');
       for (const at of ["start", "center", "end"] as const) {
         await flow.evaluate((el, block) => el.scrollIntoView({ block }), at);
-        await page.waitForTimeout(700);
-        expect(await onCard(page, "cs"), at).toBeNull();
+        // Section reveals slide content for ~0.6–0.9s; the mascot rechecks when they
+        // finish. Poll so we assert the settled layout, not a mid-tween frame.
+        await expect.poll(() => onCard(page, "cs"), { timeout: 2500, message: at }).toBeNull();
       }
       // Off the card (page top): the mascot is back in a corner and its tooltip fits.
       await page.evaluate(() => scrollTo(0, 0));

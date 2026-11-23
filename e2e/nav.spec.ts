@@ -44,10 +44,7 @@ test("Wall and BMC open from their preview panels", async ({ page, isMobile }) =
   else await wall.hover();
   const wallPanel = wall.locator("..").locator(".nav-panel");
   await expect(wallPanel.getByText("Memory Wall", { exact: true })).toBeVisible();
-  await expect(wallPanel.getByRole("link", { name: "Open wall" })).toHaveAttribute(
-    "href",
-    "/wall",
-  );
+  await expect(wallPanel.getByRole("link", { name: "Open wall" })).toHaveAttribute("href", "/wall");
   await wallPanel.getByRole("link", { name: "Open wall" }).click();
   await expect(page).toHaveURL(/\/wall\/?$/);
   await expect(page.getByRole("region", { name: "Personal wall" })).toBeVisible();

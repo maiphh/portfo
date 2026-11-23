@@ -103,10 +103,7 @@ for (const p of PAGES) {
       await expect(page.locator(".cs-sheet")).toHaveCount(0);
       await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
       if (p.logo) {
-        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute(
-          "alt",
-          p.logo,
-        );
+        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute("alt", p.logo);
       } else {
         await expect(page.locator(".cs-hero-a__meta")).toHaveCount(0);
       }
@@ -197,10 +194,7 @@ test.describe("Hero A", () => {
       await expect(page.locator(".cs-hero-a__line")).toHaveCount(0);
       await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
       if (h.logo) {
-        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute(
-          "alt",
-          h.logo,
-        );
+        await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute("alt", h.logo);
       } else {
         await expect(page.locator(".cs-hero-a__meta")).toHaveCount(0);
       }
@@ -247,10 +241,16 @@ test.describe("Hero A", () => {
     // Mid-intro the outline is split into letters and shown.
     await expect(page.locator(".cs-hero-a__ol")).toHaveCSS("visibility", "visible");
     await expect.poll(() => page.locator(".cs-hero-a__ol div").count()).toBeGreaterThan(0);
-    // Then: the filled name at rest.
+    // Then: the filled name at rest (headline slogan removed; settle matches AT_REST).
     await expect
       .poll(() => page.evaluate(heroState), { timeout: 8000 })
-      .toMatchObject({ fill: "none", fillIn: "none", outline: "hidden", sweep: true, line: "1" });
+      .toMatchObject({
+        fill: "none",
+        fillIn: "none",
+        outline: "hidden",
+        sweep: true,
+        noLine: true,
+      });
   });
 });
 
@@ -318,7 +318,11 @@ test.describe("public projects: links, credit and real screenshots", () => {
     await page.goto("/work/ecom/");
     await expect(page.locator("section#mirror-now")).toBeVisible();
     await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
-    await expect(page.locator("main img")).toHaveCount(0);
+    // Tech stack skill marks are the only <img>s; no product screenshots (private repos).
+    const srcs = await page
+      .locator("main img")
+      .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
+    expect(srcs.every((s) => s?.startsWith("/icons/skills/"))).toBe(true);
     await expect(page.locator('main a[href*="github.com"]')).toHaveCount(0);
     await expect(page.locator("main")).toContainText(/the first shop built on the template/i);
   });
@@ -330,7 +334,13 @@ test.describe("public projects: links, credit and real screenshots", () => {
     const srcs = await page
       .locator("main img")
       .evaluateAll((im) => im.map((i) => i.getAttribute("src")).sort());
-    expect(srcs).toEqual(["form", "letter"].map((n) => `/work/poet/${n}.webp`));
+    // Skill marks from the tech stack plus the two vetted captures.
+    expect(srcs.filter((s) => s?.startsWith("/work/poet/"))).toEqual(
+      ["form", "letter"].map((n) => `/work/poet/${n}.webp`),
+    );
+    expect(
+      srcs.filter((s) => !s?.startsWith("/icons/skills/") && !s?.startsWith("/work/poet/")),
+    ).toEqual([]);
   });
 
   for (const slug of ["openportfo", "poet"])

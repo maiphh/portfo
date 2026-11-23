@@ -4,7 +4,14 @@ for (const width of [320, 390, 414, 768, 1024, 1440]) {
   for (const path of ["/", "/work/document-ocr/"]) {
     test(`wordmark is a usable target at ${width}px on ${path}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
+      // Reduced motion: no hide-on-scroll / appear tween fighting the hit target.
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(path);
+      // Home nav stays visibility:hidden above the hero until past it.
+      if (path === "/") {
+        await page.locator("#work").scrollIntoViewIfNeeded();
+        await expect(page.locator("header.nav")).toHaveAttribute("data-nav-visible", "");
+      }
       const wordmark = page.locator(".nav .wordmark");
       await expect(wordmark).toBeVisible();
       const box = await wordmark.boundingBox();
