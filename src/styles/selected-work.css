@@ -420,19 +420,76 @@ button.sw-video-frame video {
 #work[data-selected-work] .sw-row:focus-visible {
   outline-offset: 7px;
 }
-.sw-row:focus-within {
-  opacity: 1 !important;
-  transform: none !important;
+.sw-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  width: min(280px, calc(100vw - 24px));
+  pointer-events: none;
+  border: 1px solid var(--rule-2);
+  border-radius: 10px;
+  background: var(--ground);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 40%);
+  overflow: hidden;
+  will-change: transform, opacity;
 }
-.sw-motion-ready .sw-row {
-  transition:
-    opacity 0.45s ease,
-    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transition-delay: var(--sw-enter-delay, 0ms);
+.sw-preview-media {
+  aspect-ratio: 16 / 9;
+  background: #101212;
+  border-bottom: 1px solid var(--rule-2);
+  overflow: hidden;
 }
-.sw-motion-ready .sw-row:not(.is-visible) {
-  opacity: 0;
-  transform: translateY(12px);
+.sw-preview-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sw-preview-body {
+  padding: 12px 14px 14px;
+}
+.sw-preview-title {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 100;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+.sw-preview-summary {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sw-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.sw-preview-tags li {
+  font-family: var(--code);
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+@media (hover: none), (pointer: coarse) {
+  .sw-preview {
+    display: none !important;
+  }
 }
 .sw-craftland-body {
   padding: 0 32px 24px 36px;
@@ -671,8 +728,7 @@ button.sw-video-frame video {
     animation: none !important;
     transition: none !important;
   }
-  .sw-motion-ready .sw-row {
-    opacity: 1 !important;
-    transform: none !important;
+  .sw-preview {
+    display: none !important;
   }
 }
