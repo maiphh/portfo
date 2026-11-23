@@ -9,6 +9,7 @@ import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { $, $$, fmt } from "./dom";
+import { initSectionReveals } from "./scroll-reveal";
 
 gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin);
 
@@ -37,6 +38,15 @@ export function initMotion() {
     end: "max",
     refreshPriority: -2,
     onUpdate: (s) => setBar(s.progress),
+  });
+
+  // Section reveals (Hero has its own intro; Contact owns band/words motion).
+  initSectionReveals({
+    sections:
+      "#timeline[data-reveal], #work[data-reveal], #activity[data-reveal], #how[data-reveal]",
+    duration: 0.6,
+    stagger: 0.07,
+    y: 16,
   });
 
   const mm = gsap.matchMedia();

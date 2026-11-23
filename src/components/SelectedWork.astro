@@ -15,6 +15,8 @@ const { Content: CraftlandBody } = await render(pick(work, "craftland"));
 type Presentation = {
   title: string;
   purpose: string;
+  /** Optional thumbnail for the pointer-fine hover preview card. */
+  previewImage?: string;
 } & (
   | { kind: "case"; slug: "legal-rag" | "data-validation" | "openportfo" | "ecom" | "poet" }
   | { kind: "disclosure"; slug: "craftland" }
@@ -34,6 +36,7 @@ const groups: { label: string; rows: Presentation[] }[] = [
         slug: "data-validation",
         title: "Payroll validation",
         purpose: "Client rules become automated checks.",
+        previewImage: "/work/data-validation/motion-poster.jpg",
       },
       {
         kind: "disclosure",
@@ -51,6 +54,7 @@ const groups: { label: string; rows: Presentation[] }[] = [
         slug: "openportfo",
         title: "OpenPortfo",
         purpose: "Crypto and Vietnamese stocks, together.",
+        previewImage: "/work/openportfo/portfolio.webp",
       },
       {
         kind: "case",
@@ -63,6 +67,7 @@ const groups: { label: string; rows: Presentation[] }[] = [
         slug: "poet",
         title: "POET",
         purpose: "A youth charity, ready for donations.",
+        previewImage: "/work/poet/home-hero.webp",
       },
     ],
   },
@@ -83,7 +88,7 @@ const numberedGroups = groups.reduce<
 ---
 
 <div class="sw-inner">
-  <header class="sw-heading">
+  <header class="sw-heading" data-reveal-child>
     <p class="sw-eyebrow">Selected / 01—07</p>
     <h2 id="work-h">
       Selected work
@@ -97,6 +102,7 @@ const numberedGroups = groups.reduce<
     class="sw-featured"
     id={ocr.data.anchor}
     data-slug={ocr.id}
+    data-reveal-child
     style={`--project:${ocr.data.accent?.line}`}
     aria-labelledby="sw-ocr-title"
   >
@@ -137,11 +143,9 @@ const numberedGroups = groups.reduce<
       <p class="sw-featured-index">
         <span>01</span> Featured project
       </p>
-      {
-        ocrLogo && (
-          <OrgLogo src={ocrLogo.src} name={ocrLogo.name} named wordmark={isWordmark(ocrLogo)} />
-        )
-      }
+      {ocrLogo && (
+        <OrgLogo src={ocrLogo.src} name={ocrLogo.name} named wordmark={isWordmark(ocrLogo)} />
+      )}
       <h3 id="sw-ocr-title">Document OCR</h3>
       <p class="sw-featured-purpose">
         Paperwork in,
@@ -163,15 +167,7 @@ const numberedGroups = groups.reduce<
           {ocr.data.facts.map((fact) => (
             <div>
               <dt>{fact.label}</dt>
-              <dd>
-                {fact.value.startsWith("About ") ? (
-                  <>
-                     {fact.value.slice(6)}
-                  </>
-                ) : (
-                  fact.value
-                )}
-              </dd>
+              <dd>{fact.value.startsWith("About ") ? <>{fact.value.slice(6)}</> : fact.value}</dd>
             </div>
           ))}
         </dl>
@@ -189,61 +185,63 @@ const numberedGroups = groups.reduce<
       <h3 id="sw-more-title">More work</h3>
       <p>Different projects. The same care.</p>
     </div> -->
-    {
-      numberedGroups.map((group) => (
-        <div class="sw-group">
-          <h4 class="sw-group-label">{group.label}</h4>
-          <ul class="sw-list">
-            {group.rows.map((row) => {
-              const entry = pick(work, row.slug);
-              const Container = row.kind === "disclosure" ? "details" : "article";
-              const Row = row.kind === "disclosure" ? "summary" : "a";
-              return (
-                <li>
-                  <Container
-                    id={entry.data.anchor}
-                    data-slug={entry.id}
-                    style={`--project:${entry.data.accent?.line ?? "#c4c8c2"}`}
+    {numberedGroups.map((group) => (
+      <div class="sw-group" data-reveal-child>
+        <h4 class="sw-group-label">{group.label}</h4>
+        <ul class="sw-list">
+          {group.rows.map((row) => {
+            const entry = pick(work, row.slug);
+            const Container = row.kind === "disclosure" ? "details" : "article";
+            const Row = row.kind === "disclosure" ? "summary" : "a";
+            const preview = {
+              title: row.title,
+              summary: entry.data.summary,
+              tags: entry.data.meta,
+              image: row.previewImage ?? "",
+            };
+            return (
+              <li>
+                <Container
+                  id={entry.data.anchor}
+                  data-slug={entry.id}
+                  style={`--project:${entry.data.accent?.line ?? "#c4c8c2"}`}
+                >
+                  <Row
+                    class="sw-row"
+                    href={row.kind === "case" ? `/work/${row.slug}` : undefined}
+                    data-sw-preview={JSON.stringify(preview)}
                   >
-                    <Row
-                      class="sw-row"
-                      href={row.kind === "case" ? `/work/${row.slug}` : undefined}
-                    >
-                      <span class="sw-row-index" aria-hidden="true">
-                        <i></i>
-                        {row.indexLabel}
+                    <span class="sw-row-index" aria-hidden="true">
+                      <i></i>
+                      {row.indexLabel}
+                    </span>
+                    <div class="sw-row-project">
+                      <h3>{row.title}</h3>
+                      <p class="sw-row-purpose">{row.purpose}</p>
+                    </div>
+                    <p class="sw-row-summary">{entry.data.summary}</p>
+                    <span class="sw-row-arrow">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d={row.kind === "disclosure" ? "m6 9 6 6 6-6" : "M5 19 19 5M6 5h13v13"}
+                        ></path>
+                      </svg>
+                      <span class="sr-only">
+                        {row.kind === "disclosure" ? "Project details" : "Explore project"}
                       </span>
-                      <div class="sw-row-project">
-                        <h3>{row.title}</h3>
-                        <p class="sw-row-purpose">{row.purpose}</p>
-                      </div>
-                      <p class="sw-row-summary">{entry.data.summary}</p>
-                      <span class="sw-row-arrow">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            d={
-                              row.kind === "disclosure"
-                                ? "m6 9 6 6 6-6"
-                                : "M5 19 19 5M6 5h13v13"
-                            }
-                          ></path>
-                        </svg>
-                        <span class="sr-only">
-                          {row.kind === "disclosure" ? "Project details" : "Explore project"}
-                        </span>
-                      </span>
-                    </Row>
-                    {row.kind === "disclosure" && (
-                      <div class="sw-craftland-body">
-                        <CraftlandBody />
-                      </div>
-                    )}
-                  </Container>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))
-    }
-  </section></div>
+                    </span>
+                  </Row>
+                  {row.kind === "disclosure" && (
+                    <div class="sw-craftland-body">
+                      <CraftlandBody />
+                    </div>
+                  )}
+                </Container>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
+  </section>
+</div>

@@ -164,9 +164,9 @@ const edges: FlowEdge[] = [
 ];
 ---
 
-<section class="sec chapter" id="how" aria-labelledby="how-h">
+<section class="sec chapter" id="how" aria-labelledby="how-h" data-reveal>
   <div class="wrap">
-    <div class="head">
+    <div class="head" data-reveal-child>
       <h2 id="how-h" data-split>
         How this site works
       </h2>
@@ -175,18 +175,20 @@ const edges: FlowEdge[] = [
         runs that doesn't need to. Select any part to see what it does.
       </p>
     </div>
-    <FlowDiagram
-      id="how"
-      cols={4}
-      nodes={nodes}
-      edges={edges}
-      label="Parts of this site, in the order a visit uses them"
-      keyLabel="runs on Cloudflare"
-      hint="Select any part of the diagram to see what it does, the tech behind it and the key decision."
-      packets
-      autoplay
-    />
-    <div class="how-notes">
+    <div data-reveal-child>
+      <FlowDiagram
+        id="how"
+        cols={4}
+        nodes={nodes}
+        edges={edges}
+        label="Parts of this site, in the order a visit uses them"
+        keyLabel="runs on Cloudflare"
+        hint="Select any part of the diagram to see what it does, the tech behind it and the key decision."
+        packets
+        autoplay
+      />
+    </div>
+    <div class="how-notes" data-reveal-child>
       <p>
         <b>The chat</b> runs on the same Cloudflare Worker as the data APIs. It only answers from
         tool results (bundled site JSON and D1) and lists its sources.

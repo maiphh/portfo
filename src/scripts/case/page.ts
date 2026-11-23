@@ -122,5 +122,7 @@ if (page) {
     // Highlights: each scene's loop. With reduced motion the static scene stays, as without JS.
     if (page.querySelector("svg.hl-fig[data-scene]"))
       void import("./flow").then((m) => m.default(page));
+    // Section reveals after the curtain / Hero A own their own timelines.
+    void import("./reveal").then((m) => m.initCaseReveals(page));
   }
 }

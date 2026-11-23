@@ -17,7 +17,7 @@ const work = await getWork();
 <Base base="">
   <Hero slot="hero" />
   <Timeline />
-  <section id="work" data-selected-work aria-labelledby="work-h">
+  <section id="work" data-selected-work data-reveal aria-labelledby="work-h">
     <SelectedWork work={work} />
   </section>
   <Activity github={getGithubSummary()} />
