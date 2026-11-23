@@ -1,10 +1,9 @@
 ---
 /**
- * Hero A · Title (portfo-design case-studies/prototype-heroes/HERO-A-SPEC.md §2): the project
- * name, set huge, is the hero. Without JS or with reduced motion the HTML is the end state (the
- * filled name, the headline with its accent mark). scripts/case/hero-a.ts plays the intro: the
- * outline letters rise, an accent scan line sweeps once and leaves the filled name behind, the
- * mark draws. On scroll the name lifts and shrinks a little.
+ * Hero A · Title: the project name is the hero. Without JS or with reduced motion the HTML
+ * is the end state (the filled name). scripts/case/hero-a.ts plays the intro: the outline
+ * letters rise, an accent scan line sweeps once and leaves the filled name behind. On scroll
+ * the name lifts and shrinks a little.
  */
 import type { CollectionEntry } from "astro:content";
 import Icon from "~/components/Icon.astro";
@@ -22,10 +21,6 @@ const logo = logoForWorkOrg(d.org);
 const words = (data.hero_name ?? d.title).split(" ");
 // Fallback width when unmeasured: about 0.7em per letter of the longest word.
 const w = data.hero_w ?? Math.max(...words.map((x) => x.length)) * 0.7;
-const mark = data.hero_mark;
-const at = mark ? d.headline.indexOf(mark) : -1;
-const pre = mark && at >= 0 ? d.headline.slice(0, at) : d.headline;
-const post = mark && at >= 0 ? d.headline.slice(at + mark.length) : null;
 ---
 
 <header class="cs-hero-a" data-hero-a>
@@ -67,40 +62,28 @@ const post = mark && at >= 0 ? d.headline.slice(at + mark.length) : null;
     )}
   </div>
 
-  <div class="cs-hero-a__row">
-    <p class="cs-hero-a__line">
-      {pre}
-      {post !== null && (
-        <mark class="hx-mark">
-          {mark}
-          <span class="hx-mk" aria-hidden="true" />
-        </mark>
-      )}
-      {post}
-    </p>
-    <div class="cs-hero-a__side">
-      <p class="lede">{d.summary}</p>
-      {data.credit && (
-        <p class="cs2-credit" data-credit>
-          {data.credit.lead}{" "}
-          <a class="link" href={data.credit.href} rel="noopener">
-            {data.credit.label}
-          </a>
-          {data.credit.rest}
-        </p>
-      )}
-      {d.links.length > 0 && (
-        <ul class="cs2-links" aria-label="Links">
-          {d.links.map((l) => (
-            <li>
-              <a class="link" href={l.href} rel="noopener">
-                {l.label}
-                <Icon name="out" />
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+  <div class="cs-hero-a__side">
+    <p class="lede">{d.summary}</p>
+    {data.credit && (
+      <p class="cs2-credit" data-credit>
+        {data.credit.lead}{" "}
+        <a class="link" href={data.credit.href} rel="noopener">
+          {data.credit.label}
+        </a>
+        {data.credit.rest}
+      </p>
+    )}
+    {d.links.length > 0 && (
+      <ul class="cs2-links" aria-label="Links">
+        {d.links.map((l) => (
+          <li>
+            <a class="link" href={l.href} rel="noopener">
+              {l.label}
+              <Icon name="out" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
   </div>
 </header>

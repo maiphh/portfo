@@ -2,7 +2,6 @@
  * Case-study page behaviour (components/case/CaseStudy.astro):
  * - ?dev shows the TODO slots;
  * - highlights: "The detail" is open on wide screens and folded on narrow ones;
- * - "Full stack with versions" opens the stack table;
  * - the short cut (OCR, DVP) autoplays muted while half in view, unless reduced motion or a
  *   data saver is on: then a play button sits on its poster;
  * - without reduced motion: the Hero A intro (hero-a.ts), the page's flow select effect, and the
@@ -47,14 +46,6 @@ if (page) {
     });
   syncDives();
   wide.addEventListener("change", syncDives);
-
-  // "Full stack with versions" → open the table first.
-  const stack = page.querySelector<HTMLDetailsElement>("#stack");
-  for (const a of page.querySelectorAll("[data-open-stack]"))
-    a.addEventListener("click", () => {
-      if (stack) stack.open = true;
-    });
-  if (location.hash === "#stack" && stack) stack.open = true;
 
   // The poster is set only as the video frame nears the viewport (200px ahead), not with the
   // page: a poster="" in the markup is fetched right away, even with preload="none".

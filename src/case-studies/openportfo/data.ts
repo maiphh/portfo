@@ -50,11 +50,15 @@ export const openportfo: CaseStudyData = {
     summary:
       "A Next.js client talks to FastAPI on Elastic Beanstalk through API Gateway. DynamoDB holds the records, S3 the price history (queried with Athena), and an EventBridge clock runs the daily jobs on Lambda. Select any part to see what it does, its tech and the decision behind it.",
     stack: [
-      { label: "UI", value: "Next.js", version: "15.5" },
-      { label: "API", value: "FastAPI", version: "Python 3.12" },
-      { label: "Records", value: "DynamoDB" },
-      { label: "History", value: "S3 + Athena" },
-      { label: "Jobs", value: "EventBridge → Lambda" },
+      { label: "UI", value: "Next.js", version: "15.5", icons: ["nextjs"] },
+      { label: "API", value: "FastAPI", version: "Python 3.12", icons: ["fastapi"] },
+      { label: "Records", value: "DynamoDB", icons: ["dynamodb"] },
+      { label: "History", value: "S3 + Athena", icons: ["s3", "athena"] },
+      {
+        label: "Jobs",
+        value: "EventBridge → Lambda",
+        icons: ["eventbridge", "lambda"],
+      },
       { label: "Markets", value: "CoinGecko, vnstock" },
     ],
     flow: {

@@ -1,0 +1,38 @@
+---
+/**
+ * How it works tech stack: logo-only row using tandpfun/skill-icons (dark tiles).
+ * No role/name text on the chips. Unsupported marks are omitted; full stack stays
+ * in a visually hidden list for screen readers.
+ */
+import type { CaseStackItem } from "~/lib/case";
+import { skillMarksFor, type TechLogoName } from "~/lib/tech";
+
+interface Props {
+  items: CaseStackItem[];
+}
+const { items } = Astro.props;
+
+const marks = skillMarksFor(items.flatMap((item) => (item.icons ?? []) as TechLogoName[]));
+---
+
+{
+  marks.length > 0 && (
+    <section class="cs2-tech" aria-labelledby="tech-h">
+      <h3 id="tech-h">Tech stack</h3>
+      <ul class="cs2-tech-list">
+        {marks.map((mark) => (
+          <li class="cs2-tech-tile">
+            <img class="cs2-tech-mark" src={mark.src} alt={mark.label} width="48" height="48" loading="lazy" />
+          </li>
+        ))}
+      </ul>
+      <ul class="sr-only">
+        {items.map((item) => (
+          <li>
+            {item.label}: {item.value}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

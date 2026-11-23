@@ -29,12 +29,17 @@ export const ecom: CaseStudyData = {
     summary:
       "Host pages (a storefront and a seller desk) call two adapters, `@/shop/store` and `@/shop/desk`. Behind them, `createShop` wires the order machine, pricing, the payment port and a storage gateway. Select any part to see what it does, its tech and the decision behind it.",
     stack: [
-      { label: "Engine", value: "TypeScript", version: "no React" },
-      { label: "Host", value: "Next.js", version: "16.3.6" },
-      { label: "Database", value: "Postgres, Drizzle", version: "0.45" },
+      { label: "Engine", value: "TypeScript", version: "no React", icons: ["typescript"] },
+      { label: "Host", value: "Next.js", version: "16.3.6", icons: ["nextjs"] },
+      {
+        label: "Database",
+        value: "Postgres, Drizzle",
+        version: "0.45",
+        icons: ["postgresql", "drizzle"],
+      },
       { label: "Payments", value: "PayOS", version: "2.0.5" },
-      { label: "Auth", value: "Neon Auth" },
-      { label: "Tests", value: "Vitest", version: "5" },
+      { label: "Auth", value: "Neon Auth", icons: ["neon"] },
+      { label: "Tests", value: "Vitest", version: "5", icons: ["vitest"] },
     ],
     flow: {
       cols: 5,

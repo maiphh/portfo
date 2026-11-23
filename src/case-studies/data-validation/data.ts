@@ -156,12 +156,12 @@ export const dvp: CaseStudyData = {
     architectureNote:
       "A FastAPI backend and a Next.js app. A client holds its parsed workbook, sheet structure, compiled rules and templates. Init and update-rules teach that state; process runs it on a new month's files. Select any part to see what it does, its tech and the decision behind it.",
     stack: [
-      { label: "API", value: "FastAPI", version: "/api/v2" },
-      { label: "Frontend", value: "Next.js", version: "16.1.5" },
-      { label: "Database", value: "PostgreSQL" },
-      { label: "Rules", value: "Generated Python, sandboxed" },
+      { label: "API", value: "FastAPI", version: "/api/v2", icons: ["fastapi"] },
+      { label: "Frontend", value: "Next.js", version: "16.1.5", icons: ["nextjs"] },
+      { label: "Database", value: "PostgreSQL", icons: ["postgresql"] },
+      { label: "Rules", value: "Generated Python, sandboxed", icons: ["python"] },
       { label: "LLM", value: "On-prem, over HTTP" },
-      { label: "Sign-in", value: "Microsoft Entra ID" },
+      { label: "Sign-in", value: "Microsoft Entra ID", icons: ["microsoft"] },
     ],
     flow: {
       cols: 5,

@@ -11,6 +11,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0 10px;
+  margin: 0 0 4px;
   font-size: 0.92rem;
   color: var(--muted);
 }
@@ -34,34 +35,31 @@
 }
 
 /* ---------- 1. hero A · title (HERO-A-SPEC.md §3) ----------
-   The name is the hero. The HTML is the end state (filled name, headline with its mark); the
-   intro in scripts/case/hero-a.ts only runs without reduced motion. */
+   The name is the hero. The HTML is the end state (filled name); the intro in
+   scripts/case/hero-a.ts only runs without reduced motion. */
 .cs-hero-a {
   --hero-stroke: #75756e; /* 3.97:1 on the ground; decorative, shown only during the intro */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(18px, 3vh, 36px);
-  padding-block: clamp(22px, 4vh, 48px) clamp(28px, 5vh, 56px);
-  /* First screen: viewport − nav − the article's top padding − crumbs. */
-  min-height: calc(100svh - var(--nav-h) - var(--s5) - 44px);
+  gap: 14px;
+  padding-block: 8px var(--s6);
 }
 .cs-hero-a__meta {
   max-width: none;
   display: flex;
   align-items: center;
-  margin: 0 0 12px;
+  margin: 0;
 }
 .cs-hero-a__meta .org-logo {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   background: none;
 }
 .cs-hero-a__meta .org-logo--wordmark {
   width: auto;
-  height: 52px;
-  max-width: min(280px, 70vw);
+  height: 40px;
+  max-width: min(240px, 70vw);
   padding: 0;
 }
 .cs-hero-a__meta .org-logo--wordmark img {
@@ -73,7 +71,7 @@
 
 .cs-hero-a__stage {
   position: relative;
-  margin: auto 0;
+  margin: 0;
   container-type: inline-size;
 }
 .cs-hero-a__name {
@@ -81,22 +79,16 @@
   display: grid;
   margin: 0;
   max-width: none;
-  /* The widest word fills the column: --w is its measured em width (lib/case.ts hero_w). */
-  font: 820 min(19rem, 100cqw / var(--w) * 0.985) / 0.84 var(--display);
-  font-variation-settings: "wdth" 118;
-  letter-spacing: -0.055em;
+  /* Smaller than full-bleed: about half the old fill scale, capped. */
+  font: 780 min(6.5rem, 100cqw / var(--w) * 0.52) / 0.9 var(--display);
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -0.04em;
   text-wrap: nowrap;
   color: var(--ink);
 }
-/* Two columns: the first screen should hold the whole hero, so the name is also capped by the
-   height left after the nav, crumbs, logo, and headline row (about 410px). */
 @media (min-width: 900px) {
   .cs-hero-a__name {
-    font-size: min(
-      19rem,
-      100cqw / var(--w) * 0.985,
-      (100svh - var(--nav-h) - 410px) / var(--lines) / 0.84
-    );
+    font-size: min(6.5rem, 100cqw / var(--w) * 0.52);
   }
 }
 .cs-hero-a__name > span {
@@ -169,53 +161,12 @@ html:not(.js) .cs-hero-a__sweep {
   }
 }
 
-.cs-hero-a__row {
-  display: grid;
-  gap: 18px 48px;
-  align-items: end;
-}
-@media (min-width: 900px) {
-  .cs-hero-a__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-.cs-hero-a__line {
-  font: 680 clamp(1.7rem, 1.1rem + 2.4vw, 3.3rem) / 1.04 var(--display);
-  font-variation-settings: "wdth" 110;
-  letter-spacing: -0.03em;
-  max-width: 16ch;
-  text-wrap: balance;
-  color: var(--ink);
-}
-@media (max-width: 480px) {
-  .cs-hero-a__line {
-    font-size: clamp(1.85rem, 9.2vw, 2.5rem);
-  }
-}
-.hx-mark {
-  position: relative;
-  z-index: 0;
-  background: none;
-  color: inherit;
-  white-space: nowrap;
-}
-.hx-mk {
-  position: absolute;
-  /* Flush with the word: the bar never crosses the gutter when the mark starts or ends a line. */
-  left: 0;
-  right: 0;
-  bottom: 0.02em;
-  height: 0.16em;
-  z-index: -1;
-  border-radius: 2px;
-  background: var(--acc);
-  transform-origin: 0 50%;
-}
 .cs-hero-a__side {
   min-width: 0;
+  max-width: 54ch;
 }
 .cs-hero-a__side .lede {
-  max-width: 54ch;
+  max-width: none;
   font-size: 1rem;
   color: var(--ink-2);
 }
@@ -250,6 +201,8 @@ html:not(.js) .cs-hero-a__sweep {
 
 /* ---------- sections ---------- */
 .cs2-sec {
+  --sec-title: clamp(1.15rem, 1.05rem + 0.55vw, 1.4rem);
+  --sec-sub: clamp(1.05rem, 1rem + 0.35vw, 1.2rem);
   padding: var(--s8) 0;
   border-top: 1px solid var(--rule);
   scroll-margin-top: calc(var(--nav-h) + 56px);
@@ -261,15 +214,16 @@ html:not(.js) .cs-hero-a__sweep {
 .cs2-sec > h2,
 .cs2-video-head h2,
 .cs2-how-head h2 {
-  font-size: clamp(1.9rem, 1.1rem + 2.4vw, 3.2rem);
-  font-variation-settings: "wdth" 108;
-  letter-spacing: -0.025em;
-  line-height: 1.05;
-  max-width: 22ch;
+  font-size: var(--sec-title);
+  font-weight: 720;
+  font-variation-settings: "wdth" 104;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  max-width: 28ch;
   margin-bottom: var(--s5);
 }
 .cs2-sec h3 {
-  font: 680 1.35rem/1.2 var(--display);
+  font: 680 var(--sec-sub) / 1.25 var(--display);
   font-variation-settings: "wdth" 104;
   letter-spacing: -0.015em;
   color: var(--ink);
@@ -288,24 +242,46 @@ html:not(.js) .cs-hero-a__sweep {
   overflow-wrap: anywhere;
 }
 
-/* 2. overview */
+/* 2. overview: The Problem / Solution / Outcome — title left, content right. */
 .cs2-pso {
   display: grid;
-  gap: var(--s6);
+  gap: var(--s8);
+  text-align: left;
 }
-@media (min-width: 900px) {
-  .cs2-pso {
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-  }
-  .cs2-outcome {
-    grid-column: 1 / -1;
-  }
+.cs2-pso > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, 16rem) minmax(0, 1fr);
+  gap: var(--s4) clamp(24px, 4vw, 56px);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
 }
 .cs2-pso h3 {
-  margin-bottom: var(--s3);
+  font-size: var(--sec-title);
+  font-weight: 720;
+  font-variation-settings: "wdth" 104;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+  max-width: none;
+  color: var(--ink);
 }
-/* Outcome is one full-width column under Problem and Solution, with metric cards in a row. */
+.cs2-pso-body {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+}
+.cs2-pso p {
+  margin: 0;
+  max-width: 42rem;
+}
+@media (max-width: 700px) {
+  .cs2-pso > div {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
+  }
+}
+/* Outcome keeps the metric cards in a row under its copy. */
 .cs2-outcome {
   min-width: 0;
 }
@@ -325,6 +301,7 @@ html:not(.js) .cs-hero-a__sweep {
 .cs2-metrics li {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   min-height: 76px;
   margin: 0;
@@ -332,6 +309,7 @@ html:not(.js) .cs-hero-a__sweep {
   border: 1px solid var(--rule);
   border-radius: 4px;
   background: var(--sheet);
+  text-align: left;
 }
 .cs2-metrics__n {
   flex: none;
@@ -491,12 +469,6 @@ html:not(.js) .cs2-video video[data-case-video] {
   display: grid;
   gap: var(--s5) 64px;
 }
-@media (min-width: 900px) {
-  .cs2-how-head:has(.cs2-stack) {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    align-items: end;
-  }
-}
 .cs2-how-sub {
   margin-top: var(--s6);
 }
@@ -506,40 +478,40 @@ html:not(.js) .cs2-video video[data-case-video] {
 .cs2-how-head h2 {
   margin-bottom: var(--s3);
 }
-.cs2-stack {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+/* tech stack: logo-only row (tandpfun/skill-icons dark tiles in /icons/skills) */
+.cs2-tech {
+  margin-top: var(--s6);
+  padding-top: var(--s5);
   border-top: 1px solid var(--rule);
 }
-.cs2-stack div {
-  min-width: 0;
-  padding: 12px 16px 12px 0;
-  border-bottom: 1px solid var(--rule);
+.cs2-tech > h3 {
+  margin-bottom: var(--s3);
 }
-.cs2-stack dt {
-  font-size: 13px;
-  color: var(--muted);
+.cs2-tech-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.cs2-stack dd {
-  color: var(--ink);
-  font-size: 15px;
-  overflow-wrap: anywhere;
+.cs2-tech-tile {
+  display: block;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
 }
-.cs2-stack dd code {
-  margin-left: 6px;
-  color: var(--muted);
-  font-size: 12.5px;
+.cs2-tech-mark {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
 }
-.cs2-full a,
 .cs2-out a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
-}
-.cs2-full a {
-  color: var(--ink);
-  text-underline-offset: 0.2em;
 }
 
 /* 6. highlights: the articles and drawings are in highlights.css (HIGHLIGHTS-SPEC v3) */
@@ -554,16 +526,36 @@ html:not(.js) .cs2-video video[data-case-video] {
   min-width: 0;
 }
 
-/* 7. limits */
+/* 7. limits: title left, lists right (same split as overview). */
+.cs2-limits-col {
+  display: grid;
+  grid-template-columns: minmax(9rem, 16rem) minmax(0, 1fr);
+  gap: var(--s4) clamp(24px, 4vw, 56px);
+  align-items: start;
+  width: 100%;
+  margin-inline: 0;
+  text-align: left;
+}
+.cs2-limits-col > h2 {
+  font-size: var(--sec-title);
+  font-weight: 720;
+  font-variation-settings: "wdth" 104;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
 .cs2-limits-grid {
   display: grid;
-  gap: var(--s6);
+  gap: var(--s7);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
 }
-@media (min-width: 900px) {
-  .cs2-limits-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px;
-  }
+.cs2-limits-grid > div {
+  width: 100%;
+  min-width: 0;
 }
 .cs2-limits h3 {
   margin-bottom: var(--s3);
@@ -571,76 +563,20 @@ html:not(.js) .cs2-video video[data-case-video] {
 .cs2-limits ul {
   display: grid;
   gap: 8px;
+  width: 100%;
+  margin: 0;
   padding-left: 1.1em;
+  text-align: left;
 }
-.cs2-more {
-  margin-top: var(--s5);
-  border-top: 1px solid var(--rule);
-  scroll-margin-top: calc(var(--nav-h) + 56px);
+.cs2-limits li {
+  max-width: 42rem;
 }
-.cs2-more summary {
-  display: flex;
-  align-items: center;
-  min-height: 52px;
-  font-weight: 650;
-  color: var(--ink);
-  cursor: pointer;
-}
-.cs2-more summary:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.cs2-more > ul,
-.cs2-tables {
-  padding-bottom: var(--s4);
-}
-.cs2-tables {
-  display: grid;
-  gap: var(--s5);
-}
-@media (min-width: 1024px) {
-  .cs2-tables {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 40px;
+@media (max-width: 700px) {
+  .cs2-limits-col {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
   }
 }
-.cs2-tables table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 14.5px;
-}
-.cs2-tables caption {
-  text-align: left;
-  font-weight: 650;
-  color: var(--ink);
-  padding-bottom: 8px;
-}
-.cs2-tables th,
-.cs2-tables td {
-  text-align: left;
-  vertical-align: top;
-  padding: 8px 12px 8px 0;
-  border-top: 1px solid var(--rule);
-  color: var(--ink-2);
-  overflow-wrap: anywhere;
-}
-.cs2-tables thead th {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 600;
-}
-.cs2-tables tbody th {
-  width: 38%;
-  font-weight: 500;
-  color: var(--muted);
-}
-.cs2-note {
-  font-size: 13px !important;
-  color: var(--muted) !important;
-  padding-bottom: var(--s4);
-}
-
 /* 8. next */
 .cs2-next {
   margin-top: 0;

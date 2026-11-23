@@ -145,14 +145,14 @@ for (const p of PAGES) {
   });
 }
 
-/** Hero A (HERO-A-SPEC.md): the name is the h1, the headline's mark, optional org logo. */
+/** Hero A: the name is the h1; optional org logo. Headline slogan removed. */
 const HEROES = [
-  { slug: "document-ocr", name: "Document OCR", mark: "clean data out", logo: "Talentnet" },
-  { slug: "legal-rag", name: "Legal RAG", mark: "the citation", logo: "Talentnet" },
-  { slug: "data-validation", name: "DVP", mark: "turned into code", logo: "Talentnet" },
-  { slug: "openportfo", name: "OpenPortfo", mark: "side by side", logo: null },
-  { slug: "ecom", name: "Ecom", mark: "many storefronts", logo: null },
-  { slug: "poet", name: "POET", mark: "youth charity", logo: null },
+  { slug: "document-ocr", name: "Document OCR", logo: "Talentnet" },
+  { slug: "legal-rag", name: "Legal RAG", logo: "Talentnet" },
+  { slug: "data-validation", name: "DVP", logo: "Talentnet" },
+  { slug: "openportfo", name: "OpenPortfo", logo: null },
+  { slug: "ecom", name: "Ecom", logo: null },
+  { slug: "poet", name: "POET", logo: null },
 ];
 
 /** What the hero looks like at rest: the HTML end state. */
@@ -169,9 +169,8 @@ const heroState = () => {
     outline: css(".cs-hero-a__ol")?.visibility,
     sweep:
       css(".cs-hero-a__sweep")?.display === "none" || css(".cs-hero-a__sweep")?.opacity === "0",
-    mark: css(".hx-mk")?.transform,
-    line: css(".cs-hero-a__line")?.opacity,
     noSig: !q(".cs2-sig, [data-sig], .cs2-open"),
+    noLine: !q(".cs-hero-a__line"),
   };
 };
 const AT_REST = {
@@ -180,15 +179,14 @@ const AT_REST = {
   fillIn: "none",
   outline: "hidden",
   sweep: true,
-  mark: "none",
-  line: "1",
   noSig: true,
+  noLine: true,
 };
 
 test.describe("Hero A", () => {
   for (const h of HEROES) {
     const url = `/work/${h.slug}/`;
-    test(`${h.slug}: one h1 named "${h.name}", the mark, optional org logo`, async ({ page }) => {
+    test(`${h.slug}: one h1 named "${h.name}", optional org logo`, async ({ page }) => {
       await page.goto(url);
       const h1 = page.locator("h1");
       await expect(h1).toHaveCount(1);
@@ -196,7 +194,7 @@ test.describe("Hero A", () => {
         page.getByRole("heading", { level: 1, name: h.name, exact: true }),
       ).toBeVisible();
       await expect(page.locator(".cs-hero-a__ol")).toHaveAttribute("aria-hidden", "true");
-      await expect(page.locator(".cs-hero-a__line mark.hx-mark")).toHaveText(h.mark);
+      await expect(page.locator(".cs-hero-a__line")).toHaveCount(0);
       await expect(page.locator("[data-rail], .cs2-rail")).toHaveCount(0);
       if (h.logo) {
         await expect(page.locator(".cs-hero-a__meta .org-logo img")).toHaveAttribute(
@@ -227,7 +225,7 @@ test.describe("Hero A", () => {
     });
   }
 
-  test("no JS: the name, headline and mark are complete; no sweep", async ({ browser }) => {
+  test("no JS: the name is complete; no sweep or headline", async ({ browser }) => {
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
     for (const h of HEROES) {

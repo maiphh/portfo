@@ -28,10 +28,15 @@ export const poet: CaseStudyData = {
     summary:
       "Two pieces: GitHub Pages serves the HTML, and the Worker is the only door to PayOS and D1. `config.js` is the one place the Worker's origin is set. Select any part to see what it does, its tech and the decision behind it.",
     stack: [
-      { label: "Pages", value: "HTML, CSS, JS", version: "no framework" },
-      { label: "Hosting", value: "GitHub Pages" },
-      { label: "API", value: "Cloudflare Worker" },
-      { label: "Database", value: "D1" },
+      {
+        label: "Pages",
+        value: "HTML, CSS, JS",
+        version: "no framework",
+        icons: ["html", "css", "javascript"],
+      },
+      { label: "Hosting", value: "GitHub Pages", icons: ["github"] },
+      { label: "API", value: "Cloudflare Worker", icons: ["cloudflare"] },
+      { label: "Database", value: "D1", icons: ["sqlite"] },
       { label: "Checkout", value: "PayOS" },
     ],
     flow: {

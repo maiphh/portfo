@@ -102,7 +102,7 @@ test.describe("Document OCR case study", () => {
     await expect(page.locator("#work[data-selected-work] .org-badge")).toHaveCount(0);
   });
 
-  test("the architecture flow opens details; the how section has no stack", async ({
+  test("the architecture flow opens details; the how section carries the tech stack", async ({
     page,
     isMobile,
   }) => {
@@ -130,7 +130,9 @@ test.describe("Document OCR case study", () => {
       await expect(page.locator('[data-flow="cs"] .flow-groupbox')).toHaveText("FastAPI process");
       await expect(page.locator('[data-flow="cs"] path.dotted')).toHaveCount(1);
     }
-    await expect(page.locator("#how-it-works .cs2-stack")).toHaveCount(0);
+    await expect(page.locator("#how-it-works .cs2-tech")).toHaveCount(1);
+    // Logo-only skill-icons row: OCR shows Next.js, FastAPI, PostgreSQL, Azure (Entra).
+    await expect(page.locator("#how-it-works .cs2-tech-list > .cs2-tech-tile")).toHaveCount(4);
     await expect(page.locator("#how-it-works .cs2-how-sub > h3")).toHaveText([
       "Application flow",
       "Architecture",

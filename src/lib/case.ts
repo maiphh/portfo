@@ -4,6 +4,7 @@
  * Strings may use `backticks` for code (rendered by richText).
  */
 import type { FlowEdge, FlowNode } from "~/lib/flow/types";
+import type { TechLogoName } from "~/lib/tech";
 
 /** One outcome figure: a large number with a short label beside it. */
 export interface CaseMetric {
@@ -15,9 +16,9 @@ export interface CaseOverview {
   problem: string;
   solution: string;
   /** Only results the project pack states. Omit when the pack's result is unconfirmed: the
-   * column then shows only in the ?dev view, as a TODO slot. */
+   * block then shows only in the ?dev view, as a TODO slot. */
   outcome?: string;
-  /** When set, the outcome column shows these cards instead of the outcome paragraph. */
+  /** When set, the outcome block shows these cards instead of the outcome paragraph. */
   metrics?: CaseMetric[];
   /** Line above the metric cards, e.g. "Two months after go-live". */
   metricsNote?: string;
@@ -28,7 +29,10 @@ export interface CaseOverview {
 export interface CaseStackItem {
   label: string;
   value: string;
+  /** Kept in data for reference; the How it works stack no longer shows versions. */
   version?: string;
+  /** Marks from lib/tech shown beside the value; omit for tech with no brand mark. */
+  icons?: TechLogoName[];
 }
 
 export interface CaseFlow {
@@ -68,15 +72,15 @@ export interface CaseStackTable {
 export interface CaseLimits {
   /** Paths that still run but aren't the main one. */
   deprecated: string[];
-  /** For developers: where the project's docs lag its code (collapsed). */
+  /** Kept in data for reference; no longer rendered on the case page. */
   docsLag: string[];
   /** Reserved or unimplemented features the page must not claim. */
   reserved: string[];
   /** What stays private. */
   notShown: string[];
-  /** The full stack with versions (collapsed, opened by "Full stack with versions"). */
+  /** Kept in data for reference; no longer rendered on the case page. */
   stack: CaseStackTable[];
-  /** Where the versions come from. */
+  /** Kept in data for reference; no longer rendered on the case page. */
   stackSource: string;
 }
 
@@ -125,7 +129,7 @@ export interface CaseStudyData {
   video?: CaseVideo;
   how: {
     summary: string;
-    /** Shown beside the summary. An empty list hides the stack and the versions link. */
+    /** Shown under How it works. An empty list hides the tech stack. */
     stack: CaseStackItem[];
     /** A second diagram, rendered above the architecture diagram. Same component, its own nodes. */
     application?: { title: string; flow: CaseFlow };

@@ -16,6 +16,7 @@ import CaseHeroTitle from "~/components/case/CaseHeroTitle.astro";
 import FlowDiagram from "~/components/flow/FlowDiagram.astro";
 import Icon from "~/components/Icon.astro";
 import FlowFigure from "~/components/case/FlowFigure.astro";
+import TechStack from "~/components/case/TechStack.astro";
 import Base from "~/layouts/Base.astro";
 import type { CaseStudyData } from "~/lib/case";
 import { ISO_CREDIT } from "~/lib/credit";
@@ -76,38 +77,46 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           Overview
         </h2>
         <div>
-          <h3>Problem</h3>
-          <p set:html={richText(o.problem)} />
+          <h3>The Problem</h3>
+          <div class="cs2-pso-body">
+            <p set:html={richText(o.problem)} />
+          </div>
         </div>
         <div>
-          <h3>Solution</h3>
-          <p set:html={richText(o.solution)} />
+          <h3>The Solution</h3>
+          <div class="cs2-pso-body">
+            <p set:html={richText(o.solution)} />
+          </div>
         </div>
         {o.outcome ? (
           <div class="cs2-outcome">
-            <h3>Outcome</h3>
-            {o.metrics?.length ? (
-              <>
-                {o.metricsNote && <p class="cs2-metrics-note">{o.metricsNote}</p>}
-                <ul class="cs2-metrics">
-                  {o.metrics.map((metric) => (
-                    <li>
-                      <span class="cs2-metrics__n">{metric.value}</span>
-                      <span class="cs2-metrics__l">{metric.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <p set:html={richText(o.outcome)} />
-            )}
+            <h3>The Outcome</h3>
+            <div class="cs2-pso-body">
+              {o.metrics?.length ? (
+                <>
+                  {o.metricsNote && <p class="cs2-metrics-note">{o.metricsNote}</p>}
+                  <ul class="cs2-metrics">
+                    {o.metrics.map((metric) => (
+                      <li>
+                        <span class="cs2-metrics__n">{metric.value}</span>
+                        <span class="cs2-metrics__l">{metric.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p set:html={richText(o.outcome)} />
+              )}
+            </div>
           </div>
         ) : (
           <div class="cs2-todo" data-dev-only hidden>
-            <h3>Outcome</h3>
-            <p>
-              <b>TODO (Phu):</b> Result: to be added. {o.outcomeTodo}
-            </p>
+            <h3>The Outcome</h3>
+            <div class="cs2-pso-body">
+              <p>
+                <b>TODO (Phu):</b> Result: to be added. {o.outcomeTodo}
+              </p>
+            </div>
           </div>
         )}
       </section>
@@ -189,27 +198,8 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
             <h2 id="how-h">How it works</h2>
             <p set:html={richText(how.summary)} />
           </div>
-          {how.stack.length > 0 && (
-            <div>
-              <dl class="cs2-stack" aria-label="Stack">
-                {how.stack.map((s) => (
-                  <div>
-                    <dt>{s.label}</dt>
-                    <dd>
-                      {s.value}
-                      {s.version && <code>{s.version}</code>}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <p class="cs2-full">
-                <a href="#stack" data-open-stack>
-                  Full stack with versions
-                </a>
-              </p>
-            </div>
-          )}
         </div>
+        {how.stack.length > 0 && <TechStack items={how.stack} />}
         {how.application && (
           <div class="cs2-how-sub">
             <h3>{how.application.title}</h3>
@@ -291,58 +281,27 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
       )}
 
       <section class="cs2-sec cs2-limits" id="limits" aria-labelledby="lim-h">
-        <h2 id="lim-h">Limits and what isn't shown</h2>
-        <div class="cs2-limits-grid">
-          <div>
-            <h3>Not shown</h3>
-            <ul>
-              {limits.notShown.map((t) => (
-                <li set:html={richText(t)} />
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3>Not the main path, or not built yet</h3>
-            <ul>
-              {[...limits.deprecated, ...limits.reserved].map((t) => (
-                <li set:html={richText(t)} />
-              ))}
-            </ul>
+        <div class="cs2-limits-col">
+          <h2 id="lim-h">The Limitation</h2>
+          <div class="cs2-limits-grid">
+            <div>
+              <h3>Not shown</h3>
+              <ul>
+                {limits.notShown.map((t) => (
+                  <li set:html={richText(t)} />
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3>Not the main path, or not built yet</h3>
+              <ul>
+                {[...limits.deprecated, ...limits.reserved].map((t) => (
+                  <li set:html={richText(t)} />
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-        <details class="cs2-more">
-          <summary>Docs that lag the code (for developers)</summary>
-          <ul>
-            {limits.docsLag.map((t) => (
-              <li set:html={richText(t)} />
-            ))}
-          </ul>
-        </details>
-        <details class="cs2-more" id="stack">
-          <summary>Full stack with versions</summary>
-          <div class="cs2-tables">
-            {limits.stack.map((t) => (
-              <table>
-                <caption>{t.title}</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Piece</th>
-                    <th scope="col">Choice</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {t.rows.map(([a, b]) => (
-                    <tr>
-                      <th scope="row">{a}</th>
-                      <td set:html={richText(b)} />
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ))}
-          </div>
-          <p class="cs2-note">{limits.stackSource}</p>
-        </details>
       </section>
 
       <nav class="cs-next cs2-next" aria-label="More work">

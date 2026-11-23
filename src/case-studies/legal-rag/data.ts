@@ -28,12 +28,12 @@ export const legalRag: CaseStudyData = {
     summary:
       "One FastAPI process and a Next.js app on PostgreSQL with pgvector. No queue and no Redis: ingest and questions run in the request. Select any part to see what it does, its tech and the decision behind it.",
     stack: [
-      { label: "API", value: "FastAPI", version: "Python 3.12" },
-      { label: "Frontend", value: "Next.js", version: "16.0.7" },
-      { label: "Vectors", value: "pgvector", version: "4096-d" },
-      { label: "Embeddings", value: "On-prem qwen3-embed-8b" },
+      { label: "API", value: "FastAPI", version: "Python 3.12", icons: ["fastapi"] },
+      { label: "Frontend", value: "Next.js", version: "16.0.7", icons: ["nextjs"] },
+      { label: "Vectors", value: "pgvector", version: "4096-d", icons: ["postgresql"] },
+      { label: "Embeddings", value: "On-prem qwen3-embed-8b", icons: ["qwen"] },
       { label: "LLM and VLM", value: "On-prem LLM" },
-      { label: "Sign-in", value: "Microsoft Entra ID" },
+      { label: "Sign-in", value: "Microsoft Entra ID", icons: ["microsoft"] },
     ],
     flow: {
       cols: 6,

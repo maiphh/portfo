@@ -1,9 +1,9 @@
 /**
  * Hero A · Title intro (components/case/CaseHeroTitle.astro, HERO-A-SPEC.md §4–5).
  * Once per load: the outline letters rise, an accent scan line sweeps once and leaves the
- * filled name behind, the headline and side copy rise, and the accent mark draws. On scroll
- * the name lifts and shrinks a little; scrolling back up into the hero repeats a faint
- * line-only pass, at most once every 20 s. No timed loop.
+ * filled name behind, and the side copy rises. On scroll the name lifts and shrinks a little;
+ * scrolling back up into the hero repeats a faint line-only pass, at most once every 20 s.
+ * No timed loop.
  *
  * Transform/opacity/visibility only. Reduced motion and no-JS show the end state that is
  * already in the HTML (only loaded without reduced motion; gsap.matchMedia also reverts
@@ -69,15 +69,7 @@ function intro(hero: HTMLElement, delay: number): () => void {
         0.75,
       );
   }
-  rise(
-    tl,
-    [q(".cs-hero-a__line")].filter((x): x is Element => x !== null),
-    1.05,
-  );
-  rise(tl, [...hero.querySelectorAll(".cs-hero-a__side > *")], 1.25);
-  const mk = [...hero.querySelectorAll(".hx-mk")];
-  if (mk.length)
-    tl.fromTo(mk, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "expo.inOut" }, 1.6);
+  rise(tl, [...hero.querySelectorAll(".cs-hero-a__side > *")], 1.15);
 
   // On scroll the name lifts and shrinks a little.
   const lift = gsap.to(name, {
@@ -117,15 +109,12 @@ function intro(hero: HTMLElement, delay: number): () => void {
     tl.kill();
     hero.removeAttribute("data-anim");
     split.revert();
-    gsap.set([stage, name, ol, fill, fin, sw, tag, ...mk].filter(Boolean), {
+    gsap.set([stage, name, ol, fill, fin, sw, tag].filter(Boolean), {
       clearProps: "all",
     });
-    gsap.set(
-      [...hero.querySelectorAll(".cs-hero-a__meta, .cs-hero-a__line, .cs-hero-a__side > *")],
-      {
-        clearProps: "all",
-      },
-    );
+    gsap.set([...hero.querySelectorAll(".cs-hero-a__meta, .cs-hero-a__side > *")], {
+      clearProps: "all",
+    });
   };
 }
 
