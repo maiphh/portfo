@@ -94,8 +94,8 @@ export async function validateDraft(input: unknown) {
       typeof parent !== "string" ||
       !["folder", "note", "photo"].includes(kind) ||
       typeof title !== "string" ||
-      !title.trim() ||
       title.length > 100 ||
+      (kind !== "photo" && !title.trim()) ||
       !Number.isFinite(x) ||
       !Number.isFinite(y) ||
       Math.abs(x) > 1_000_000 ||

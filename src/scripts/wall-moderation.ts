@@ -17,6 +17,8 @@ interface Submission {
   body: string;
   alt: string | null;
   mediaId: string | null;
+  folderHint: string | null;
+  visitorName: string | null;
   createdAt: number;
 }
 interface Queue {
@@ -55,19 +57,24 @@ if (select && feedback && list && more && reload) {
   const card = (submission: Submission) => {
     const article = element("article");
     article.className = "owner-submission";
-    const title = element("h3", submission.title);
+    const rawTitle = /^[a-f0-9]{64}$/.test(submission.title.trim()) ? "" : submission.title.trim();
+    const heading = rawTitle || (submission.mediaId ? "Untitled photo" : "Untitled");
+    const title = element("h3", heading);
     title.id = `title-${submission.id}`;
     article.setAttribute("aria-labelledby", title.id);
     const date = element("time", new Date(submission.createdAt).toLocaleString());
     date.dateTime = new Date(submission.createdAt).toISOString();
     article.append(title, date);
+    if (submission.visitorName?.trim()) {
+      article.append(element("p", `From ${submission.visitorName.trim()}`));
+    }
     if (submission.mediaId) {
       const base = `/api/admin/wall/media/${submission.mediaId}`;
       const link = element("a");
       link.href = `${base}/detail`;
       link.target = "_blank";
       link.rel = "noopener";
-      link.setAttribute("aria-label", `Open full photo: ${submission.title}`);
+      link.setAttribute("aria-label", `Open full photo: ${heading}`);
       const img = element("img");
       img.src = `${base}/thumbnail`;
       img.alt = submission.alt ?? "";
@@ -101,6 +108,9 @@ if (select && feedback && list && more && reload) {
       }
       destination.add(new Option(titles.join(" / "), folder.id));
     }
+    const hint = submission.folderHint;
+    if (hint && [...destination.options].some((option) => option.value === hint))
+      destination.value = hint;
     const accept = button("Accept");
     const reject = button("Reject");
     const decide = async (action: "accept" | "reject") => {

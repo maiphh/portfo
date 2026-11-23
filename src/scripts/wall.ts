@@ -18,115 +18,12 @@ type Item = {
   width?: number;
   height?: number;
 };
-const initial: Item[] = [
-  {
-    id: "f1",
-    parent: "root",
-    kind: "folder",
-    title: "Somewhere else",
-    x: 95,
-    y: 70,
-    description: "Photos and notes from places worth remembering.",
-  },
-  {
-    id: "f2",
-    parent: "root",
-    kind: "folder",
-    title: "Things I made",
-    x: 575,
-    y: 310,
-    description: "A few projects and the moments that went into making them.",
-  },
-  {
-    id: "p1",
-    parent: "root",
-    kind: "photo",
-    title: "A little inspiration",
-    x: 330,
-    y: 55,
-    rotation: -4,
-    src: "/work/poet/home-hero.webp",
-    text: "A sample image from the portfolio. A little reminder to keep looking.",
-  },
-  {
-    id: "n1",
-    parent: "root",
-    kind: "note",
-    title: "A note to self",
-    x: 90,
-    y: 340,
-    rotation: 3,
-    text: "Collect moments, not just milestones.",
-  },
-  {
-    id: "p2",
-    parent: "root",
-    kind: "photo",
-    title: "On the wall",
-    x: 355,
-    y: 340,
-    rotation: 4,
-    src: "/work/poet/wall.webp",
-    text: "A sample image from the portfolio.",
-  },
-  {
-    id: "f3",
-    parent: "f1",
-    kind: "folder",
-    title: "Little details",
-    x: 390,
-    y: 70,
-    description: "Small things I wanted to look at again.",
-  },
-  {
-    id: "p3",
-    parent: "f1",
-    kind: "photo",
-    title: "A letter",
-    x: 100,
-    y: 90,
-    rotation: -3,
-    src: "/work/poet/letter.webp",
-    text: "A sample image from the portfolio.",
-  },
-  {
-    id: "n2",
-    parent: "f1",
-    kind: "note",
-    title: "Remember",
-    x: 370,
-    y: 300,
-    rotation: 3,
-    text: "The best days have room to wander.",
-  },
-  {
-    id: "p4",
-    parent: "f3",
-    kind: "photo",
-    title: "A small detail",
-    x: 120,
-    y: 100,
-    rotation: 2,
-    src: "/work/poet/form.webp",
-    text: "A sample image from the portfolio.",
-  },
-  {
-    id: "p5",
-    parent: "f2",
-    kind: "photo",
-    title: "Work in progress",
-    x: 130,
-    y: 100,
-    rotation: -2,
-    src: "/work/openportfo/portfolio.webp",
-    text: "A sample image from the portfolio.",
-  },
-];
 const $ = <T extends HTMLElement>(selector: string): T => {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing element: ${selector}`);
   return element;
 };
+const maybe = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
 const canvas = $<HTMLDivElement>("#wall-canvas");
 const world = $<HTMLDivElement>("#wall-world");
 const tree = $("#wall-tree");
@@ -141,8 +38,11 @@ const mediaUrl = (id: string, variant: "thumbnail" | "detail") =>
 const index = $("#wall-index");
 const indexToggle = $("#index-toggle");
 const expandButton = $("#expand-all");
-const editButton = $("#edit-toggle");
 const actions = $("#wall-actions");
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const isImageFile = (file: File) =>
+  IMAGE_TYPES.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+const fileTitle = (file: File) => file.name.replace(/\.[^.]+$/, "").trim().slice(0, 100);
 const mobileIndex = window.matchMedia("(max-width: 680px)");
 const rootFolder = {
   id: "root",
@@ -150,8 +50,7 @@ const rootFolder = {
   description: "The main wall, with loose memories and folders to explore.",
 };
 type FolderView = { x: number; y: number; scale: number };
-const storageKey = "personal-wall-prototype-v1";
-let items: Item[] = hosted ? [] : structuredClone(initial);
+let items: Item[] = [];
 type HostedDraft = {
   version: number;
   baseRevision: string | null;
@@ -163,48 +62,6 @@ let hostedDirty = false;
 let busy = false;
 let stale = false;
 let leaving = false;
-let hasLocalDraft = false;
-const database =
-  !hosted && import.meta.env.DEV
-    ? new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open("personal-wall", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("drafts");
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      })
-    : null;
-async function readDraft(): Promise<Item[] | null> {
-  if (!database) return null;
-  const db = await database;
-  const stored = await new Promise<unknown>((resolve, reject) => {
-    const request = db.transaction("drafts", "readonly").objectStore("drafts").get("current");
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  if (Array.isArray(stored)) return stored as Item[];
-  const legacy = localStorage.getItem(storageKey);
-  if (legacy) {
-    const parsed: unknown = JSON.parse(legacy);
-    if (Array.isArray(parsed)) {
-      await writeDraft(parsed as Item[]);
-      localStorage.removeItem(storageKey);
-      return parsed as Item[];
-    }
-  }
-  return null;
-}
-async function writeDraft(snapshot: Item[]) {
-  if (!database) throw new Error("Local editing is unavailable");
-  const db = await database;
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction("drafts", "readwrite");
-    transaction.objectStore("drafts").put(snapshot, "current");
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error);
-  });
-}
-let saveQueue = Promise.resolve();
 let current = "root",
   editing = false,
   scale = 1,
@@ -235,22 +92,9 @@ const escapeHTML = (value: string) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
   );
 function save() {
-  if (hosted) {
-    hostedDirty = true;
-    hostedControls("Unsaved changes.");
-    return;
-  }
-  hasLocalDraft = true;
-  const snapshot = structuredClone(items);
-  saveQueue = saveQueue
-    .catch(() => {})
-    .then(() => writeDraft(snapshot))
-    .catch(() => {
-      showState(
-        "Draft could not be saved. Your changes are still open; export them now and free browser storage before retrying.",
-      );
-      alert("Draft could not be saved. Export it now and free browser storage before retrying.");
-    });
+  if (!hosted) return;
+  hostedDirty = true;
+  hostedControls("Unsaved changes.");
 }
 function transform() {
   world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
@@ -299,9 +143,10 @@ function setIndex(open: boolean) {
 function syncControls() {
   expandButton.setAttribute("aria-pressed", String(expanded));
   expandButton.textContent = expanded ? "Collapse all" : "Expand all";
-  editButton.setAttribute("aria-pressed", String(editing && !expanded));
-  editButton.textContent = editing && !expanded ? "Editing locally" : "Edit locally";
-  actions.hidden = !editing || expanded;
+  actions.hidden = !hosted || !editing || expanded;
+}
+function setCurrentFolder(id: string) {
+  app.dataset.currentFolder = id;
 }
 function path(id: string) {
   const result: Item[] = [];
@@ -323,6 +168,7 @@ function enter(id: string, focusCanvas = false, updateHistory = true) {
     history.pushState({ folder: id }, "", url);
   }
   current = id;
+  setCurrentFolder(id);
   expanded = false;
   folderView = undefined;
   if (mobileIndex.matches) setIndex(false);
@@ -368,19 +214,21 @@ function folderList() {
 }
 function renderCard(item: Item) {
   const { id, kind, x, y } = item;
+  const label = item.title.trim() || (kind === "photo" ? "Photo" : "Untitled");
   const title = escapeHTML(item.title);
+  const safeLabel = escapeHTML(label);
   const move =
     editing && !expanded
-      ? `<div class="item-actions"><button type="button" data-edit="${escapeHTML(id)}" aria-label="Edit ${title}">Edit</button><button type="button" data-move="${escapeHTML(id)}" aria-label="Move ${title} to another folder">Move</button><button type="button" data-delete="${escapeHTML(id)}" aria-label="Delete ${title}">×</button></div>`
+      ? `<div class="item-actions"><button type="button" data-edit="${escapeHTML(id)}" aria-label="Edit ${safeLabel}">Edit</button><button type="button" data-move="${escapeHTML(id)}" aria-label="Move ${safeLabel} to another folder">Move</button><button type="button" data-delete="${escapeHTML(id)}" aria-label="Delete ${safeLabel}">×</button></div>`
       : "";
   let content = "";
   if (kind === "photo")
-    content = `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "thumbnail") : item.src) || "")}" alt="" loading="lazy" draggable="false"><div class="item-label"><span>${title}</span><span aria-hidden="true">↗</span></div>`;
+    content = `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "thumbnail") : item.src) || "")}" alt="" loading="lazy" draggable="false"><div class="item-label">${item.title.trim() ? `<span>${title}</span>` : ""}<span aria-hidden="true">↗</span></div>`;
   if (kind === "note") content = `<p>${escapeHTML(item.text || "")}</p><small>${title}</small>`;
   if (kind === "folder")
     content = `<div class="folder-tab"></div><div class="folder-face"><span aria-hidden="true">↗</span><strong>${title}</strong><small>${itemCount(folderChildren(id).length)}</small></div>`;
   const action = kind === "folder" ? "Preview folder" : `View ${kind}`;
-  return `<div class="wall-item ${kind}" role="button" tabindex="0" aria-label="${action}: ${title}" data-id="${escapeHTML(id)}" style="left:${x}px;top:${y}px;--rotation:${item.rotation || 0}deg">${move}${content}</div>`;
+  return `<div class="wall-item ${kind}" role="button" tabindex="0" aria-label="${action}: ${safeLabel}" data-id="${escapeHTML(id)}" style="left:${x}px;top:${y}px;--rotation:${item.rotation || 0}deg">${move}${content}</div>`;
 }
 function itemCount(count: number) {
   return `${count} ${count === 1 ? "item" : "items"}`;
@@ -564,7 +412,8 @@ function openItem(id: string, trigger: HTMLElement) {
     showFolder(id, trigger);
     return;
   }
-  detailContent.innerHTML = `${item.kind === "photo" ? `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "detail") : item.src) || "")}" alt="${escapeHTML(item.alt || item.title)}">` : ""}<h2 id="wall-detail-title">${escapeHTML(item.title)}</h2><p>${escapeHTML(item.text || "")}</p>`;
+  const detailTitle = item.title.trim() || (item.kind === "photo" ? "Photo" : "Untitled");
+  detailContent.innerHTML = `${item.kind === "photo" ? `<img src="${escapeHTML((item.mediaId ? mediaUrl(item.mediaId, "detail") : item.src) || "")}" alt="${escapeHTML(item.alt || detailTitle)}">` : ""}<h2 id="wall-detail-title">${escapeHTML(detailTitle)}</h2><p>${escapeHTML(item.text || "")}</p>`;
   openDetail(trigger);
 }
 function moveItem(id: string) {
@@ -601,7 +450,7 @@ function moveItem(id: string) {
       Object.assign(item, position(data) ?? { x: 100, y: 100 });
       save();
       render();
-      (hosted ? canvas : editButton).focus({ preventScroll: true });
+      canvas.focus({ preventScroll: true });
     },
   );
 }
@@ -780,15 +629,6 @@ mobileIndex.addEventListener("change", () => {
   }
 });
 expandButton.addEventListener("click", toggleOverview);
-editButton.addEventListener("click", () => {
-  if (expanded) {
-    editing = true;
-    toggleOverview();
-  } else {
-    editing = !editing;
-    render();
-  }
-});
 new ResizeObserver(() => {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -798,26 +638,51 @@ new ResizeObserver(() => {
   canvasHeight = height;
   transform();
 }).observe(canvas);
-function add(kind: Kind, title: string, extra: Partial<Item> = {}) {
+function defaultPosition(parent = current) {
+  const count = items.filter((item) => item.parent === parent).length;
+  return { x: (count % 4) * 200, y: Math.floor(count / 4) * 220 };
+}
+function createItem(kind: Kind, title: string, extra: Partial<Item> = {}) {
+  const parent = typeof extra.parent === "string" ? extra.parent : current;
+  const fallback = defaultPosition(parent);
   const item: Item = {
     id: `i${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
-    parent: current,
+    parent,
     kind,
     title,
-    x: Math.round((canvas.clientWidth / 2 - offsetX) / scale - 90),
-    y: Math.round((canvas.clientHeight / 2 - offsetY) / scale - 80),
+    x: fallback.x,
+    y: fallback.y,
     ...extra,
   };
   items.push(item);
+  return item;
+}
+function add(kind: Kind, title: string, extra: Partial<Item> = {}) {
+  createItem(kind, title, extra);
   save();
   render();
+}
+function ensureFolder(parentId: string, title: string) {
+  const existing = items.find(
+    (item) => item.parent === parentId && item.kind === "folder" && item.title === title,
+  );
+  if (existing) return existing;
+  return createItem("folder", title, { parent: parentId, description: "" });
+}
+async function uploadHostedPhoto(file: File) {
+  const upload = new FormData();
+  upload.set("photo", file);
+  return ownerRequest<Pick<Item, "mediaId" | "width" | "height">>(`${hostedApi}/media`, {
+    method: "POST",
+    body: upload,
+  });
 }
 const editor = $<HTMLDialogElement>("#wall-editor");
 function showEditor(
   title: string,
   fields: string,
   submit: string,
-  onSubmit: (data: FormData) => void | Promise<void>,
+  onSubmit: (data: FormData, feedback: HTMLElement) => void | Promise<void>,
 ) {
   editor.innerHTML = `<form><h2 id="wall-editor-title">${escapeHTML(title)}</h2>${fields}<p role="status" data-editor-status hidden></p><div class="wall-editor-actions"><button type="button" data-cancel>Cancel</button><button type="submit">${submit}</button></div></form>`;
   const form = editor.querySelector("form");
@@ -832,7 +697,8 @@ function showEditor(
     event.preventDefault();
     if (cancel.disabled) return;
     const data = new FormData(form);
-    if (typeof data.get("title") === "string" && !String(data.get("title")).trim()) {
+    const titleInput = form.querySelector<HTMLInputElement>("#folder-title, #note-title, #item-title");
+    if (titleInput?.required && !String(data.get("title") ?? "").trim()) {
       feedback.textContent = "Enter a title.";
       feedback.hidden = false;
       return;
@@ -844,7 +710,7 @@ function showEditor(
     feedback.textContent = "Applying changes…";
     feedback.hidden = false;
     try {
-      await onSubmit(data);
+      await onSubmit(data, feedback);
       editor.close();
     } catch (error) {
       feedback.textContent = apiMessage(error);
@@ -897,7 +763,7 @@ function editItem(id: string) {
   const isPhoto = item.kind === "photo";
   showEditor(
     isPhoto ? "Edit photo" : "Edit note",
-    `<label for="item-title">Title</label><input id="item-title" name="title" required maxlength="100" value="${escapeHTML(item.title)}"><label for="item-text">${isPhoto ? "Caption" : "Note"}</label><textarea id="item-text" name="text" maxlength="5000">${escapeHTML(item.text || "")}</textarea>${isPhoto ? `<label for="item-alt">Image description</label><input id="item-alt" name="alt" maxlength="500" value="${escapeHTML(item.alt || "")}">` : ""}${coordinates(item)}`,
+    `<label for="item-title">Title${isPhoto ? " (optional)" : ""}</label><input id="item-title" name="title" ${isPhoto ? "" : "required "}maxlength="100" value="${escapeHTML(item.title)}"><label for="item-text">${isPhoto ? "Caption (optional)" : "Note"}</label><textarea id="item-text" name="text" ${isPhoto ? "" : "required "}maxlength="5000">${escapeHTML(item.text || "")}</textarea>${isPhoto ? `<label for="item-alt">Image description (optional)</label><input id="item-alt" name="alt" maxlength="500" value="${escapeHTML(item.alt || "")}">` : ""}${coordinates(item)}`,
     "Save",
     (data) => {
       item.title = String(data.get("title")).trim();
@@ -936,75 +802,129 @@ function deleteItem(id: string) {
     },
   );
 }
-$("#add-folder").addEventListener("click", () => showFolderEditor());
-$("#add-note").addEventListener("click", () =>
-  showEditor(
-    "New note",
-    `<label for="note-title">Title</label><input id="note-title" name="title" required maxlength="100"><label for="note-body">Note</label><textarea id="note-body" name="body" required ${hosted ? 'maxlength="5000"' : ""}></textarea>${coordinates()}`,
-    "Create note",
-    (data) =>
-      add("note", String(data.get("title")).trim(), {
-        text: String(data.get("body")).trim(),
-        ...position(data),
-      }),
-  ),
-);
-$("#add-photo").addEventListener("click", () =>
-  showEditor(
-    "Add photo",
-    `<label for="photo-title">${hosted ? "Title" : "Caption"}</label><input id="photo-title" name="title" required maxlength="100">
-    ${hosted ? '<label for="photo-caption">Caption</label><textarea id="photo-caption" name="caption" maxlength="5000"></textarea>' : ""}
-    <label for="photo-alt">Image description</label><input id="photo-alt" name="alt" maxlength="500">
-    <label for="photo-file">Image (up to ${hosted ? 4 : 10} MB)</label><input id="photo-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required>
-    <p>JPEG, PNG or WebP only.${hosted ? "" : " Photos are stored only in this browser; browser storage is limited."}</p>
-    ${coordinates()}`,
-    "Add photo",
-    async (data) => {
-      const file = data.get("file");
-      const limit = hosted ? 4_000_000 : 10_000_000;
-      if (
-        !(file instanceof File) ||
-        (!hosted && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) ||
-        !file.size ||
-        file.size > limit
-      ) {
-        throw new OwnerApiError(422, {
-          error: `Choose a JPEG, PNG, or WebP image up to ${limit / 1_000_000} MB.`,
-        });
-      }
-      const title = String(data.get("title")).trim();
-      const alt = String(data.get("alt")).trim();
-      if (hosted) {
-        const upload = new FormData();
-        upload.set("photo", file);
-        const image = await ownerRequest<Pick<Item, "mediaId" | "width" | "height">>(
-          `${hostedApi}/media`,
-          {
-            method: "POST",
-            body: upload,
-          },
-        );
-        add("photo", title, {
-          ...image,
+if (hosted) {
+  maybe("#add-folder")?.addEventListener("click", () => showFolderEditor());
+  maybe("#add-note")?.addEventListener("click", () =>
+    showEditor(
+      "New note",
+      `<label for="note-title">Title</label><input id="note-title" name="title" required maxlength="100"><label for="note-body">Note</label><textarea id="note-body" name="body" required maxlength="5000"></textarea>${coordinates()}`,
+      "Create note",
+      (data) =>
+        add("note", String(data.get("title")).trim(), {
+          text: String(data.get("body")).trim(),
           ...position(data),
-          text: String(data.get("caption")).trim(),
-          alt,
-        });
-        return;
-      }
-      const src = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () =>
-          reject(
-            new OwnerApiError(422, { error: "The image could not be read. Please try again." }),
-          );
-        reader.readAsDataURL(file);
-      });
-      add("photo", title, { src, text: "", alt });
-    },
-  ),
-);
+        }),
+    ),
+  );
+  maybe("#add-photo")?.addEventListener("click", () =>
+    showEditor(
+      "Add photos",
+      `<label for="photo-title">Title (optional, used when adding one photo)</label><input id="photo-title" name="title" maxlength="100">
+      <label for="photo-caption">Caption (optional)</label><textarea id="photo-caption" name="caption" maxlength="5000"></textarea>
+      <label for="photo-alt">Image description (optional)</label><input id="photo-alt" name="alt" maxlength="500">
+      <label for="photo-file">Images (JPEG, PNG, or WebP, up to 4 MB each)</label><input id="photo-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+      <p>Select one or many photos. Empty titles use each file name.</p>
+      ${coordinates()}`,
+      "Add photos",
+      async (data, feedback) => {
+        const files = [...data.getAll("file")].filter(
+          (value): value is File => value instanceof File && !!value.size,
+        );
+        if (!files.length)
+          throw new OwnerApiError(422, { error: "Choose at least one JPEG, PNG, or WebP image." });
+        if (files.length > 100)
+          throw new OwnerApiError(422, { error: "Add up to 100 photos at a time." });
+        const sharedTitle = String(data.get("title")).trim();
+        const caption = String(data.get("caption")).trim();
+        const alt = String(data.get("alt")).trim();
+        const origin = position(data) ?? defaultPosition();
+        let added = 0;
+        for (const [index, file] of files.entries()) {
+          if (!isImageFile(file) || file.size > 4_000_000)
+            throw new OwnerApiError(422, {
+              error: `${file.name} must be a JPEG, PNG, or WebP image up to 4 MB.`,
+            });
+          if (feedback) feedback.textContent = `Uploading ${index + 1} of ${files.length}…`;
+          const image = await uploadHostedPhoto(file);
+          createItem("photo", files.length === 1 ? sharedTitle || fileTitle(file) : fileTitle(file), {
+            ...image,
+            parent: current,
+            x: origin.x + (index % 4) * 200,
+            y: origin.y + Math.floor(index / 4) * 220,
+            text: caption,
+            alt,
+          });
+          added += 1;
+        }
+        if (!added) throw new OwnerApiError(422, { error: "No photos were added." });
+        save();
+        render();
+      },
+    ),
+  );
+  maybe("#add-folder-upload")?.addEventListener("click", () =>
+    showEditor(
+      "Upload folder",
+      `<label for="folder-upload">Choose a folder</label><input id="folder-upload" name="file" type="file" accept="image/jpeg,image/png,image/webp" webkitdirectory multiple required>
+      <p>Creates folders from the selected directory tree and adds JPEG, PNG, or WebP images (up to 4 MB each, 100 files max). Titles come from file names.</p>`,
+      "Upload folder",
+      async (data, feedback) => {
+        const files = [...data.getAll("file")].filter(
+          (value): value is File => value instanceof File && !!value.size && isImageFile(value),
+        );
+        if (!files.length)
+          throw new OwnerApiError(422, {
+            error: "That folder has no JPEG, PNG, or WebP images under 4 MB.",
+          });
+        if (files.length > 100)
+          throw new OwnerApiError(422, { error: "Upload up to 100 images from a folder at a time." });
+        const rootName =
+          files[0]?.webkitRelativePath.split("/")[0]?.trim() ||
+          "Uploaded folder";
+        const rootFolder = ensureFolder(current, rootName.slice(0, 100));
+        const folderIds = new Map<string, string>([[rootName, rootFolder.id]]);
+        const counts = new Map<string, number>();
+        let added = 0;
+        for (const [index, file] of files.entries()) {
+          if (file.size > 4_000_000) continue;
+          if (feedback) feedback.textContent = `Uploading ${index + 1} of ${files.length}…`;
+          const parts = file.webkitRelativePath.split("/").filter(Boolean);
+          const directories = parts.slice(0, -1);
+          let path = "";
+          let parentId = current;
+          for (const segment of directories) {
+            path = path ? `${path}/${segment}` : segment;
+            let folderId = folderIds.get(path);
+            if (!folderId) {
+              const folder = ensureFolder(parentId, segment.slice(0, 100));
+              folderId = folder.id;
+              folderIds.set(path, folderId);
+            }
+            parentId = folderId;
+          }
+          const image = await uploadHostedPhoto(file);
+          const slot = counts.get(parentId) ?? 0;
+          counts.set(parentId, slot + 1);
+          createItem("photo", fileTitle(file), {
+            ...image,
+            parent: parentId,
+            x: (slot % 4) * 200,
+            y: Math.floor(slot / 4) * 220,
+            text: "",
+            alt: "",
+          });
+          added += 1;
+        }
+        if (!added)
+          throw new OwnerApiError(422, {
+            error: "No images under 4 MB could be uploaded from that folder.",
+          });
+        save();
+        render();
+      },
+    ),
+  );
+}
 const state = $("#wall-state");
 function showState(message: string) {
   state.hidden = !message;
@@ -1022,51 +942,32 @@ function openLinkedFolder() {
 window.addEventListener("popstate", openLinkedFolder);
 async function initialize() {
   setIndex(!mobileIndex.matches);
-  if (import.meta.env.DEV) {
-    try {
-      const draft = await readDraft();
-      if (draft) {
-        items = draft;
-        hasLocalDraft = true;
-      }
-    } catch {
-      showState("Local storage is unavailable. Changes may not persist; export your draft.");
-    }
-  }
-  editButton.hidden = !import.meta.env.DEV;
-  if (!WORKER_URL && !import.meta.env.DEV) {
+  if (!WORKER_URL) {
     items = [];
-    showState("The wall is not configured yet.");
+    showState(
+      import.meta.env.DEV
+        ? "Set PUBLIC_WORKER_URL to load the published wall."
+        : "The wall is not configured yet.",
+    );
     render();
     return;
   }
-  if (WORKER_URL) {
-    showState("Loading the wall…");
-    try {
-      const response = await fetch(apiUrl("/wall"));
-      if (!response.ok) throw new Error(`Wall returned ${response.status}`);
-      const data: { revision: string | null; items: Item[] } = await response.json();
-      if (!Array.isArray(data.items)) throw new Error("Invalid wall response");
-      if (!hasLocalDraft) items = data.items;
-      showState(
-        import.meta.env.DEV
-          ? hasLocalDraft
-            ? "Local browser draft · export to publish."
-            : "Published wall · local edits stay in this browser."
-          : data.revision
-            ? ""
-            : "The wall is empty.",
-      );
-    } catch {
-      state.innerHTML =
-        'Unable to load the wall. <button type="button" id="wall-retry">Try again</button>';
-      state.hidden = false;
-      $("#wall-retry").addEventListener("click", () => void initialize());
-      render();
-      return;
-    }
-  } else {
-    showState("Local editor · sample or browser draft. Export to publish.");
+  showState("Loading the wall…");
+  try {
+    const response = await fetch(apiUrl("/wall"));
+    if (!response.ok) throw new Error(`Wall returned ${response.status}`);
+    const data: { revision: string | null; items: Item[] } = await response.json();
+    if (!Array.isArray(data.items)) throw new Error("Invalid wall response");
+    items = data.items;
+    showState(data.revision ? "" : "The wall is empty.");
+  } catch {
+    items = [];
+    state.innerHTML =
+      'Unable to load the wall. <button type="button" id="wall-retry">Try again</button>';
+    state.hidden = false;
+    $("#wall-retry").addEventListener("click", () => void initialize());
+    render();
+    return;
   }
   openLinkedFolder();
   document.fonts.ready.then(fit);
@@ -1229,56 +1130,3 @@ if (hosted) {
 }
 if (hosted) void hostedOperation("Loading draft…", loadHosted);
 else void initialize();
-$("#export-wall").addEventListener("click", async () => {
-  try {
-    const exported = await Promise.all(
-      items.map(async (item) => {
-        if (item.kind !== "photo" || item.src?.startsWith("data:")) return item;
-        const source = item.mediaId ? mediaUrl(item.mediaId, "detail") : item.src;
-        if (!source) throw new Error("Photo has no source");
-        const response = await fetch(source);
-        if (!response.ok) throw new Error("Photo unavailable");
-        const blob = await response.blob();
-        const src = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        const digest = item.mediaId
-          ? Array.from(
-              new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer())),
-              (b) => b.toString(16).padStart(2, "0"),
-            ).join("")
-          : undefined;
-        return { ...item, src, sourceHash: digest };
-      }),
-    );
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify({ schemaVersion: 1, items: exported }, null, 2)], {
-        type: "application/json",
-      }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "wall-draft.json";
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch {
-    alert("A photo could not be included in the export. Check its source and try again.");
-  }
-});
-
-$("#reset-wall").addEventListener("click", () =>
-  showEditor(
-    "Reset sample wall?",
-    "<p>This removes your local draft in this browser.</p>",
-    "Reset samples",
-    () => {
-      items = structuredClone(initial);
-      save();
-      enter("root");
-      (hosted ? canvas : editButton).focus({ preventScroll: true });
-    },
-  ),
-);

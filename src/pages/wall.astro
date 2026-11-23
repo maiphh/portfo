@@ -27,28 +27,38 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <dialog id="wall-contribution" class="wall-editor" aria-labelledby="contribute-title">
       <form>
         <h2 id="contribute-title">Contribute to the wall</h2>
+        <p id="contribution-folder-hint" class="wall-contribute-hint"></p>
+        <input id="contribution-folder" name="folderHint" type="hidden" value="root" />
         <label for="contribution-kind">Contribution</label>
         <select id="contribution-kind">
           <option value="note">Note</option>
-          <option value="photo">Photo</option>
+          <option value="photo">Photos</option>
         </select>
-        <label for="contribution-title">Title</label>
+        <label for="contribution-name">Your name (optional)</label>
+        <input id="contribution-name" name="visitorName" maxlength="100" autocomplete="nickname" />
+        <label id="contribution-title-label" for="contribution-title">Title</label>
         <input id="contribution-title" name="title" maxlength="100" required />
         <label id="contribution-body-label" for="contribution-body">
           Note
         </label>
         <textarea id="contribution-body" name="body" maxlength="5000" required></textarea>
         <div id="contribution-image-fields" hidden>
-          <label for="contribution-photo">Photo (JPEG, PNG, or WebP, up to 4 MB)</label>
+          <label for="contribution-photo">
+            Photos (JPEG, PNG, or WebP, up to 4 MB each, 10 max)
+          </label>
           <input
             id="contribution-photo"
             name="photo"
             type="file"
             accept="image/jpeg,image/png,image/webp"
+            multiple
             disabled
           />
-          <label for="contribution-alt">Image description (alt text)</label>
+          <label for="contribution-alt">Image description (optional)</label>
           <input id="contribution-alt" name="alt" maxlength="500" disabled />
+          <p class="wall-contribute-hint">
+            Photos go into the folder you are viewing. Title is optional for photos.
+          </p>
         </div>
         <p id="contribution-status" role="status"></p>
         <div class="wall-editor-actions">

@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "wall:publish": "node scripts/wall/publish.mjs",
+    "wall:reset-password": "node scripts/wall/reset-owner-password.mjs",
     "test:e2e:wall": "playwright test --config=playwright.wall.config.ts"
   },
   "dependencies": {

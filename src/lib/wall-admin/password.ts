@@ -22,7 +22,7 @@ function bounded(value: unknown): value is string {
 function validNew(value: unknown): value is string {
   if (!bounded(value)) return false;
   const count = [...value].length;
-  return count >= 16 && count <= 128;
+  return count >= 8 && count <= 128;
 }
 
 function derive(password: string, salt: Buffer) {
@@ -116,7 +116,7 @@ export async function changePassword(context: APIContext, input: Record<string, 
   const errors: Record<string, string> = {};
   if (!bounded(currentPassword)) errors.currentPassword = "Enter your current password.";
   if (!validNew(newPassword))
-    errors.newPassword = "Use 16–128 characters and up to 512 UTF-8 bytes.";
+    errors.newPassword = "Use 8–128 characters and up to 512 UTF-8 bytes.";
   else if (newPassword === currentPassword) errors.newPassword = "Choose a different password.";
   if (newPassword !== confirmation || !bounded(confirmation))
     errors.confirmation = "Enter the new password again.";

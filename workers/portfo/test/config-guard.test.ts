@@ -16,7 +16,7 @@ describe("deploy guard", () => {
   it("the committed top level has no placeholders", () => {
     expect(checkConfig(wrangler)).toEqual([]);
     const vars = effectiveConfig(wrangler).vars as Record<string, string>;
-    expect(vars.ALLOWED_ORIGINS).toBe("http://localhost:4321");
+    expect(vars.ALLOWED_ORIGINS).toBe("http://localhost:4321,http://[::1]:4321");
     expect(vars.API_URL).toBeUndefined();
     expect(wrangler.build).toEqual({ command: "node scripts/check-config.ts" });
   });

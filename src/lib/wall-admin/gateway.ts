@@ -131,17 +131,31 @@ export async function publicSubmission(context: APIContext) {
     const title = getText("title");
     const body = getText("body");
     const alt = photo ? getText("alt") : "";
+    const folderHint = getText("folderHint");
+    const visitorName = getText("visitorName");
     if (
       !new RegExp(`^${uuid}$`).test(id) ||
-      !title ||
       title.length > 100 ||
       body.length > 5000 ||
-      (!photo && !body) ||
-      (photo && (!alt || alt.length > 500))
+      visitorName.length > 100 ||
+      (!photo && (!title || !body)) ||
+      (photo && alt.length > 500) ||
+      (folderHint &&
+        folderHint !== "root" &&
+        !/^[A-Za-z0-9_-]{1,100}$/.test(folderHint))
     )
       throw new GatewayError(422, "Check your title, note, and image description.");
     const bytes = photo ? Buffer.from(await photo.arrayBuffer()) : null;
-    const fingerprint = digest(JSON.stringify([title, body, alt, bytes ? digest(bytes) : null]));
+    const fingerprint = digest(
+      JSON.stringify([
+        title,
+        body,
+        alt,
+        folderHint || null,
+        visitorName || null,
+        bytes ? digest(bytes) : null,
+      ]),
+    );
     const receipt = await worker(context, "/submission-receipt", {
       method: "POST",
       body: { id, fingerprint },
@@ -151,6 +165,8 @@ export async function publicSubmission(context: APIContext) {
     const normalized = new FormData();
     for (const [key, value] of Object.entries({ id, fingerprint, title, body, alt }))
       normalized.set(key, value);
+    if (folderHint) normalized.set("folderHint", folderHint);
+    if (visitorName) normalized.set("visitorName", visitorName);
     if (bytes) await normalizeImage(bytes, normalized);
     return forward(await worker(context, "/submissions", { method: "POST", body: normalized }));
   } catch (error) {

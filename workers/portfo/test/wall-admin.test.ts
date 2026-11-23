@@ -2,6 +2,8 @@ import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import migration from "../migrations/0002_personal_wall.sql?raw";
 import adminMigration from "../migrations/0003_wall_admin.sql?raw";
+import folderHintMigration from "../migrations/0004_wall_submission_folder.sql?raw";
+import visitorNameMigration from "../migrations/0005_wall_visitor_name.sql?raw";
 import { handle } from "../src/index";
 import { env } from "./env";
 
@@ -40,6 +42,8 @@ beforeAll(async () => {
       .map((sql) => env.DB.prepare(sql.trim())),
   );
   await env.DB.prepare(trigger.trim()).run();
+  await env.DB.prepare(folderHintMigration.trim()).run();
+  await env.DB.prepare(visitorNameMigration.trim()).run();
 });
 
 beforeEach(async () => {

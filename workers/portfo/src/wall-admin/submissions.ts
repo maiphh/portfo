@@ -13,13 +13,18 @@ interface Submission {
   mediaId: string | null;
   width: number | null;
   height: number | null;
+  folderHint: string | null;
+  visitorName: string | null;
   createdAt: number;
   decidedAt: number | null;
   acceptedItemId: string | null;
 }
 
 const columns = `id, status, title, body, alt, media_id AS mediaId, width, height,
-  created_at AS createdAt, decided_at AS decidedAt, accepted_item_id AS acceptedItemId`;
+  folder_hint AS folderHint, visitor_name AS visitorName, created_at AS createdAt,
+  decided_at AS decidedAt, accepted_item_id AS acceptedItemId`;
+const mediaIdTitle = /^[a-f0-9]{64}$/;
+const photoTitle = (title: string) => (mediaIdTitle.test(title.trim()) ? "" : title.trim());
 const find = (db: D1Database, id: string) =>
   db
     .prepare(`SELECT ${columns}, fingerprint FROM wall_submissions WHERE id = ?`)
@@ -50,6 +55,8 @@ export async function submit(env: Env, form: FormData) {
   const title = form.get("title");
   const body = form.get("body");
   const alt = form.get("alt");
+  const folderHint = form.get("folderHint");
+  const visitorName = form.get("visitorName");
   const photo = form.has("mediaId");
   if (
     typeof id !== "string" ||
@@ -57,30 +64,38 @@ export async function submit(env: Env, form: FormData) {
     typeof fingerprint !== "string" ||
     !mediaPattern.test(fingerprint) ||
     typeof title !== "string" ||
-    !title.trim() ||
     title.length > 100 ||
     typeof body !== "string" ||
     body.length > 5000 ||
-    (!photo && !body.trim()) ||
-    (photo && (typeof alt !== "string" || !alt.trim() || alt.length > 500))
+    (!photo && (!title.trim() || !body.trim())) ||
+    (photo && typeof alt === "string" && alt.length > 500) ||
+    (folderHint !== null &&
+      (typeof folderHint !== "string" ||
+        (folderHint !== "root" && !/^[A-Za-z0-9_-]{1,100}$/.test(folderHint)))) ||
+    (visitorName !== null && (typeof visitorName !== "string" || visitorName.length > 100))
   )
     throw new RequestError(422, "Check your title, note, and image description.");
   const existing = await find(env.DB, id);
   if (existing) return receipt(existing, fingerprint);
   const image = photo ? await storeImage(env, form, false) : null;
+  const hint = typeof folderHint === "string" && folderHint ? folderHint : null;
+  const name = typeof visitorName === "string" ? visitorName.trim() : "";
   const [, stored] = await env.DB.batch<Submission>([
     env.DB.prepare(
       `INSERT OR IGNORE INTO wall_submissions
-       (id, fingerprint, title, body, alt, media_id, width, height, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, fingerprint, title, body, alt, media_id, width, height, folder_hint, visitor_name, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).bind(
       id,
       fingerprint,
-      title,
+      photo ? photoTitle(title) : title,
       body,
-      photo ? alt : null,
+      photo ? (typeof alt === "string" ? alt : "") : null,
       image?.mediaId ?? null,
       image?.width ?? null,
       image?.height ?? null,
+      hint,
+      name || null,
       Date.now(),
     ),
     env.DB.prepare(`SELECT ${columns}, fingerprint FROM wall_submissions WHERE id = ?`).bind(id),
@@ -166,14 +181,18 @@ export async function decide(
   );
   let cell = 0;
   while (occupied.has(`${(cell % 4) * 240}:${Math.floor(cell / 4) * 260}`)) cell++;
+  const attribution = submission.visitorName?.trim();
+  const text = [submission.body.trim(), attribution ? `— ${attribution}` : ""]
+    .filter(Boolean)
+    .join("\n\n");
   const item: Item = {
     id: itemId,
     kind: submission.mediaId ? "photo" : "note",
-    title: submission.title,
+    title: submission.mediaId ? photoTitle(submission.title) : submission.title,
     parent: folderId,
     x: (cell % 4) * 240,
     y: Math.floor(cell / 4) * 260,
-    text: submission.body,
+    text,
     ...(submission.mediaId
       ? {
           mediaId: submission.mediaId,

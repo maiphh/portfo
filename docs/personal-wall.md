@@ -150,7 +150,15 @@ From the repository root, run Astro with that same service key and a dummy boots
 PUBLIC_WORKER_URL=http://127.0.0.1:8787 WALL_ADMIN_WORKER_URL=http://127.0.0.1:8787 WALL_ADMIN_SERVICE_KEY=local-wall-admin-key-replace-me-with-a-long-random-value ADMIN_BOOTSTRAP_PASSWORD='local owner password for development' pnpm dev
 ```
 
-Open `/login` and sign in with the bootstrap password. The public wall accepts notes and JPEG, PNG, or WebP photos. The owner editor is at `/admin/wall`, the review queue at `/admin/wall/submissions`, and password rotation at `/admin/password`. Queued photos become public only when an accepted card is published. The bootstrap hash is initialized once. Remove `ADMIN_BOOTSTRAP_PASSWORD` after initializing a real environment. Recovery requires an authorized operator to replace `admin_credentials.password_hash` with a hash in the format defined by `src/lib/wall-admin/password.ts` and increment `admin_credentials.version` in the same update. Incrementing the version invalidates existing sessions.
+Open `/login` and sign in with the bootstrap password. The public wall accepts notes and batch JPEG, PNG, or WebP photos into the folder the visitor is viewing. Photo titles and image descriptions are optional; empty titles use the file name. The owner editor at `/admin/wall` supports multi-photo upload and folder-tree upload (`+ Upload folder`), which recreates the chosen directory as folders and images. The review queue is at `/admin/wall/submissions`, and password rotation at `/admin/password`. Queued photos become public only when an accepted card is published. Apply D1 migrations through `0004_wall_submission_folder.sql` so visitor contributions can remember their destination folder. The bootstrap hash is initialized once. After that first successful login, changing `ADMIN_BOOTSTRAP_PASSWORD` in `.env` does nothing: the database password wins. Remove `ADMIN_BOOTSTRAP_PASSWORD` after initializing a real environment.
+
+**Forgot the local owner password?** Reset the hash in the local Worker D1 database (8–128 characters):
+
+```sh
+pnpm wall:reset-password 'your-new-password'
+```
+
+That replaces `admin_credentials.password_hash`, increments `version`, and clears `admin_sessions`. Then sign in at `/login` with the new password. For a non-default persist directory, pass `--db path/to.sqlite`. Production recovery is the same idea with an authorized operator updating the live D1 row using a hash in the format from `src/lib/wall-admin/password.ts`.
 
 Run checks with `pnpm lint`, `pnpm check`, `pnpm build`, `pnpm test`, `pnpm test:e2e`, `pnpm --dir workers/portfo typecheck`, and `pnpm --dir workers/portfo test`. The live browser test uses separate owner and visitor contexts for contribution, review, publication, logout, password rotation, and revocation.
 

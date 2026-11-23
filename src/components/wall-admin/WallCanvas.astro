@@ -20,9 +20,6 @@ const { hosted = false } = Astro.props;
       <button id="expand-all" type="button" aria-pressed="false">
         Expand all
       </button>
-      <button id="edit-toggle" type="button" aria-pressed="false" hidden>
-        Edit locally
-      </button>
       {!hosted && (
         <button id="wall-contribute" type="button">
           Contribute
@@ -30,23 +27,25 @@ const { hosted = false } = Astro.props;
       )}
     </div>
   </div>
-  <div class="wall-actions" id="wall-actions" hidden>
-    {!hosted && <span>Changes stay in this browser.</span>}
-    <button id="add-folder" type="button">
-      + Folder
-    </button>
-    <button id="add-note" type="button">
-      + Note
-    </button>
-    <button id="add-photo" type="button">
-      + Photo
-    </button>
-    <button id="export-wall" type="button" hidden={hosted}>
-      Export draft
-    </button>
-    <button id="reset-wall" type="button" hidden={hosted}>
-      Reset samples
-    </button>
+  <div class="wall-actions" id="wall-actions" hidden={!hosted}>
+    {
+      hosted && (
+        <>
+          <button id="add-folder" type="button">
+            + Folder
+          </button>
+          <button id="add-note" type="button">
+            + Note
+          </button>
+          <button id="add-photo" type="button">
+            + Photos
+          </button>
+          <button id="add-folder-upload" type="button">
+            + Upload folder
+          </button>
+        </>
+      )
+    }
   </div>
   <div id="wall-state" class="wall-state" role="status" hidden></div>
   <div class="wall-body">
