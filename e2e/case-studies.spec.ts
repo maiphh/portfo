@@ -383,7 +383,6 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
         muted: el.muted,
         inline: el.playsInline,
         preload: el.preload,
-        poster: el.getAttribute("poster"),
         autoplay: el.autoplay,
         described: el.getAttribute("aria-describedby"),
       })),
@@ -391,13 +390,24 @@ test.describe("DVP promo cut (approved 2026-10-22)", () => {
       muted: true,
       inline: true,
       preload: "none",
-      poster: null,
       autoplay: false,
       described: null,
     });
     await expect(page.locator("#vid-desc")).toHaveCount(0);
-    // The poster="" is set only as the frame nears the viewport.
+    // Poster stays off the markup and is applied only when the frame is within
+    // the 200px rootMargin. On desktop DVP the cut is already that close after
+    // load (also true on main), so poster may already be set here.
     await expect(v).toHaveAttribute("data-poster-src", "/work/data-validation/motion-poster.jpg");
+    const nearViewport = await v.evaluate((el) => {
+      const frame = el.closest(".cs2-video-frame") ?? el;
+      const top = frame.getBoundingClientRect().top;
+      return top < window.innerHeight + 200;
+    });
+    if (nearViewport) {
+      await expect(v).toHaveAttribute("poster", "/work/data-validation/motion-poster.jpg");
+    } else {
+      expect(await v.getAttribute("poster")).toBeNull();
+    }
     await expect(page.locator(".cs2-video figcaption")).toContainText(/not results/);
     await expect(page.locator(".cs2-video-head")).toContainText(/demo values/i);
     const res = await page.request.get("/work/data-validation/motion.mp4");
