@@ -15,16 +15,20 @@ test("Talentnet's full role fits on one line and aligns with its name", async ({
   await expect(role).toHaveCSS("white-space", "nowrap");
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   const fits = await role.evaluate((element) => {
-    const card = element.closest("[data-tl-bar]")!;
-    const bounds = card.getBoundingClientRect();
+    const bar = element.closest("[data-tl-bar]");
+    if (!(bar instanceof HTMLElement)) return false;
+    const bounds = bar.getBoundingClientRect();
     return (
       element.scrollWidth <= element.clientWidth &&
       element.getBoundingClientRect().bottom <= bounds.bottom
     );
   });
   expect(fits).toBe(true);
-  const nameBounds = (await card.getByText("Talentnet", { exact: true }).boundingBox())!;
-  const roleBounds = (await role.boundingBox())!;
+  const nameBounds = await card.getByText("Talentnet", { exact: true }).boundingBox();
+  const roleBounds = await role.boundingBox();
+  expect(nameBounds).toBeTruthy();
+  expect(roleBounds).toBeTruthy();
+  if (!nameBounds || !roleBounds) return;
   expect(roleBounds.x).toBeCloseTo(nameBounds.x);
 });
 
@@ -33,9 +37,10 @@ test("experience sits before work and the IELTS mark never overlaps its label", 
 }) => {
   await page.goto("/");
   const order = await page.evaluate(() => {
-    const tl = document.querySelector("#timeline")!;
-    const work = document.querySelector("#work")!;
-    return tl.compareDocumentPosition(work) & Node.DOCUMENT_POSITION_FOLLOWING;
+    const tl = document.querySelector("#timeline");
+    const work = document.querySelector("#work");
+    if (!tl || !work) return false;
+    return Boolean(tl.compareDocumentPosition(work) & Node.DOCUMENT_POSITION_FOLLOWING);
   });
   expect(order).toBeTruthy();
 
@@ -43,9 +48,10 @@ test("experience sits before work and the IELTS mark never overlaps its label", 
   const mark = page.locator(".mark-qual");
   await expect(mark).toContainText("IELTS 7.0");
   const gap = await mark.evaluate((el) => {
-    const logo = el.querySelector<HTMLElement>(".org-logo")!.getBoundingClientRect();
-    const label = el.querySelector<HTMLElement>("span:not(.org-logo)")!.getBoundingClientRect();
-    return label.left - logo.right;
+    const logo = el.querySelector<HTMLElement>(".org-logo");
+    const label = el.querySelector<HTMLElement>("span:not(.org-logo)");
+    if (!logo || !label) return -1;
+    return label.getBoundingClientRect().left - logo.getBoundingClientRect().right;
   });
   expect(gap).toBeGreaterThanOrEqual(0);
 });
