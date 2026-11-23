@@ -3,6 +3,7 @@ import "@fontsource-variable/familjen-grotesk";
 import "@fontsource-variable/hubot-sans/wdth.css";
 import "@fontsource-variable/jetbrains-mono";
 import "~/styles/global.css";
+import GsapTransitions from "~/components/GsapTransitions.astro";
 import WallCanvas from "~/components/wall-admin/WallCanvas.astro";
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -19,8 +20,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>Personal Wall — Mai Gia Phu</title>
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Match Base.astro: curtain arrivals cover before paint; js enables transition CSS. -->
+    <script is:inline>
+      document.documentElement.classList.add("js");
+      try {
+        if (
+          !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          sessionStorage.getItem("t-go") !== null
+        ) {
+          document.documentElement.classList.add("t-covered", "t-shield");
+        }
+      } catch {
+        // storage unavailable — plain load
+      }
+    </script>
   </head>
   <body class="wall-page">
+    <GsapTransitions />
     <main>
       <WallCanvas />
     </main>

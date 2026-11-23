@@ -1,4 +1,5 @@
 ---
+import SupportFooterStub from "~/components/support/SupportFooterStub.astro";
 import type { Credit } from "~/lib/credit";
 import { USE_MOCKS } from "~/lib/flags";
 import { site } from "~/lib/site";
@@ -7,8 +8,9 @@ interface Props {
   base?: "" | "/";
   /** A one-line credit under the footer row (the case studies' iso-glow figures). */
   credit?: Credit | undefined;
+  supportPage?: boolean;
 }
-const { base = "", credit } = Astro.props;
+const { base = "", credit, supportPage = false } = Astro.props;
 // the credit text around its linked word, or null when there is no link to place
 const at = credit?.link ? credit.text.indexOf(credit.link.label) : -1;
 const cr =
@@ -24,6 +26,7 @@ const cr =
     <p class="foot-name" aria-hidden="true" data-footname>
       {site.name}
     </p>
+    {!supportPage && import.meta.env.PUBLIC_SUPPORT_ENABLED === "true" && <SupportFooterStub />}
     <div class="foot-row">
       <span>
         {site.role} · {site.city}

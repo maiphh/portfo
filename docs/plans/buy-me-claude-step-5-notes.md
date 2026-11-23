@@ -1,0 +1,13 @@
+# Buy Me Claude: browser acceptance handoff
+
+The support Playwright suite builds with fixture-only public settings and intercepts geo, Turnstile, Worker requests and the Polar checkout navigation. It does not add a production test mode. The on-demand geo function is tested separately with synthetic Vercel headers in `src/lib/support/default-rail.test.ts`; the static preview cannot run that function.
+
+The screenshot matrix is written to `/workspace/portfo-shots/buy-me-claude/` locally and uploaded as the `support-screenshots` CI artifact. For each of 320, 390, 414, 768, 1024 and 1440 pixels it captures the preview with empty wall, review form, footer and nav; QR/confirming; paid; expired; failed; card return; no-JavaScript; and the homepage footer ticket. Representative mobile and desktop receipt layouts were compared with the Option B references in `.codex-input/option-b/out/`. The launch wall intentionally contains no example notes.
+
+The suite checks overflow and feature text sizes, 44px support controls, keyboard selection, reduced motion, paper and blank-roll contrast, and disabled secure actions without JavaScript. The existing wordmark suite checks the anchor and hit targets on home and a case study, with the mobile menu open and closed. Mock scenarios cover geo suggestions and override, custom validation, QR copy and download, settlement including late payment, recovery after a lost response, provider return and cancellation, outages, and pending/free/badged notes and wall visibility after moderation. These browser fixtures do not replace the Worker tests of provider signatures, settlement and moderation.
+
+Local verification: frozen pnpm installs; root lint, Astro check, unit tests and both default and support builds; Worker typecheck, configuration guard, corpus/work generation and Vitest with local D1; and Playwright suites. The site-wide Playwright run had four trace-file cleanup errors when the support suite ran concurrently; those four cases were rerun separately. No live provider, Cloudflare resource, remote migration or deployment was used.
+
+## Separate launch gate
+
+Phu must approve prices, copy, moderation and retention, confirm Polar eligibility in writing, and provide the placeholder credentials and public settings. After separate approval, apply the existing migration remotely, configure secrets and callbacks, verify the Vercel country header and approved provider sandbox flows, and test QR import, clipboard/download and receipt rendering on real devices. Enable Worker creation flags before publishing the feature-enabled build. If activation is paused, keep verified webhooks available for outstanding attempts. See the plan and Worker README for the full runbook.

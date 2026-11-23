@@ -2,25 +2,35 @@
 /**
  * GSAP "curtain" page transition (adapted from prototypes/prototype-a-curtain.html).
  *
- * - Clicking any link to /work/* covers the screen with staggered columns only
- *   (readout stays hidden; no typing on the old page). Navigate when the curtain
- *   is shut (`landedAt`). The arrival page owns the command line.
+ * - Clicking any link to /work/*, /wall, or /buy-me-claude covers the screen with
+ *   staggered columns only (readout stays hidden; no typing on the old page).
+ *   Navigate when the curtain is shut (`landedAt`). The arrival page owns the
+ *   command line.
  * - Arrival types the command on the closed curtain (same character type as
  *   before), holds the finished line, then uncovers. Exit never types.
- * - /work pages render WITH the curtain already covered server-side, so the loaded
- *   document paints under it and the transition reads as one move (no flash).
+ * - Those destination pages render WITH the curtain already covered server-side,
+ *   so the loaded document paints under it and the transition reads as one move
+ *   (no flash).
  * - Pages arrived at via an exit (incl. home on the way back) get `t-covered`
- *   and `t-shield` (Base.astro inline head script) before first paint. The
- *   curtain is the first body node, and `t-shield` paints the canvas the
+ *   and `t-shield` (Base.astro / wall.astro inline head script) before first paint.
+ *   The curtain is the first body node, and `t-shield` paints the canvas the
  *   curtain color until the columns are actually covering.
- * - Each covered page uncovers itself + staggers its content in.
+ * - Each covered page uncovers itself + staggers case-study content in when present.
  * - Browser back restores the previous document from bfcache; if it left covered,
  *   it types the command for the page being re-entered, then uncovers.
  * - Everything is skipped for prefers-reduced-motion (instant navigation).
  */
 const route = Astro.url.pathname;
-const slug = route.startsWith("/work/") ? (route.split("/")[2] ?? "") : "";
-const covered = !!slug;
+const workSlug = route.startsWith("/work/") ? (route.split("/")[2] ?? "") : "";
+const covered =
+  Boolean(workSlug) || /^\/wall\/?$/.test(route) || route.startsWith("/buy-me-claude");
+const coveredCommand = workSlug
+  ? `cd work/${workSlug}`
+  : /^\/wall\/?$/.test(route)
+    ? "cd wall"
+    : route.startsWith("/buy-me-claude")
+      ? "cd buy-me-claude"
+      : "";
 ---
 
 <div id="t-curtain" class:list={[covered && "covered"]} hidden={!covered} aria-hidden="true">
@@ -32,7 +42,7 @@ const covered = !!slug;
   <div class="col"></div>
 </div>
 <div id="t-readout" hidden={!covered} aria-hidden="true">
-  <span id="t-readout-text">{covered ? `cd work/${slug}` : ""}</span>
+  <span id="t-readout-text">{coveredCommand}</span>
 </div>
 <script is:inline>
   // SSR-covered failsafe: if the entrance module never runs, clear the curtain.
@@ -84,8 +94,8 @@ const covered = !!slug;
     transform: scaleY(0);
     will-change: transform;
   }
-  /* Server-rendered covered state on /work pages (class) and the flagged arrival
-     state on any page (Base.astro sets .t-covered when sessionStorage has t-go). */
+  /* Server-rendered covered state on curtain routes (class) and the flagged arrival
+     state on any page (head script sets .t-covered when sessionStorage has t-go). */
   #t-curtain.covered .col,
   .t-covered #t-curtain .col {
     transform: scaleY(1);
@@ -161,12 +171,18 @@ const covered = !!slug;
   const reveals = gsap.utils.toArray<HTMLElement>(`article.cs ${TARGETS}`);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /** `cd work/<slug>` into a case study, `cd ..` out of one. */
+  const isHome = (path: string): boolean => path === "/" || path === "";
+  const isCurtainRoute = (path: string): boolean =>
+    path.startsWith("/work/") || /^\/wall\/?$/.test(path) || path.startsWith("/buy-me-claude");
+
+  /** Terminal-style label for the destination: case study, wall, BMC, or back. */
   const commandFor = (path: string): string => {
     if (path.startsWith("/work/")) {
       const slug = path.split("/")[2] || "";
       return slug ? `cd work/${slug}` : "cd ..";
     }
+    if (/^\/wall\/?$/.test(path)) return "cd wall";
+    if (path.startsWith("/buy-me-claude")) return "cd buy-me-claude";
     return "cd ..";
   };
 
@@ -322,10 +338,10 @@ const covered = !!slug;
     hide();
   }
 
-  const isWork = location.pathname.startsWith("/work/");
+  const onCurtainPage = isCurtainRoute(location.pathname);
 
-  // The document may have rendered already covered (server-rendered on /work, or
-  // flagged via the inline head script for the "cd .." route home).
+  // The document may have rendered already covered (server-rendered on curtain
+  // routes, or flagged via the inline head script for the "cd .." route home).
   const arrivedCovered =
     curtain.classList.contains("covered") ||
     document.documentElement.classList.contains("t-covered");
@@ -364,7 +380,7 @@ const covered = !!slug;
     // departed covered: reopen the show
     try {
       // reflect the page being re-entered, not the stale destination command
-      const backCmd = isWork ? commandFor(location.pathname) : "cd ..";
+      const backCmd = onCurtainPage ? commandFor(location.pathname) : "cd ..";
       gsap.set(cols, { scaleY: 1, transformOrigin: "top center" });
       typeCommand(backCmd);
       window.setTimeout(() => (busy = false), 1600);
@@ -388,10 +404,12 @@ const covered = !!slug;
     if (url.origin !== location.origin) return;
     // in-page anchors stay put
     if (url.hash && url.pathname === location.pathname) return;
+    if (url.pathname === location.pathname) return;
 
-    const isToWork = url.pathname.startsWith("/work/");
-    const leavingWork = isWork && url.pathname === "/";
-    if (!isToWork && !leavingWork) return;
+    const toCurtain = isCurtainRoute(url.pathname);
+    const leavingCurtain = onCurtainPage && isHome(url.pathname);
+    const betweenCurtain = onCurtainPage && toCurtain;
+    if (!toCurtain && !leavingCurtain && !betweenCurtain) return;
 
     if (reduced) {
       // plain navigation

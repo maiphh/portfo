@@ -1,5 +1,5 @@
-// portfo: contact, views, GitHub activity, the chat agent, and the Personal Wall. Nothing here is a secret.
-// Top level is local/dev (localhost only). env.production is the launch config.
+// portfo: contact, views, GitHub activity, the chat agent, Personal Wall, and support.
+// Nothing here is a secret. Top level is local/dev (localhost only). env.production is launch.
 // A deploy stops if any value is still a placeholder: see build.command.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -36,6 +36,11 @@
       "namespace_id": "1001",
       "simple": { "limit": 3, "period": 10 },
     },
+    {
+      "name": "SUPPORT_READ_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 120, "period": 60 },
+    },
   ],
 
   // Exact counters: per-visitor 10-minute window and the daily message budget.
@@ -48,6 +53,12 @@
   "vars": {
     // Astro may be opened as localhost or [::1] on the same machine.
     "ALLOWED_ORIGINS": "http://localhost:4321,http://[::1]:4321",
+    "SUPPORT_SITE_ORIGIN": "http://localhost:4321",
+    "POLAR_PRODUCT_ID": "",
+    "POLAR_ORG_ID": "",
+    "POLAR_ENVIRONMENT": "sandbox",
+    "SUPPORT_PAYOS_ENABLED": "false",
+    "SUPPORT_CARD_ENABLED": "false",
     "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "DAILY_MESSAGE_CAP": "50",
@@ -57,7 +68,8 @@
   },
 
   // Secrets (never in this file): SESSION_SIGNING_KEY, VISITOR_HASH_SALT,
-  // RESEND_API_KEY, NOTIFY_EMAIL, RESEND_FROM, GITHUB_TOKEN, GITHUB_LOGIN, CRON_SECRET.
+  // RESEND_API_KEY, NOTIFY_EMAIL, RESEND_FROM, GITHUB_TOKEN, GITHUB_LOGIN, CRON_SECRET,
+  // WALL_ADMIN_SERVICE_KEY, PAYOS_*, TURNSTILE_SECRET_KEY, SUPPORT_* signing/admin salts.
 
   "env": {
     "production": {
@@ -79,6 +91,11 @@
           "namespace_id": "1001",
           "simple": { "limit": 3, "period": 10 },
         },
+        {
+          "name": "SUPPORT_READ_LIMITER",
+          "namespace_id": "1002",
+          "simple": { "limit": 120, "period": 60 },
+        },
       ],
       "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Quota"] }],
@@ -87,6 +104,12 @@
         // TODO(launch): the production site origin, e.g. "https://maiphh.dev".
         "ALLOWED_ORIGINS": "https://REPLACE_ME_SITE_DOMAIN",
         "ENVIRONMENT": "production",
+        "SUPPORT_SITE_ORIGIN": "",
+        "POLAR_PRODUCT_ID": "",
+        "POLAR_ORG_ID": "",
+        "POLAR_ENVIRONMENT": "production",
+        "SUPPORT_PAYOS_ENABLED": "false",
+        "SUPPORT_CARD_ENABLED": "false",
         "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         "CHAT_FALLBACK_MODEL": "@cf/meta/llama-3.1-8b-instruct",
         "DAILY_MESSAGE_CAP": "50",

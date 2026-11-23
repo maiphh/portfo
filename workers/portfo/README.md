@@ -56,3 +56,25 @@ model knobs) live in `wrangler.jsonc`. The committed `database_id` is the `portf
 not a secret); on a fresh account replace it after `wrangler d1 create portfo`. Top-level config stays deployable for local dev (no
 `REPLACE_ME`); `env.production` fails the deploy guard until its placeholders are filled and
 `ALLOWED_ORIGINS` includes an `https://` origin with `ENVIRONMENT=production`.
+
+## Support moderation and retention
+
+Review submissions are private until approved. Use a dedicated `SUPPORT_ADMIN_TOKEN` and
+server-to-server requests without an Origin header. Replace the placeholders locally; do not
+paste credentials into source control or share them in command history.
+
+```sh
+curl -H "Authorization: Bearer $SUPPORT_ADMIN_TOKEN" "$WORKER_URL/api/support/admin/reviews?status=pending"
+curl -X POST -H "Authorization: Bearer $SUPPORT_ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{"action":"approve"}' "$WORKER_URL/api/support/admin/reviews/<review-id>"
+# Other actions: reject (pending), hide (approved).
+curl -H "Authorization: Bearer $SUPPORT_ADMIN_TOKEN" "$WORKER_URL/api/support/admin/donations"
+curl -X POST -H "Authorization: Bearer $SUPPORT_ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{"action":"hide_supporter"}' "$WORKER_URL/api/support/admin/donations/<donation-id>"
+```
+
+Donation messages are visible only to this admin endpoint. Hiding a name does not change payment
+status. The scheduled job independently clears private messages and checkout artifacts after 30
+days from payment or creation, IP digests after 24 hours, rate counters after 48 hours, and
+rejected/hidden content after 30 days. Each run handles up to 500 records per category. Minimal
+payment and replay records remain for reconciliation; Phu must approve final retention. Rotating
+`SUPPORT_REVIEW_SIGNING_KEY` invalidates outstanding signatures; eligible donors can reclaim a
+token signed with the current key during the seven-day window. Coordinate rotation accordingly.

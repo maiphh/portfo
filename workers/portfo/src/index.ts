@@ -8,9 +8,10 @@
  *   POST /cron/github-sync   manual sync (Bearer CRON_SECRET)
  *   GET  /wall               published Personal Wall metadata
  *   GET  /wall/media/:id/:variant  published Personal Wall image
+ *   /api/support/*           Buy me Claude payments and reviews
  *   GET  /health             liveness and non-secret config
  * Cron Trigger every 6 hours runs the GitHub sync (no bearer needed).
- * CORS: ALLOWED_ORIGINS for browser calls; no Origin is allowed for cron/curl.
+ * CORS: ALLOWED_ORIGINS for browser CORS; no Origin is allowed for cron/curl.
  */
 import { getPopular, parseDays, POPULAR_CACHE_CONTROL } from "./analytics/popular";
 import { readViewBody, recordView, viewResponse } from "./analytics/view";
@@ -26,6 +27,8 @@ import { handleGithubSync } from "./github/handler";
 import { createGraphqlProvider } from "./github/provider";
 import { runGithubSync } from "./github/sync";
 import { corsHeaders, error, withHeaders } from "./http";
+import { handleSupport } from "./support/routes";
+import { cleanupSupport } from "./support/store";
 import { tools } from "./tools";
 import { handleWall } from "./wall";
 import { handleWallAdmin } from "./wall-admin";
@@ -100,6 +103,11 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   if (url.pathname.startsWith("/internal/wall-admin/")) return handleWallAdmin(request, url, env);
   const cfg = config(env);
   const origin = request.headers.get("Origin");
+  if (
+    url.pathname.startsWith("/api/support/webhooks/") ||
+    url.pathname.startsWith("/api/support/admin/")
+  )
+    return handleSupport(request, env);
   const cors = corsHeaders(origin, cfg);
 
   if (cors === false) {
@@ -110,7 +118,25 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const wallRoute = url.pathname === "/wall" || url.pathname.startsWith("/wall/media/");
   if (request.method === "OPTIONS") {
     if (wallRoute && headers) headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
-    return new Response(null, { status: 204, headers: headers ?? undefined });
+    return new Response(null, {
+      status: 204,
+      headers:
+        headers && url.pathname.startsWith("/api/support/")
+          ? {
+              ...headers,
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+              "Cache-Control": "no-store",
+            }
+          : (headers ?? undefined),
+    });
+  }
+
+  if (url.pathname.startsWith("/api/support/")) {
+    if (!headers) return error(403, "forbidden_origin", "Origin not allowed.");
+    return withHeaders(await handleSupport(request, env), {
+      ...headers,
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    });
   }
 
   if (wallRoute) return withHeaders(await handleWall(request, url.pathname, env), headers);
@@ -233,6 +259,11 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
 export default {
   fetch: (request, env, ctx) => handle(request, env, ctx),
   async scheduled(_controller, env) {
+    try {
+      await cleanupSupport(env.DB);
+    } catch {
+      log.error("[cron] support cleanup failed");
+    }
     const result = await runGithubSync(syncDeps(env));
     if (!result.ok) log.error("[cron] github sync failed", result);
     else log.info("[cron] github sync ok", result);

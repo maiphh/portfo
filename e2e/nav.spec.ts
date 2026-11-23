@@ -30,10 +30,7 @@ test("the home nav follows the hero boundary and current section", async ({ page
   await expect(nav).toBeHidden();
 });
 
-test("Wall opens /wall from its preview panel; BMC stays coming soon", async ({
-  page,
-  isMobile,
-}) => {
+test("Wall and BMC open from their preview panels", async ({ page, isMobile }) => {
   await page.goto("/#work");
   const nav = page.getByRole("navigation", { name: "Primary" });
   await expect(nav).toBeVisible();
@@ -63,10 +60,13 @@ test("Wall opens /wall from its preview panel; BMC stays coming soon", async ({
   else await bmc.hover();
   const bmcPanel = bmc.locator("..").locator(".nav-panel");
   await expect(bmcPanel.getByText("Buy me Claude", { exact: true })).toBeVisible();
-  await expect(bmcPanel.getByText("Coming soon")).toBeVisible();
-  await expect(bmcPanel.getByRole("link")).toHaveCount(0);
-  if (!isMobile) await bmcPanel.hover();
-  await expect(bmcPanel).toBeVisible();
+  await expect(bmcPanel.getByRole("link", { name: "Open Buy me Claude" })).toHaveAttribute(
+    "href",
+    "/buy-me-claude",
+  );
+  await bmcPanel.getByRole("link", { name: "Open Buy me Claude" }).click();
+  await expect(page).toHaveURL(/\/buy-me-claude\/?$/);
+  await expect(page.getByRole("heading", { name: "Buy me a Claude" })).toBeVisible();
 });
 
 test("case studies show the nav on arrival and support keyboard disclosure", async ({

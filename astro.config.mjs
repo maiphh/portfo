@@ -3,6 +3,12 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import vercel from "@astrojs/vercel";
+import { createRequire } from "node:module";
+
+// Resolve Astro's Vite dependency so config reads the same .env files as the build.
+const { loadEnv } = await import(
+  createRequire(import.meta.resolve("astro/config")).resolve("vite")
+);
 
 // Canonical origin: set SITE_URL once a custom domain exists. On Vercel the
 // production URL is used automatically; locally it falls back to the dev server.
@@ -11,6 +17,10 @@ const site =
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "http://localhost:4321");
+const supportEnabled =
+  (process.env.PUBLIC_SUPPORT_ENABLED ??
+    loadEnv(process.env.NODE_ENV || "production", process.cwd(), "PUBLIC_")
+      .PUBLIC_SUPPORT_ENABLED) === "true";
 
 // https://astro.build/config
 export default defineConfig({
@@ -22,11 +32,15 @@ export default defineConfig({
   integrations: [
     mdx(),
     // Retired case-study URLs (pages/work/craftland, mirror-now) only forward the browser.
+    // Admin/login stay out of the sitemap. Support is listed only when enabled.
     sitemap({
-      filter: (page) =>
-        !/\/(?:login|admin(?:\/.*)?|work\/(?:craftland|mirror-now))\/?$/.test(
-          new URL(page).pathname,
-        ),
+      filter: (page) => {
+        const pathname = new URL(page).pathname;
+        if (/\/(?:login|admin(?:\/.*)?)\/?$/.test(pathname)) return false;
+        if (/\/work\/(?:craftland|mirror-now)\/?$/.test(pathname)) return false;
+        if (!supportEnabled && /\/buy-me-claude(?:\/return)?\/?$/.test(pathname)) return false;
+        return true;
+      },
     }),
   ],
   trailingSlash: "ignore",

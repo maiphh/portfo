@@ -1,0 +1,13 @@
+---
+import Base from "~/layouts/Base.astro";
+import SupportPage from "~/components/support/SupportPage.astro";
+---
+
+<Base
+  title="Buy me a Claude · Mai Gia Phu"
+  base="/"
+  supportPage
+  noindex={import.meta.env.PUBLIC_SUPPORT_ENABLED !== "true"}
+>
+  <SupportPage />
+</Base>
