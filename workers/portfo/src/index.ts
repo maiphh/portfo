@@ -6,6 +6,8 @@
  *   GET  /popular[?days=]    most-read case studies
  *   GET  /activity           GitHub summary
  *   POST /cron/github-sync   manual sync (Bearer CRON_SECRET)
+ *   GET  /wall               published Personal Wall metadata
+ *   GET  /wall/media/:id/:variant  published Personal Wall image
  *   GET  /health             liveness and non-secret config
  * Cron Trigger every 6 hours runs the GitHub sync (no bearer needed).
  * CORS: ALLOWED_ORIGINS for browser calls; no Origin is allowed for cron/curl.
@@ -25,6 +27,7 @@ import { createGraphqlProvider } from "./github/provider";
 import { runGithubSync } from "./github/sync";
 import { corsHeaders, error, withHeaders } from "./http";
 import { tools } from "./tools";
+import { handleWall } from "./wall";
 import { knownSlugs, workList } from "./work";
 
 export { Quota } from "./quota";
@@ -102,9 +105,13 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   }
   const headers = cors;
 
+  const wallRoute = url.pathname === "/wall" || url.pathname.startsWith("/wall/media/");
   if (request.method === "OPTIONS") {
+    if (wallRoute && headers) headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
     return new Response(null, { status: 204, headers: headers ?? undefined });
   }
+
+  if (wallRoute) return withHeaders(await handleWall(request, url.pathname, env), headers);
 
   switch (url.pathname) {
     case "/health":

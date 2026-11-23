@@ -12,6 +12,7 @@ export interface AiBinding {
 
 export interface Env {
   DB: D1Database;
+  WALL_MEDIA: R2Bucket;
   AI: AiBinding;
   /** Burst guard at the edge (the binding only supports 10 s or 60 s periods). */
   CHAT_BURST_LIMITER: RateLimiter;
