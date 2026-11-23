@@ -57,6 +57,15 @@
       "start": "2025-01",
       "end": null,
       "highlight": null
+    },
+    {
+      "id": "ielts",
+      "kind": "qualification",
+      "title": "IELTS 7.0",
+      "detail": "English proficiency",
+      "start": "2024-06",
+      "end": null,
+      "highlight": null
     }
   ],
   "projects": [
