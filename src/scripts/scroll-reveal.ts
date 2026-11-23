@@ -66,6 +66,7 @@ export function initSectionReveals(opts: RevealOptions = {}): () => void {
         gsap.set(el, { clearProps: "opacity,transform" });
       });
     });
+    document.dispatchEvent(new CustomEvent("portfo:content-shift"));
   };
 
   const run = () => {
@@ -83,6 +84,7 @@ export function initSectionReveals(opts: RevealOptions = {}): () => void {
         if (!items.length) continue;
         // Opacity (not autoAlpha): keep visibility so keyboard focus still works off-screen.
         gsap.set(items, { opacity: 0, y });
+        const shift = () => document.dispatchEvent(new CustomEvent("portfo:content-shift"));
         const tween = gsap.to(items, {
           opacity: 1,
           y: 0,
@@ -90,11 +92,16 @@ export function initSectionReveals(opts: RevealOptions = {}): () => void {
           ease: "power3.out",
           stagger,
           clearProps: "transform",
+          // Mascot / layout listeners: transforms do not fire ResizeObserver.
+          onComplete: shift,
           scrollTrigger: {
             trigger: section,
             start,
             once: true,
-            onEnter: () => items.forEach((el) => el.setAttribute("data-reveal-done", "")),
+            onEnter: () => {
+              items.forEach((el) => el.setAttribute("data-reveal-done", ""));
+              shift();
+            },
           },
         });
         local.push(() => {
