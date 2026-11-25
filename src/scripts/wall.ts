@@ -42,7 +42,11 @@ const actions = $("#wall-actions");
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const isImageFile = (file: File) =>
   IMAGE_TYPES.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
-const fileTitle = (file: File) => file.name.replace(/\.[^.]+$/, "").trim().slice(0, 100);
+const fileTitle = (file: File) =>
+  file.name
+    .replace(/\.[^.]+$/, "")
+    .trim()
+    .slice(0, 100);
 const mobileIndex = window.matchMedia("(max-width: 680px)");
 const rootFolder = {
   id: "root",
@@ -697,7 +701,9 @@ function showEditor(
     event.preventDefault();
     if (cancel.disabled) return;
     const data = new FormData(form);
-    const titleInput = form.querySelector<HTMLInputElement>("#folder-title, #note-title, #item-title");
+    const titleInput = form.querySelector<HTMLInputElement>(
+      "#folder-title, #note-title, #item-title",
+    );
     if (titleInput?.required && !String(data.get("title") ?? "").trim()) {
       feedback.textContent = "Enter a title.";
       feedback.hidden = false;
@@ -846,14 +852,18 @@ if (hosted) {
             });
           if (feedback) feedback.textContent = `Uploading ${index + 1} of ${files.length}…`;
           const image = await uploadHostedPhoto(file);
-          createItem("photo", files.length === 1 ? sharedTitle || fileTitle(file) : fileTitle(file), {
-            ...image,
-            parent: current,
-            x: origin.x + (index % 4) * 200,
-            y: origin.y + Math.floor(index / 4) * 220,
-            text: caption,
-            alt,
-          });
+          createItem(
+            "photo",
+            files.length === 1 ? sharedTitle || fileTitle(file) : fileTitle(file),
+            {
+              ...image,
+              parent: current,
+              x: origin.x + (index % 4) * 200,
+              y: origin.y + Math.floor(index / 4) * 220,
+              text: caption,
+              alt,
+            },
+          );
           added += 1;
         }
         if (!added) throw new OwnerApiError(422, { error: "No photos were added." });
@@ -877,10 +887,10 @@ if (hosted) {
             error: "That folder has no JPEG, PNG, or WebP images under 4 MB.",
           });
         if (files.length > 100)
-          throw new OwnerApiError(422, { error: "Upload up to 100 images from a folder at a time." });
-        const rootName =
-          files[0]?.webkitRelativePath.split("/")[0]?.trim() ||
-          "Uploaded folder";
+          throw new OwnerApiError(422, {
+            error: "Upload up to 100 images from a folder at a time.",
+          });
+        const rootName = files[0]?.webkitRelativePath.split("/")[0]?.trim() || "Uploaded folder";
         const rootFolder = ensureFolder(current, rootName.slice(0, 100));
         const folderIds = new Map<string, string>([[rootName, rootFolder.id]]);
         const counts = new Map<string, number>();

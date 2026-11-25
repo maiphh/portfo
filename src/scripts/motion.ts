@@ -9,6 +9,7 @@ import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { $, $$, fmt } from "./dom";
+import { initSectionReveals } from "./scroll-reveal";
 
 gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin);
 
@@ -39,6 +40,15 @@ export function initMotion() {
     onUpdate: (s) => setBar(s.progress),
   });
 
+  // Section reveals (Hero has its own intro; Contact owns band/words motion).
+  initSectionReveals({
+    sections:
+      "#timeline[data-reveal], #work[data-reveal], #activity[data-reveal], #how[data-reveal]",
+    duration: 0.6,
+    stagger: 0.07,
+    y: 16,
+  });
+
   const mm = gsap.matchMedia();
   mm.add(
     {
@@ -54,6 +64,37 @@ export function initMotion() {
         // Final states are already in the HTML; just lift the JS-on curtain.
         gsap.set("[data-h]", { visibility: "visible" });
         return () => cleanups.forEach((f) => f());
+      }
+
+      gsap.to("[data-ascii-stage]", {
+        yPercent: c.desktop ? 18 : 8,
+        ease: "none",
+        scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: true },
+      });
+
+      // Open the featured demo into place, then bring each project group up row by row.
+      const demo = $(".sw-demo");
+      if (demo) {
+        gsap.from(demo, {
+          scale: c.desktop ? 0.88 : 0.94,
+          y: c.desktop ? 48 : 22,
+          transformOrigin: "50% 85%",
+          ease: "none",
+          scrollTrigger: {
+            trigger: demo.parentElement,
+            start: "top 95%",
+            end: "top 40%",
+            scrub: true,
+          },
+        });
+      }
+      for (const list of $$(".sw-list")) {
+        gsap.from($$(":scope > li", list), {
+          x: c.desktop ? -38 : -14,
+          stagger: 0.18,
+          ease: "power2.out",
+          scrollTrigger: { trigger: list, start: "top 95%", end: "bottom 80%", scrub: true },
+        });
       }
 
       if (c.desktop && c.hover) {

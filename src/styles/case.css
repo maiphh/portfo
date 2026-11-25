@@ -303,6 +303,7 @@ html:not(.js) .cs-hero-a__sweep {
   align-items: center;
   justify-content: center;
   gap: 14px;
+  min-width: 0;
   min-height: 76px;
   margin: 0;
   padding: 14px 16px;
@@ -319,12 +320,16 @@ html:not(.js) .cs-hero-a__sweep {
   color: var(--ink);
 }
 .cs2-metrics__l {
+  min-width: 0;
   color: var(--ink-2);
   font-size: 0.98rem;
   line-height: 1.25;
   max-width: 14ch;
+  overflow-wrap: break-word;
 }
-@media (min-width: 700px) {
+/* 3-up only when the outcome column is wide enough. At 700–1023 the PSO
+   title+body grid leaves ~420px for metrics — three cards overflow there. */
+@media (min-width: 1024px) {
   .cs2-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

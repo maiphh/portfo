@@ -67,15 +67,15 @@ const currentClass = (e: Entry) => (!e.data.end && e.data.lane === "work" ? " is
 const nowP = (nowIdx / TL_MONTHS).toFixed(3);
 ---
 
-<section class="sec" id="timeline" aria-labelledby="tl-h">
+<section class="sec" id="timeline" aria-labelledby="tl-h" data-reveal>
   <div class="wrap">
-    <div class="head">
+    <div class="head" data-reveal-child>
       <h2 id="tl-h" data-split>
         Work and study, 2021 to 2028
       </h2>
       <p>Two jobs, two degrees, one competition podium.</p>
     </div>
-    <div class="tl" data-tl>
+    <div class="tl" data-tl data-reveal-child>
       <div class="tl-axis" aria-hidden="true">
         {TL_YEARS.map((y) => (
           <span>{y}</span>
@@ -94,9 +94,7 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
                   data-tl-bar
                   {...noteAttrs(e)}
                 >
-                  {logo && (
-                    <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />
-                  )}
+                  {logo && <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />}
                   <span class="bar-copy">
                     <b>{e.data.title}</b>
                     <span>{cardLabel(e.data.detail)}</span>
@@ -113,9 +111,7 @@ const nowP = (nowIdx / TL_MONTHS).toFixed(3);
               const logo = logoForExperience(e.id);
               return (
                 <li class="bar" style={barStyle(e.data.start, e.data.end, e.data.row)} data-tl-bar>
-                  {logo && (
-                    <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />
-                  )}
+                  {logo && <OrgLogo src={logo.src} name={logo.name} wordmark={isWordmark(logo)} />}
                   <span class="bar-copy">
                     <b>{e.data.title}</b>
                     <span>{cardLabel(e.data.detail)}</span>

@@ -24,13 +24,11 @@ const w = data.hero_w ?? Math.max(...words.map((x) => x.length)) * 0.7;
 ---
 
 <header class="cs-hero-a" data-hero-a>
-  {
-    logo && (
-      <p class="cs-hero-a__meta">
-        <OrgLogo src={logo.src} name={logo.name} named wordmark={isWordmark(logo)} />
-      </p>
-    )
-  }
+  {logo && (
+    <p class="cs-hero-a__meta">
+      <OrgLogo src={logo.src} name={logo.name} named wordmark={isWordmark(logo)} />
+    </p>
+  )}
 
   <div class="cs-hero-a__stage" style={`--w:${w};--lines:${words.length}`}>
     <h1 id="cs-h" class="cs-hero-a__name">

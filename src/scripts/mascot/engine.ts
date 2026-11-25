@@ -459,6 +459,8 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
         applySpot();
         place();
         refresh();
+        // Reveal tweens / nav hide may still be settling; recheck once more.
+        recheck();
         return;
       }
       const t = clamp((now - segStart) / cur.ms, 0, 1);
@@ -480,6 +482,9 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
 
   launcher.addEventListener("pointerdown", (e) => {
     if (drag || (e.pointerType === "mouse" && e.button !== 0)) return;
+    // Keep the pointerstream: without this the browser can pointercancel on the
+    // first move (home canvas / selection), and the drag never leaves the corner.
+    e.preventDefault();
     cancelSnap();
     moving = false;
     launcher.classList.remove("is-yield");
@@ -615,18 +620,26 @@ export function initMascot(root: HTMLElement, launcher: HTMLButtonElement): void
       refresh();
     }, 150);
   });
-  // Re-check the rest spot when a FlowDiagram panel opens or closes, and after scrolling
-  // (the panel moves with the page; the mascot is fixed).
+  // Re-check the rest spot when a FlowDiagram panel opens or closes, after scrolling
+  // (the panel moves with the page; the mascot is fixed), and when scroll-linked
+  // reveals finish moving content (transform does not fire ResizeObserver).
   let rest = 0;
+  let restLate = 0;
   const recheck = () => {
     clearTimeout(rest);
-    rest = window.setTimeout(() => {
+    clearTimeout(restLate);
+    const run = () => {
       if (!floating() || dragging() || snapping) return;
       place();
       refresh();
-    }, 120);
+    };
+    // One pass soon, one after reveal tweens (~0.6s) have moved content.
+    rest = window.setTimeout(run, 120);
+    restLate = window.setTimeout(run, 700);
   };
-  for (const type of ["flow:select", "flow:close"]) document.addEventListener(type, recheck);
+  for (const type of ["flow:select", "flow:close", "portfo:content-shift"]) {
+    document.addEventListener(type, recheck);
+  }
   addEventListener("scroll", recheck, { passive: true });
   REDUCE.addEventListener("change", refresh);
 

@@ -63,33 +63,35 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
     style={`--acc:${acc.line};--acc-tint:${acc.tint};${plateVars(acc.line)}`}
   >
     <div class="wrap">
-      <nav class="cs2-crumbs" aria-label="Breadcrumb">
-        <a href="/#work">Work</a>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">{d.title}</span>
-      </nav>
+      <div data-reveal>
+        <nav class="cs2-crumbs" aria-label="Breadcrumb" data-reveal-child>
+          <a href="/#work">Work</a>
+          <span aria-hidden="true">›</span>
+          <span aria-current="page">{d.title}</span>
+        </nav>
+      </div>
       <CaseHeroTitle entry={entry} data={data} />
     </div>
 
     <div class="wrap">
-      <section class="cs2-sec cs2-pso" id="overview" aria-labelledby="ov-h">
+      <section class="cs2-sec cs2-pso" id="overview" aria-labelledby="ov-h" data-reveal>
         <h2 id="ov-h" class="sr-only">
           Overview
         </h2>
-        <div>
+        <div data-reveal-child>
           <h3>The Problem</h3>
           <div class="cs2-pso-body">
             <p set:html={richText(o.problem)} />
           </div>
         </div>
-        <div>
+        <div data-reveal-child>
           <h3>The Solution</h3>
           <div class="cs2-pso-body">
             <p set:html={richText(o.solution)} />
           </div>
         </div>
         {o.outcome ? (
-          <div class="cs2-outcome">
+          <div class="cs2-outcome" data-reveal-child>
             <h3>The Outcome</h3>
             <div class="cs2-pso-body">
               {o.metrics?.length ? (
@@ -122,12 +124,12 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
       </section>
 
       {showVideo && (
-        <section class="cs2-sec cs2-video" id="video" aria-labelledby="vid-h">
-          <div class="cs2-video-head">
+        <section class="cs2-sec cs2-video" id="video" aria-labelledby="vid-h" data-reveal>
+          <div class="cs2-video-head" data-reveal-child>
             <h2 id="vid-h">The short cut</h2>
             <p>30 s · dark mode · no sound · demo values</p>
           </div>
-          <figure>
+          <figure data-reveal-child>
             <div class="cs2-video-frame">
               {/* Muted, no preload. It plays while half in view (scripts/case/page.ts) unless
                   reduced motion or a data saver is on; then a play button sits on the poster.
@@ -184,24 +186,30 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         </section>
       )}
 
-      <section class="cs2-sec cs2-hl" aria-labelledby="hl-h">
-        <h2 id="hl-h">{data.highlight.title}</h2>
-        <figure>
+      <section class="cs2-sec cs2-hl" aria-labelledby="hl-h" data-reveal>
+        <h2 id="hl-h" data-reveal-child>
+          {data.highlight.title}
+        </h2>
+        <figure data-reveal-child>
           <slot name="highlight" />
           <figcaption>{data.highlight.caption}</figcaption>
         </figure>
       </section>
 
-      <section class="cs2-sec cs2-how" id="how-it-works" aria-labelledby="how-h">
-        <div class="cs2-how-head">
+      <section class="cs2-sec cs2-how" id="how-it-works" aria-labelledby="how-h" data-reveal>
+        <div class="cs2-how-head" data-reveal-child>
           <div>
             <h2 id="how-h">How it works</h2>
             <p set:html={richText(how.summary)} />
           </div>
         </div>
-        {how.stack.length > 0 && <TechStack items={how.stack} />}
+        {how.stack.length > 0 && (
+          <div data-reveal-child>
+            <TechStack items={how.stack} />
+          </div>
+        )}
         {how.application && (
-          <div class="cs2-how-sub">
+          <div class="cs2-how-sub" data-reveal-child>
             <h3>{how.application.title}</h3>
             <FlowDiagram
               id="app"
@@ -219,30 +227,39 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
           </div>
         )}
         {(how.architectureTitle || how.architectureNote) && (
-          <div class="cs2-how-sub">
+          <div class="cs2-how-sub" data-reveal-child>
             {how.architectureTitle && <h3>{how.architectureTitle}</h3>}
             {how.architectureNote && <p set:html={richText(how.architectureNote)} />}
           </div>
         )}
-        <FlowDiagram
-          id="cs"
-          cols={how.flow.cols}
-          nodes={how.flow.nodes}
-          edges={how.flow.edges}
-          groups={how.flow.groups}
-          label={how.flow.label}
-          keyLabel={how.flow.keyLabel}
-          lanes3Min={how.flow.lanes3Min}
-          hint="Select any part to see what it does, its tech and the decision behind it."
-          accent={acc}
-          autoplay={how.autoplay}
-        />
+        <div data-reveal-child>
+          <FlowDiagram
+            id="cs"
+            cols={how.flow.cols}
+            nodes={how.flow.nodes}
+            edges={how.flow.edges}
+            groups={how.flow.groups}
+            label={how.flow.label}
+            keyLabel={how.flow.keyLabel}
+            lanes3Min={how.flow.lanes3Min}
+            hint="Select any part to see what it does, its tech and the decision behind it."
+            accent={acc}
+            autoplay={how.autoplay}
+          />
+        </div>
       </section>
 
-      <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h">
-        <h2 id="dd-h">Highlights</h2>
+      <section class="cs2-sec cs2-dives" id="deep-dives" aria-labelledby="dd-h" data-reveal>
+        <h2 id="dd-h" data-reveal-child>
+          Highlights
+        </h2>
         {dive.map((x, i) => (
-          <article class="hl-dv" id={`dive-${x.id}`} aria-labelledby={`dvh-${x.id}`}>
+          <article
+            class="hl-dv"
+            id={`dive-${x.id}`}
+            aria-labelledby={`dvh-${x.id}`}
+            data-reveal-child
+          >
             <header class="hl-head">
               <p class="hl-n" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
@@ -264,9 +281,11 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
       </section>
 
       {extra && (
-        <section class="cs2-sec cs2-extra" id={extra.id} aria-labelledby="extra-h">
-          <h2 id="extra-h">{extra.title}</h2>
-          <div class="cs2-extra-in">
+        <section class="cs2-sec cs2-extra" id={extra.id} aria-labelledby="extra-h" data-reveal>
+          <h2 id="extra-h" data-reveal-child>
+            {extra.title}
+          </h2>
+          <div class="cs2-extra-in" data-reveal-child>
             <div class="cs2-dive-text">
               {extra.paragraphs.map((p) => (
                 <p set:html={richText(p)} />
@@ -280,8 +299,8 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         </section>
       )}
 
-      <section class="cs2-sec cs2-limits" id="limits" aria-labelledby="lim-h">
-        <div class="cs2-limits-col">
+      <section class="cs2-sec cs2-limits" id="limits" aria-labelledby="lim-h" data-reveal>
+        <div class="cs2-limits-col" data-reveal-child>
           <h2 id="lim-h">The Limitation</h2>
           <div class="cs2-limits-grid">
             <div>
@@ -304,15 +323,15 @@ const devTodos = [...(o.outcome ? [] : [o.outcomeTodo ?? "Outcome: to be added."
         </div>
       </section>
 
-      <nav class="cs-next cs2-next" aria-label="More work">
+      <nav class="cs-next cs2-next" aria-label="More work" data-reveal>
         {prev && (
-          <a href={`/work/${prev.id}`}>
+          <a href={`/work/${prev.id}`} data-reveal-child>
             <span>Previous</span>
             <b>{prev.data.title}</b>
           </a>
         )}
         {next && (
-          <a class="next" href={`/work/${next.id}`}>
+          <a class="next" href={`/work/${next.id}`} data-reveal-child>
             <span>Next</span>
             <b>{next.data.title}</b>
           </a>

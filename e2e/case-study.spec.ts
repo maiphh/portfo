@@ -179,9 +179,9 @@ test.describe("Document OCR case study", () => {
 
   test("the case study has no on-this-page rail", async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator("[data-rail], .cs2-rail, nav[aria-label='On this page']")).toHaveCount(
-      0,
-    );
+    await expect(
+      page.locator("[data-rail], .cs2-rail, nav[aria-label='On this page']"),
+    ).toHaveCount(0);
   });
 
   for (const [w, h] of [

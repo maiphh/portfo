@@ -49,8 +49,9 @@ test("editorial structure, real destinations and existing anchors", async ({ pag
   await expect(work.locator(".sw-result-block")).toContainText("Two months after go-live");
   await expect(work.locator(".sw-results")).toContainText("8,000");
   await expect(work.locator(".sw-results")).toContainText("99.6%");
-  await expect(work.locator(".sw-results")).toContainText("About 300");
-  await expect(work.locator(".sw-demo-description")).toHaveText("Demo uses synthetic values.");
+  // The "About " prefix is stripped in the results row so the figure reads as a plain number.
+  await expect(work.locator(".sw-results")).toContainText("300");
+  await expect(work.locator(".sw-demo-description")).toHaveCount(0);
 });
 
 test("whole-frame click, Space and Enter each toggle once, with persistent pause cue", async ({
@@ -340,11 +341,8 @@ for (const width of [320, 360, 390, 414]) {
     await expect(page.locator(".chat-launcher.has-mascot")).toBeAttached({ timeout: 8000 });
     for (const target of [
       ".sw-featured-index",
-      ".sw-featured-role",
-      ".sw-demo-description",
       ".sw-results",
       ".sw-explore",
-      ".sw-list-heading",
       "#work-rag",
       "#work-craftland",
       "#work-poet",

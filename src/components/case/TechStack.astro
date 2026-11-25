@@ -15,24 +15,29 @@ const { items } = Astro.props;
 const marks = skillMarksFor(items.flatMap((item) => (item.icons ?? []) as TechLogoName[]));
 ---
 
-{
-  marks.length > 0 && (
-    <section class="cs2-tech" aria-labelledby="tech-h">
-      <h3 id="tech-h">Tech stack</h3>
-      <ul class="cs2-tech-list">
-        {marks.map((mark) => (
-          <li class="cs2-tech-tile">
-            <img class="cs2-tech-mark" src={mark.src} alt={mark.label} width="48" height="48" loading="lazy" />
-          </li>
-        ))}
-      </ul>
-      <ul class="sr-only">
-        {items.map((item) => (
-          <li>
-            {item.label}: {item.value}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
+{marks.length > 0 && (
+  <section class="cs2-tech" aria-labelledby="tech-h">
+    <h3 id="tech-h">Tech stack</h3>
+    <ul class="cs2-tech-list">
+      {marks.map((mark) => (
+        <li class="cs2-tech-tile">
+          <img
+            class="cs2-tech-mark"
+            src={mark.src}
+            alt={mark.label}
+            width="48"
+            height="48"
+            loading="lazy"
+          />
+        </li>
+      ))}
+    </ul>
+    <ul class="sr-only">
+      {items.map((item) => (
+        <li>
+          {item.label}: {item.value}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}

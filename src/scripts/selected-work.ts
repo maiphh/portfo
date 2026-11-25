@@ -4,6 +4,7 @@ import {
   updateDemoView,
   type DemoPlayback,
 } from "~/lib/demo-playback";
+import { initWorkPreview } from "./work-preview";
 
 const controllers = new WeakMap<HTMLElement, () => void>();
 
@@ -47,9 +48,8 @@ export function initSelectedWork(): () => void {
   let disposed = false;
   let mediaFailed = false;
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
-  let rowObserver: IntersectionObserver | undefined;
   let videoObserver: IntersectionObserver | undefined;
-  const rows = [...root.querySelectorAll<HTMLElement>(".sw-row")];
+  const disposePreview = initWorkPreview(root);
 
   const renderControls = () => {
     const playing = !video.paused && !video.ended;
@@ -155,7 +155,6 @@ export function initSelectedWork(): () => void {
       state = updateDemoMotion(state, reduce.matches);
       clearTimeout(feedbackTimer);
       feedback?.classList.remove("is-visible");
-      configureRows();
       void reconcile();
     },
     { signal },
@@ -171,49 +170,16 @@ export function initSelectedWork(): () => void {
     const h = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
     applyView(r.width > 0 && r.height > 0 && w * h >= r.width * r.height * 0.25);
   };
-  const configureRows = () => {
-    rowObserver?.disconnect();
-    root.classList.remove("sw-motion-ready");
-    if (state.reducedMotion || typeof IntersectionObserver === "undefined") {
-      rows.forEach((row) => row.classList.add("is-visible"));
-      return;
-    }
-    rowObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            rowObserver?.unobserve(entry.target);
-          }
-        }
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -12px 0px" },
-    );
-    rows.forEach((row, index) => {
-      row.style.setProperty("--sw-enter-delay", `${Math.min(index, 3) * 45}ms`);
-      rowObserver?.observe(row);
-    });
-    root.classList.add("sw-motion-ready");
-  };
-  root.addEventListener(
-    "focusin",
-    (event) => {
-      if (event.target instanceof Element)
-        event.target.closest(".sw-row")?.classList.add("is-visible");
-    },
-    { signal },
-  );
 
   const dispose = () => {
     if (disposed) return;
     disposed = true;
     ++request;
     listeners.abort();
-    rowObserver?.disconnect();
+    disposePreview();
     videoObserver?.disconnect();
     clearTimeout(feedbackTimer);
     video.pause();
-    root.classList.remove("sw-motion-ready");
     if (poster) poster.hidden = true;
     if (cue) cue.hidden = true;
     feedback?.classList.remove("is-visible");
@@ -235,7 +201,6 @@ export function initSelectedWork(): () => void {
   controllers.set(root, dispose);
   nativeLink.hidden = true;
   renderControls();
-  configureRows();
   if (video.error || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) mediaError();
   if (typeof IntersectionObserver !== "undefined") {
     videoObserver = new IntersectionObserver(

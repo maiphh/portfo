@@ -123,4 +123,5 @@ if (page) {
     if (page.querySelector("svg.hl-fig[data-scene]"))
       void import("./flow").then((m) => m.default(page));
   }
+  void import("./reveal").then((m) => m.initCaseReveals(page));
 }

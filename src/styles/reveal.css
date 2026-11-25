@@ -1,0 +1,12 @@
+/**
+ * Pre-hide for section reveals. Only with <html class="js"> and motion allowed.
+ * No-JS and prefers-reduced-motion leave content fully visible.
+ * Mark sections with data-reveal and children with data-reveal-child in markup.
+ * scroll-reveal.ts sets data-reveal-done when the item has animated (or if init fails).
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal-child]:not([data-reveal-done]) {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}

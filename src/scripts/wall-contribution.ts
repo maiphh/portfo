@@ -84,9 +84,7 @@ if (
     const visitorName = nameInput.value.trim();
     const sharedTitle = title.value.trim();
     const caption = body.value.trim();
-    const alt = (
-      form.querySelector<HTMLInputElement>("#contribution-alt")?.value ?? ""
-    ).trim();
+    const alt = (form.querySelector<HTMLInputElement>("#contribution-alt")?.value ?? "").trim();
     const folder = currentFolder();
     folderInput.value = folder;
 
