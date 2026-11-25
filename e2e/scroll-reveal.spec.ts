@@ -52,3 +52,21 @@ test.describe("section scroll reveals", () => {
       .toBe(true);
   });
 });
+
+for (const [path, selector] of [
+  ["/", ".sw-demo"],
+  ["/work/document-ocr", ".hl-dv-fig"],
+] as const) {
+  test(`scroll scales the artwork forward and back on ${path}`, async ({ page }) => {
+    await page.goto(path);
+    const art = page.locator(selector).first();
+    const scale = () => art.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+    await expect.poll(scale).toBeLessThan(0.98);
+    await art.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+    await expect.poll(scale).toBeGreaterThan(0.99);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect.poll(scale).toBeLessThan(0.98);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect.poll(scale).toBe(1);
+  });
+}

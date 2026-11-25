@@ -66,6 +66,37 @@ export function initMotion() {
         return () => cleanups.forEach((f) => f());
       }
 
+      gsap.to("[data-ascii-stage]", {
+        yPercent: c.desktop ? 18 : 8,
+        ease: "none",
+        scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: true },
+      });
+
+      // Open the featured demo into place, then bring each project group up row by row.
+      const demo = $(".sw-demo");
+      if (demo) {
+        gsap.from(demo, {
+          scale: c.desktop ? 0.88 : 0.94,
+          y: c.desktop ? 48 : 22,
+          transformOrigin: "50% 85%",
+          ease: "none",
+          scrollTrigger: {
+            trigger: demo.parentElement,
+            start: "top 95%",
+            end: "top 40%",
+            scrub: true,
+          },
+        });
+      }
+      for (const list of $$(".sw-list")) {
+        gsap.from($$(":scope > li", list), {
+          x: c.desktop ? -38 : -14,
+          stagger: 0.18,
+          ease: "power2.out",
+          scrollTrigger: { trigger: list, start: "top 95%", end: "bottom 80%", scrub: true },
+        });
+      }
+
       if (c.desktop && c.hover) {
         // Magnetic CTAs
         $$("[data-magnet]").forEach((b) => {

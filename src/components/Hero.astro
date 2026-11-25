@@ -1,8 +1,4 @@
 ---
-/**
- * Hero: a background-removed portrait of Phú rendered as live ASCII art.
- * His name sits behind the art, his role on the left, his actions on the right.
- */
 import Icon from "./Icon.astro";
 import { asciiPortrait } from "~/data/ascii-portrait";
 import { site } from "~/lib/site";
@@ -10,77 +6,33 @@ import "~/styles/ascii-hero.css";
 ---
 
 <section class="hero" id="top" aria-labelledby="h1" data-hero>
-  <div class="hero-glow" aria-hidden="true"></div>
-
-  <div class="wrap hero-wrap">
-    <div class="hero-top" data-h>
-      <span class="hero-kicker">
-        <i aria-hidden="true"></i> portfolio / 2026
-      </span>
-      <span class="hero-kicker-right">ho chi minh city · vn</span>
+  <div class="hero-stage" data-ascii-stage>
+    <div class="ascii-frame" data-ascii-frame>
+      <pre class="ascii-fallback" aria-hidden="true">{asciiPortrait}</pre>
+      <canvas class="ascii-canvas" data-ascii-canvas aria-hidden="true"></canvas>
     </div>
-
-    <div class="hero-main">
-      <div class="hero-stage" data-ascii-stage data-anim>
-        <h1 class="hero-name" id="h1" aria-label={site.name} data-h>
-          <span aria-hidden="true">Mai Phú</span>
-        </h1>
-
-        <div class="ascii-frame" data-ascii-frame>
-          <pre class="ascii-fallback" data-ascii-fallback aria-hidden="true">{asciiPortrait}</pre>
-          <canvas class="ascii-canvas" data-ascii-canvas aria-hidden="true"></canvas>
-          <span class="ascii-halo" aria-hidden="true"></span>
-          <span class="ascii-tag tl" aria-hidden="true">
-            fig. 01 — maiphh
-          </span>
-          <span class="ascii-tag br" aria-hidden="true">
-            ascii / live
-          </span>
-        </div>
-
-        <p class="sr-only">
-          A portrait of {site.name}, rendered as animated ASCII art. {site.role} based in{" "}
-          {site.city}.
-        </p>
-      </div>
-
-      <div class="hero-role" data-h>
-        <span class="col-label">01 / role</span>
-        <p class="role-title">
-          AI Engineer<span class="role-dot">.</span>
-        </p>
-        <p class="role-copy">at Talentnet · previously Garena Free Fire</p>
-        <p class="role-place">
-          <span class="pulse" aria-hidden="true"></span> available for work
-        </p>
-      </div>
-
-      <div class="hero-actions" data-h>
-        <span class="col-label">02 / actions</span>
-        <div class="action-list">
-          <a class="btn btn-lime" href={`mailto:${site.email}`} data-magnet>
-            <Icon name="mail" />
-            <span>Email me</span>
-            <Icon name="out" />
-          </a>
-          <a class="btn btn-line" href="#work" data-magnet>
-            <span>See the work</span>
-            <Icon name="arrow" />
-          </a>
-          <a class="btn btn-line" href={site.cv} download={site.cvFile} data-magnet>
-            <Icon name="dl" />
-            <span>Download CV</span>
-          </a>
-        </div>
+  </div>
+  <div class="hero-role" data-h>
+    <p class="role-place">Ho Chi Minh City · VN</p>
+    <h1 class="hero-name" id="h1" aria-label={site.name}>
+      Mai Phú
+    </h1>
+    <p class="role-copy">At Talentnet · previously Garena Free Fire</p>
+  </div>
+  <div class="hero-bottom">
+    <p class="role-title" data-h>
+      AI Engineer<span>.</span>
+    </p>
+    <div class="hero-actions" data-h>
+      <a class="btn hero-work" href="#work">
+        See the work <Icon name="arrow" />
+      </a>
+      <div class="hero-links">
+        <a href={`mailto:${site.email}`}>Email me</a>
+        <a href={site.cv} download={site.cvFile}>
+          Download CV
+        </a>
       </div>
     </div>
-
-    <a class="hero-foot" href="#timeline" data-h>
-      <span>scroll</span>
-      <span class="hero-foot-rule" aria-hidden="true"></span>
-      <span>
-        work and study <span aria-hidden="true">↓</span>
-      </span>
-    </a>
   </div>
 </section>
